@@ -18,7 +18,8 @@ export function Navbar() {
   const navLinks = [
     { href: "#about", label: "A propos" },
     { href: "#formations", label: "Formations" },
-    { href: "#comment", label: "Comment ca marche" },
+    { href: "/cours-live", label: "Cours Live", isLive: true },
+    { href: "/cours-archive", label: "Bibliothèque" },
     { href: "#tarifs", label: "Tarifs" },
     { href: "#faq", label: "FAQ" },
   ]
@@ -55,8 +56,11 @@ export function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="text-[11px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.6)] no-underline transition-all duration-300 relative py-2 hover:text-[#C9A227] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C9A227] after:scale-x-0 after:origin-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-left"
+                className="text-[11px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.6)] no-underline transition-all duration-300 relative py-2 hover:text-[#C9A227] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C9A227] after:scale-x-0 after:origin-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-left flex items-center gap-2"
               >
+                {(link as { isLive?: boolean }).isLive && (
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                )}
                 {link.label}
               </Link>
             </li>
