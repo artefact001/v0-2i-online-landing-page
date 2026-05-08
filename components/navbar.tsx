@@ -67,8 +67,14 @@ export function Navbar() {
           ))}
         </ul>
 
-        {/* CTA Button */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* CTA Buttons */}
+        <div className="hidden md:flex items-center gap-3">
+          <Link
+            href="/login"
+            className="text-[10px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] px-4 py-2.5 rounded-lg no-underline transition-all duration-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
+          >
+            Connexion
+          </Link>
           <Link
             href="#inscription"
             className="relative bg-[#C9A227] text-[#0D2545] text-[10px] font-bold tracking-[2px] uppercase px-6 py-3 rounded-lg no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105 hover:shadow-[0_0_20px_rgba(201,162,39,0.3)] flex items-center gap-2"
