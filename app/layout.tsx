@@ -1,32 +1,40 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Cormorant_Garamond, Outfit } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const outfit = Outfit({ 
+  subsets: ["latin"],
+  variable: '--font-outfit',
+  display: 'swap',
+})
+
+const cormorant = Cormorant_Garamond({ 
+  subsets: ["latin"],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-cormorant',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: '2I Online — Forme ici, Reconnu partout',
+  description: 'Plateforme de formation professionnelle en ligne en hotellerie, restauration et arts culinaires. Formations certifiantes reconnues par l\'Etat senegalais.',
+  keywords: ['formation professionnelle', 'hotellerie', 'restauration', 'cuisine', 'CAP', 'Senegal', 'Afrique', 'certification'],
+  authors: [{ name: 'Incub Institut' }],
   generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+  openGraph: {
+    title: '2I Online — Forme ici, Reconnu partout',
+    description: 'Formations certifiantes en hotellerie, restauration et arts culinaires. Concues pour l\'Afrique, reconnues partout sur le continent.',
+    type: 'website',
+    locale: 'fr_FR',
   },
+}
+
+export const viewport = {
+  themeColor: '#080F1E',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -35,8 +43,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
+    <html lang="fr" className={`${outfit.variable} ${cormorant.variable}`}>
+      <body className="font-sans antialiased bg-[#080F1E] overflow-x-hidden">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
