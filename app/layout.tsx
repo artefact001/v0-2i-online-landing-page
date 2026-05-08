@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Outfit } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
 
 const outfit = Outfit({ 
@@ -45,7 +46,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${outfit.variable} ${cormorant.variable}`}>
       <body className="font-sans antialiased bg-[#080F1E] overflow-x-hidden">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
