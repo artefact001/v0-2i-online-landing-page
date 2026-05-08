@@ -1,115 +1,152 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
+import { useEffect, useRef } from "react"
 
 interface Course {
   badge: string
-  badgeStyle?: string
   name: string
   mode: string
   desc: string
   duration: string
   price?: string
   popular?: boolean
-  bgClass: string
+  image: string
 }
 
 const courses: Course[] = [
   {
     badge: "Populaire",
     name: "CAP Cuisinier",
-    mode: "Formation en hybride",
-    desc: "Faites de votre passion un metier d'excellence en maitrisant l'art de la haute gastronomie. Ce CAP vous offre un apprentissage complet.",
+    mode: "Formation hybride",
+    desc: "Maitrisez l'art de la haute gastronomie. Techniques francaises, cuisine africaine revisitee, gestion de brigade.",
     duration: "3 ans",
     popular: true,
-    bgClass: "bg-gradient-to-br from-[#1a3a5c] to-[#0d2545]",
+    image: "/images/course-cuisine.jpg",
   },
   {
     badge: "CAP",
     name: "CAP Serveur",
-    mode: "Formation en hybride",
-    desc: "Maitrisez l'art du service, la mise en place et le protocole de restauration professionnelle.",
+    mode: "Formation hybride",
+    desc: "L'art du service d'excellence. Mise en place, protocole, sommellerie de base et relation client.",
     duration: "3 ans",
-    bgClass: "bg-gradient-to-br from-[#2d1a0e] to-[#1a0d05]",
+    image: "/images/course-service.jpg",
   },
   {
     badge: "Artisanat",
     name: "CAP Patissier",
-    mode: "Formation en hybride",
-    desc: "Recettes traditionnelles revisitees, techniques de viennoiserie, gestion d'une patisserie.",
+    mode: "Formation hybride",
+    desc: "Patisserie francaise et africaine. Viennoiseries, chocolaterie, gestion d'une patisserie.",
     duration: "3 ans",
-    bgClass: "bg-gradient-to-br from-[#0d3320] to-[#061a0f]",
+    image: "/images/course-patisserie.jpg",
   },
   {
     badge: "Certifiant",
-    name: "Hygiene & Securite HACCP",
-    mode: "Formation en ligne",
-    desc: "Certification en hygiene alimentaire — obligatoire pour tout professionnel.",
+    name: "HACCP & Hygiene",
+    mode: "100% en ligne",
+    desc: "Certification hygiene alimentaire obligatoire pour tout professionnel de la restauration.",
     duration: "2 mois",
     price: "80 000 F",
-    bgClass: "bg-gradient-to-br from-[#2d2a0d] to-[#1a1805]",
+    image: "/images/course-haccp.jpg",
   },
   {
-    badge: "Certificat de Specialite",
-    name: "Formations Courtes Durees",
-    mode: "Formation en ligne ou en hybride",
-    desc: "CS Cuisine, CS Patisserie, CS Serveur — des parcours intensifs et cibles pour acquerir rapidement les competences cles.",
-    duration: "6 a 8 mois",
-    bgClass: "bg-gradient-to-br from-[#1a0d2d] to-[#0d0518]",
+    badge: "CS",
+    name: "Sommellerie & Boissons",
+    mode: "Formation hybride",
+    desc: "Connaissance des vins, accords mets-vins, service des boissons et gestion de cave.",
+    duration: "6 mois",
+    image: "/images/course-sommelier.jpg",
   },
   {
     badge: "Business",
-    name: "Gestion d'un Restaurant",
-    mode: "Formation en ligne",
-    desc: "Finances, RH, approvisionnement, marketing — tout pour gerer et developper votre restaurant.",
+    name: "Gestion Restaurant",
+    mode: "100% en ligne",
+    desc: "Finances, RH, approvisionnement, marketing digital — tout pour gerer votre etablissement.",
     duration: "2 mois",
     price: "80 000 F",
-    bgClass: "bg-gradient-to-br from-[#1a2d3a] to-[#0d1a24]",
+    image: "/images/course-management.jpg",
   },
 ]
 
 function CourseCard({ course, index }: { course: Course; index: number }) {
   return (
     <div
-      className={`reveal bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-2xl overflow-hidden transition-all duration-400 hover:-translate-y-2 hover:border-[rgba(201,162,39,0.3)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.3),0_0_0_1px_rgba(201,162,39,0.1)]`}
-      style={{ transitionDelay: `${index * 100}ms` }}
+      className="reveal group bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)] rounded-2xl overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:border-[rgba(201,162,39,0.4)] hover:shadow-[0_30px_80px_rgba(0,0,0,0.4),0_0_0_1px_rgba(201,162,39,0.15)]"
+      style={{ transitionDelay: `${index * 80}ms` }}
     >
-      {/* Banner */}
-      <div className={`h-[120px] flex items-center justify-center text-5xl relative overflow-hidden ${course.bgClass}`}>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgba(8,15,30,0.8)]" />
+      {/* Image Banner */}
+      <div className="h-[180px] relative overflow-hidden">
+        <Image
+          src={course.image}
+          alt={course.name}
+          fill
+          className="object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080F1E] via-[rgba(8,15,30,0.3)] to-transparent" />
+        
+        {/* Badge overlay */}
+        <div className="absolute top-4 left-4">
+          <span className={`inline-flex items-center gap-1.5 bg-[rgba(0,0,0,0.6)] backdrop-blur-sm border border-[rgba(201,162,39,0.4)] text-[#E8C050] text-[9px] font-bold tracking-[2px] uppercase rounded-full px-3 py-1.5 ${course.popular ? 'bg-[#C9A227] text-[#0D2545] border-[#C9A227]' : ''}`}>
+            {course.popular && (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            )}
+            {course.badge}
+          </span>
+        </div>
+
+        {/* Duration overlay */}
+        <div className="absolute bottom-4 right-4">
+          <span className="inline-flex items-center gap-1 bg-[rgba(0,0,0,0.6)] backdrop-blur-sm text-white text-[10px] font-medium rounded-full px-3 py-1.5">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {course.duration}
+          </span>
+        </div>
       </div>
 
       {/* Body */}
       <div className="p-6">
-        <span className={`inline-block bg-[rgba(201,162,39,0.15)] border border-[rgba(201,162,39,0.25)] text-[#E8C050] text-[9px] font-semibold tracking-[2px] uppercase rounded px-2.5 py-1 mb-3 ${course.popular ? 'flex items-center gap-1' : ''}`}>
-          {course.popular && "⭐"} {course.badge}
-        </span>
+        <h3 className="font-serif text-xl font-semibold text-white leading-tight mb-2 group-hover:text-[#C9A227] transition-colors">
+          {course.name}
+        </h3>
         
-        <h3 className="font-serif text-xl font-semibold text-white leading-tight mb-2">{course.name}</h3>
-        
-        <div className="inline-flex items-center gap-1.5 bg-[rgba(201,162,39,0.12)] border border-[rgba(201,162,39,0.35)] rounded-full px-3 py-1.5 text-[10px] font-semibold tracking-[1.5px] text-[#E8C050] mb-2.5">
-          <span>💻</span> {course.mode}
+        <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[1px] text-[#C9A227] mb-3">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          {course.mode}
         </div>
         
-        <p className="text-xs text-[#d0daf0] leading-relaxed mb-5">{course.desc}</p>
+        <p className="text-sm text-[#d0daf0] leading-relaxed mb-5 line-clamp-3">{course.desc}</p>
         
-        {/* Meta */}
+        {/* Footer */}
         <div className="flex items-center justify-between pt-4 border-t border-[rgba(255,255,255,0.06)]">
-          <span className="text-[11px] text-[rgba(255,255,255,0.35)] tracking-[1px]">⏱ {course.duration}</span>
-          {course.price && (
-            <span className="font-serif text-[22px] font-bold text-[#C9A227]">{course.price}</span>
+          {course.price ? (
+            <div>
+              <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider">A partir de</span>
+              <div className="font-serif text-xl font-bold text-[#C9A227]">{course.price}</div>
+            </div>
+          ) : (
+            <div>
+              <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider">Diplome</span>
+              <div className="text-sm font-medium text-white">Reconnu Etat</div>
+            </div>
           )}
-        </div>
 
-        {/* CTA */}
-        <Link
-          href="#inscription"
-          className="flex items-center justify-center gap-2.5 mt-4 px-5 py-3.5 bg-[#C9A227] text-[#0D2545] text-[11px] font-bold tracking-[2px] uppercase rounded no-underline transition-all duration-250 hover:bg-[#E8C050] hover:-translate-y-0.5"
-        >
-          <span>✍️</span>
-          <span>Je m&apos;inscris</span>
-        </Link>
+          <Link
+            href="#inscription"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-[rgba(201,162,39,0.15)] border border-[rgba(201,162,39,0.3)] text-[#E8C050] text-[10px] font-bold tracking-[1.5px] uppercase rounded-lg transition-all duration-300 hover:bg-[#C9A227] hover:text-[#0D2545] hover:border-[#C9A227]"
+          >
+            S&apos;inscrire
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </div>
   )
@@ -126,7 +163,7 @@ export function CoursesSection() {
             entry.target.querySelectorAll('.reveal').forEach((el, i) => {
               setTimeout(() => {
                 el.classList.add('visible')
-              }, i * 100)
+              }, i * 80)
             })
           }
         })
@@ -142,23 +179,38 @@ export function CoursesSection() {
   }, [])
 
   return (
-    <section id="formations" ref={sectionRef} className="py-[120px] px-6 md:px-[60px] bg-[rgba(13,37,69,0.2)]">
-      <div className="text-center mb-[60px]">
-        <p className="reveal text-[10px] font-semibold tracking-[5px] uppercase text-[#C9A227] mb-3">
-          Catalogue
-        </p>
-        <h2 className="reveal font-serif text-[clamp(36px,4vw,56px)] font-semibold inline-block">
-          Nos <em className="italic text-[#C9A227] font-light">formations</em>
-        </h2>
-        <p className="reveal text-[15px] text-[#d0daf0] max-w-[600px] mx-auto mt-4">
-          Accedez a des formations d&apos;excellence creees par des experts du metier. Apprenez a votre rythme, validez vos acquis et obtenez un diplome ou certificat reconnu.
-        </p>
-      </div>
+    <section id="formations" ref={sectionRef} className="py-[120px] px-6 md:px-[60px] bg-[rgba(13,37,69,0.15)]">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <p className="reveal text-[10px] font-semibold tracking-[5px] uppercase text-[#C9A227] mb-4">
+            Catalogue de formations
+          </p>
+          <h2 className="reveal font-serif text-[clamp(36px,4vw,56px)] font-semibold text-white mb-4">
+            Nos <em className="italic text-[#C9A227] font-light">formations</em> d&apos;excellence
+          </h2>
+          <p className="reveal text-base text-[#d0daf0] max-w-[600px] mx-auto leading-relaxed">
+            Des parcours complets concus par des experts du metier. Apprenez a votre rythme, validez vos acquis et obtenez un diplome reconnu.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course, index) => (
-          <CourseCard key={course.name} course={course} index={index} />
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course, index) => (
+            <CourseCard key={course.name} course={course} index={index} />
+          ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="reveal text-center mt-16">
+          <Link
+            href="#formations"
+            className="inline-flex items-center gap-3 text-[#C9A227] text-sm font-medium hover:underline underline-offset-4"
+          >
+            Voir toutes nos formations
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </section>
   )
