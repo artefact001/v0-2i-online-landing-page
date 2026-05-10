@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useAuth } from '@/lib/auth-context'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,22 +14,39 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
   const router = useRouter()
+  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
 
-    const result = await login(email, password)
-    
-    if (result.success) {
-      // Redirect based on role
-      const storedUser = localStorage.getItem('2ionline_user')
-      if (storedUser) {
-        const user = JSON.parse(storedUser)
-        switch (user.role) {
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        setError(signInError.message === 'Invalid login credentials' 
+          ? 'Email ou mot de passe incorrect' 
+          : signInError.message)
+        setIsLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Get user profile to determine role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        // Redirect based on role
+        const role = profile?.role || 'student'
+        switch (role) {
           case 'admin':
             router.push('/dashboard/admin')
             break
@@ -42,9 +59,11 @@ export default function LoginPage() {
           default:
             router.push('/')
         }
+        router.refresh()
       }
-    } else {
-      setError(result.error || 'Une erreur est survenue')
+    } catch (err) {
+      setError('Une erreur est survenue')
+      console.error(err)
     }
     
     setIsLoading(false)
@@ -102,7 +121,7 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-[rgba(255,255,255,0.8)]">
                   Mot de passe
                 </Label>
-                <Link href="#" className="text-sm text-[#C9A227] hover:underline">
+                <Link href="/forgot-password" className="text-sm text-[#C9A227] hover:underline">
                   Mot de passe oublié?
                 </Link>
               </div>
@@ -136,29 +155,27 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-8 p-4 bg-[rgba(201,162,39,0.1)] border border-[rgba(201,162,39,0.2)] rounded-lg">
-            <h3 className="text-[#C9A227] font-semibold text-sm mb-3">Comptes de démonstration</h3>
-            <div className="space-y-2 text-xs text-[rgba(255,255,255,0.7)]">
-              <div className="flex justify-between">
-                <span className="font-medium">Admin:</span>
-                <span>admin@2ionline.com / admin123</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Professeur:</span>
-                <span>chef.kouame@2ionline.com / prof123</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Élève:</span>
-                <span>eleve.marie@2ionline.com / eleve123</span>
-              </div>
-            </div>
+          <div className="mt-8 flex items-center gap-4">
+            <div className="flex-1 h-px bg-[rgba(255,255,255,0.1)]" />
+            <span className="text-[rgba(255,255,255,0.4)] text-sm">ou</span>
+            <div className="flex-1 h-px bg-[rgba(255,255,255,0.1)]" />
+          </div>
+
+          <div className="mt-6">
+            <Link href="/inscription">
+              <Button
+                variant="outline"
+                className="w-full h-12 bg-transparent border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)] hover:border-[#C9A227]"
+              >
+                Créer un compte
+              </Button>
+            </Link>
           </div>
 
           <p className="mt-8 text-center text-[rgba(255,255,255,0.5)] text-sm">
-            Pas encore inscrit?{' '}
-            <Link href="/#tarifs" className="text-[#C9A227] hover:underline">
-              Découvrir nos formations
+            Découvrez nos formations professionnelles{' '}
+            <Link href="/#formations" className="text-[#C9A227] hover:underline">
+              ici
             </Link>
           </p>
         </div>
