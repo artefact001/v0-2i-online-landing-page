@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useAuth, UserRole } from '@/lib/auth-context'
+import { useAuth, UserProfile } from '@/components/auth-guard'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -66,12 +66,11 @@ const adminNavItems: NavItem[] = [
     ),
   },
   {
-    href: '/dashboard/admin/settings',
-    label: 'Paramètres',
+    href: '/dashboard/admin/payments',
+    label: 'Paiements',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
@@ -84,15 +83,6 @@ const professorNavItems: NavItem[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-  },
-  {
-    href: '/dashboard/professor/classes',
-    label: 'Mes Classes',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
     ),
   },
@@ -164,6 +154,8 @@ const studentNavItems: NavItem[] = [
   },
 ]
 
+type UserRole = 'admin' | 'professor' | 'student'
+
 function getNavItems(role: UserRole): NavItem[] {
   switch (role) {
     case 'admin':
@@ -178,12 +170,12 @@ function getNavItems(role: UserRole): NavItem[] {
 }
 
 export function DashboardSidebar() {
-  const { user, logout } = useAuth()
+  const { profile, signOut } = useAuth()
   const pathname = usePathname()
 
-  if (!user) return null
+  if (!profile) return null
 
-  const navItems = getNavItems(user.role)
+  const navItems = getNavItems(profile.role)
 
   const getRoleBadge = (role: UserRole) => {
     switch (role) {
@@ -196,7 +188,8 @@ export function DashboardSidebar() {
     }
   }
 
-  const roleBadge = getRoleBadge(user.role)
+  const roleBadge = getRoleBadge(profile.role)
+  const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-64 bg-[#0d0d1a] border-r border-[rgba(255,255,255,0.05)] flex flex-col z-40">
@@ -242,16 +235,16 @@ export function DashboardSidebar() {
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[rgba(255,255,255,0.05)] transition-colors">
               <div className="relative w-10 h-10 rounded-full overflow-hidden bg-[rgba(255,255,255,0.1)]">
-                {user.avatar ? (
-                  <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                {profile.avatar_url ? (
+                  <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-white font-semibold">
-                    {user.name.charAt(0)}
+                    {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               <div className="flex-1 text-left">
-                <p className="text-white font-medium text-sm truncate">{user.name}</p>
+                <p className="text-white font-medium text-sm truncate">{displayName}</p>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${roleBadge.color}`}>
                   {roleBadge.label}
                 </span>
@@ -277,7 +270,7 @@ export function DashboardSidebar() {
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-[rgba(255,255,255,0.1)]" />
             <DropdownMenuItem 
-              onClick={logout}
+              onClick={signOut}
               className="text-red-400 focus:bg-red-500/10 focus:text-red-400"
             >
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,8 +286,6 @@ export function DashboardSidebar() {
 }
 
 export function DashboardHeader({ title, subtitle }: { title: string; subtitle?: string }) {
-  const { user } = useAuth()
-  
   return (
     <header className="h-16 bg-[#0d0d1a]/80 backdrop-blur-lg border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between px-8 sticky top-0 z-30">
       <div>
