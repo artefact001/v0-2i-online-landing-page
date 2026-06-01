@@ -22,7 +22,6 @@ export function Navbar() {
     { href: "/cours-archive", label: "Bibliothèque" },
     { href: "/actualites", label: "Actu & Opportunités" },
     { href: "#tarifs", label: "Tarifs" },
-    { href: "#faq", label: "FAQ" },
   ]
 
   return (
