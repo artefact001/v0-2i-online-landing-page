@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { run, end } from "./db.mjs"
+import { run } from "./db.mjs"
 
 const sql = readFileSync(new URL("./seed.sql", import.meta.url), "utf8")
 try {
@@ -8,6 +8,4 @@ try {
 } catch (e) {
   console.error("SEED ERROR:", e.message)
   process.exitCode = 1
-} finally {
-  await end()
 }
