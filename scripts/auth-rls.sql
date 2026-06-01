@@ -47,7 +47,7 @@ begin
   foreach t in array array[
     'profiles','formations','professor_formations','modules','lessons','exercises',
     'exercise_submissions','enrollments','payments','lesson_progress','live_sessions',
-    'session_attendance','certificates','notes','favorites','forum_topics','forum_replies',
+    'certificates','notes','favorites','forum_topics','forum_replies',
     'messages','badges','user_badges','user_points','promo_codes','affiliates','referrals'
   ]
   loop
@@ -90,23 +90,20 @@ end $$;
 do $$
 declare t text;
 begin
-  foreach t in array array['exercise_submissions','enrollments','payments','lesson_progress','session_attendance','certificates','notes','favorites']
+  foreach t in array array['exercise_submissions','enrollments','payments','lesson_progress','certificates','notes','favorites','user_badges','user_points']
   loop
     execute format('drop policy if exists %I_owner on public.%I;', t, t);
     execute format('create policy %I_owner on public.%I for all using (student_id = auth.uid() or public.is_professor()) with check (student_id = auth.uid() or public.is_professor());', t, t);
   end loop;
 end $$;
 
--- user_id owned tables
-do $$
-declare t text;
-begin
-  foreach t in array array['user_badges','user_points','affiliates','referrals']
-  loop
-    execute format('drop policy if exists %I_owner on public.%I;', t, t);
-    execute format('create policy %I_owner on public.%I for all using (user_id = auth.uid() or public.is_professor()) with check (user_id = auth.uid() or public.is_professor());', t, t);
-  end loop;
-end $$;
+-- affiliates (user_id)
+drop policy if exists affiliates_owner on public.affiliates;
+create policy affiliates_owner on public.affiliates for all using (user_id = auth.uid() or public.is_admin()) with check (user_id = auth.uid() or public.is_admin());
+
+-- referrals (via referred user or admin)
+drop policy if exists referrals_owner on public.referrals;
+create policy referrals_owner on public.referrals for all using (referred_user_id = auth.uid() or public.is_admin()) with check (public.is_admin() or referred_user_id = auth.uid());
 
 -- forum write (author)
 drop policy if exists forum_topics_write on public.forum_topics;
