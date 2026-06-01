@@ -20,6 +20,7 @@ export function Navbar() {
     { href: "#formations", label: "Formations" },
     { href: "/cours-live", label: "Cours Live", isLive: true },
     { href: "/cours-archive", label: "Bibliothèque" },
+    { href: "/actualites", label: "Actu & Opportunités" },
     { href: "#tarifs", label: "Tarifs" },
     { href: "#faq", label: "FAQ" },
   ]
