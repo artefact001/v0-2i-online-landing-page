@@ -1,6 +1,9 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 export type UserRole = 'admin' | 'professor' | 'student'
 
@@ -8,8 +11,12 @@ export interface User {
   id: string
   email: string
   name: string
+  first_name: string
+  last_name: string
   role: UserRole
   avatar?: string
+  avatar_url?: string | null
+  phone?: string | null
   formation?: string
   createdAt: string
 }
@@ -17,112 +24,120 @@ export interface User {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>
+  logout: () => Promise<void>
+  refresh: () => Promise<void>
   isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Demo users for testing
-const DEMO_USERS: (User & { password: string })[] = [
-  {
-    id: '1',
-    email: 'admin@2ionline.com',
-    password: 'admin123',
-    name: 'Administrateur Principal',
-    role: 'admin',
-    avatar: '/images/testimonial-2.jpg',
-    createdAt: '2024-01-01',
-  },
-  {
-    id: '2',
-    email: 'chef.kouame@2ionline.com',
-    password: 'prof123',
-    name: 'Chef Kouamé Yao',
-    role: 'professor',
-    avatar: '/images/testimonial-1.jpg',
-    formation: 'CAP Cuisine',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '3',
-    email: 'prof.diallo@2ionline.com',
-    password: 'prof123',
-    name: 'Professeur Amadou Diallo',
-    role: 'professor',
-    avatar: '/images/testimonial-3.jpg',
-    formation: 'CAP Service',
-    createdAt: '2024-02-01',
-  },
-  {
-    id: '4',
-    email: 'eleve.marie@2ionline.com',
-    password: 'eleve123',
-    name: 'Marie Koné',
-    role: 'student',
-    avatar: '/images/testimonial-1.jpg',
-    formation: 'CAP Cuisine',
-    createdAt: '2024-03-01',
-  },
-  {
-    id: '5',
-    email: 'eleve.jean@2ionline.com',
-    password: 'eleve123',
-    name: 'Jean-Baptiste Mensah',
-    role: 'student',
-    avatar: '/images/testimonial-2.jpg',
-    formation: 'CAP Service',
-    createdAt: '2024-03-15',
-  },
-]
+function buildUser(authUser: SupabaseUser, profile: Record<string, unknown> | null): User {
+  const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>
+  const firstName = (profile?.first_name as string) || (meta.first_name as string) || ''
+  const lastName = (profile?.last_name as string) || (meta.last_name as string) || ''
+  const role = ((profile?.role as UserRole) || (meta.role as UserRole) || 'student') as UserRole
+  const avatarUrl = (profile?.avatar_url as string) ?? null
+  const name = [firstName, lastName].filter(Boolean).join(' ') || (authUser.email ?? 'Utilisateur')
+
+  return {
+    id: authUser.id,
+    email: authUser.email ?? '',
+    name,
+    first_name: firstName,
+    last_name: lastName,
+    role,
+    avatar: avatarUrl ?? undefined,
+    avatar_url: avatarUrl,
+    phone: (profile?.phone as string) ?? null,
+    formation: (profile?.formation as string) ?? undefined,
+    createdAt: (profile?.created_at as string) || authUser.created_at || new Date().toISOString(),
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
+
+  const loadProfile = useCallback(
+    async (authUser: SupabaseUser | null) => {
+      if (!authUser) {
+        setUser(null)
+        return null
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle()
+
+      const built = buildUser(authUser, profile)
+      setUser(built)
+      return built
+    },
+    [supabase],
+  )
+
+  const refresh = useCallback(async () => {
+    const { data } = await supabase.auth.getUser()
+    await loadProfile(data.user ?? null)
+  }, [supabase, loadProfile])
 
   useEffect(() => {
-    // Check for stored session
-    const storedUser = localStorage.getItem('2ionline_user')
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem('2ionline_user')
-      }
-    }
-    setIsLoading(false)
-  }, [])
+    let active = true
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    setIsLoading(true)
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    const foundUser = DEMO_USERS.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    )
-    
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser
-      setUser(userWithoutPassword)
-      localStorage.setItem('2ionline_user', JSON.stringify(userWithoutPassword))
+    async function init() {
+      const { data } = await supabase.auth.getUser()
+      if (!active) return
+      await loadProfile(data.user ?? null)
+      if (active) setIsLoading(false)
+    }
+
+    init()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await loadProfile(session?.user ?? null)
       setIsLoading(false)
-      return { success: true }
-    }
-    
-    setIsLoading(false)
-    return { success: false, error: 'Email ou mot de passe incorrect' }
-  }
+    })
 
-  const logout = () => {
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
+  }, [supabase, loadProfile])
+
+  const login = useCallback(
+    async (email: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        const message =
+          error.message === 'Invalid login credentials'
+            ? 'Email ou mot de passe incorrect'
+            : error.message === 'Email not confirmed'
+              ? 'Veuillez confirmer votre email avant de vous connecter'
+              : error.message
+        return { success: false, error: message }
+      }
+
+      const built = await loadProfile(data.user)
+      return { success: true, role: built?.role }
+    },
+    [supabase, loadProfile],
+  )
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem('2ionline_user')
-  }
+  }, [supabase])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, logout, refresh, isAuthenticated: !!user }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -135,5 +150,3 @@ export function useAuth() {
   }
   return context
 }
-
-export { DEMO_USERS }

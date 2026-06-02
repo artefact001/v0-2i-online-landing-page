@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,49 +23,34 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const result = await login(email, password)
 
-      if (signInError) {
-        setError(signInError.message === 'Invalid login credentials' 
-          ? 'Email ou mot de passe incorrect' 
-          : signInError.message)
+      if (!result.success) {
+        setError(result.error || 'Une erreur est survenue')
         setIsLoading(false)
         return
       }
 
-      if (data.user) {
-        // Get user profile to determine role
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
-
-        // Redirect based on role
-        const role = profile?.role || 'student'
-        switch (role) {
-          case 'admin':
-            router.push('/dashboard/admin')
-            break
-          case 'professor':
-            router.push('/dashboard/professor')
-            break
-          case 'student':
-            router.push('/dashboard/student')
-            break
-          default:
-            router.push('/')
-        }
-        router.refresh()
+      // Redirect based on role
+      switch (result.role) {
+        case 'admin':
+          router.push('/dashboard/admin')
+          break
+        case 'professor':
+          router.push('/dashboard/professor')
+          break
+        case 'student':
+          router.push('/dashboard/student')
+          break
+        default:
+          router.push('/dashboard/student')
       }
+      router.refresh()
     } catch (err) {
       setError('Une erreur est survenue')
-      console.error(err)
+      console.error('[v0] Login error:', err)
     }
-    
+
     setIsLoading(false)
   }
 

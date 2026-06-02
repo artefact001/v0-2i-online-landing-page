@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { User } from '@supabase/supabase-js'
+import { useAuth as useAuthContext, UserRole } from '@/lib/auth-context'
 
 export interface UserProfile {
   id: string
@@ -12,79 +11,43 @@ export interface UserProfile {
   last_name: string | null
   phone: string | null
   avatar_url: string | null
-  role: 'admin' | 'professor' | 'student'
+  role: UserRole
   is_active: boolean
   created_at: string
 }
 
 interface AuthGuardProps {
   children: React.ReactNode
-  allowedRoles?: ('admin' | 'professor' | 'student')[]
+  allowedRoles?: UserRole[]
 }
 
 export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, isLoading } = useAuthContext()
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        router.push('/login')
-        return
-      }
+    if (isLoading) return
 
-      setUser(user)
-
-      // Get profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (profile) {
-        setProfile(profile)
-
-        // Check role access
-        if (allowedRoles && !allowedRoles.includes(profile.role)) {
-          // Redirect to appropriate dashboard
-          switch (profile.role) {
-            case 'admin':
-              router.push('/dashboard/admin')
-              break
-            case 'professor':
-              router.push('/dashboard/professor')
-              break
-            case 'student':
-              router.push('/dashboard/student')
-              break
-            default:
-              router.push('/')
-          }
-          return
-        }
-      }
-
-      setLoading(false)
+    if (!user) {
+      router.push('/login')
+      return
     }
 
-    checkAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        router.push('/login')
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
+      switch (user.role) {
+        case 'admin':
+          router.push('/dashboard/admin')
+          break
+        case 'professor':
+          router.push('/dashboard/professor')
+          break
+        default:
+          router.push('/dashboard/student')
       }
-    })
+    }
+  }, [user, isLoading, allowedRoles, router])
 
-    return () => subscription.unsubscribe()
-  }, [supabase, router, allowedRoles])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -95,57 +58,31 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
     )
   }
 
+  if (!user) return null
+
   return <>{children}</>
 }
 
+/**
+ * Compatibility hook for components that expect a `profile` object and `signOut`.
+ * Delegates to the single unified Supabase auth context.
+ */
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-  const router = useRouter()
+  const { user, isLoading, logout } = useAuthContext()
 
-  useEffect(() => {
-    async function getUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
-        
-        setProfile(profile)
+  const profile: UserProfile | null = user
+    ? {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name || null,
+        last_name: user.last_name || null,
+        phone: user.phone ?? null,
+        avatar_url: user.avatar_url ?? null,
+        role: user.role,
+        is_active: true,
+        created_at: user.createdAt,
       }
+    : null
 
-      setLoading(false)
-    }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => setProfile(data))
-      } else {
-        setProfile(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
-
-  const signOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
-  return { user, profile, loading, signOut }
+  return { user, profile, loading: isLoading, signOut: logout }
 }
