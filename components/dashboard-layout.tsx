@@ -105,7 +105,7 @@ const professorNavItems: NavItem[] = [
     ),
   },
   {
-    href: '/dashboard/professor/live-sessions',
+    href: '/dashboard/professor/live',
     label: 'Session Live',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
