@@ -88,9 +88,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true
 
     async function init() {
-      const { data } = await supabase.auth.getUser()
+      // getSession reads from local storage/cookies (no network), avoiding lock contention
+      const { data } = await supabase.auth.getSession()
       if (!active) return
-      await loadProfile(data.user ?? null)
+      await loadProfile(data.session?.user ?? null)
       if (active) setIsLoading(false)
     }
 
@@ -98,9 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      await loadProfile(session?.user ?? null)
-      setIsLoading(false)
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // IMPORTANT: do not `await` Supabase calls directly inside this callback.
+      // supabase-js holds an internal lock during the callback; awaiting another
+      // Supabase request here causes a deadlock. Defer the work instead.
+      const sessionUser = session?.user ?? null
+      setTimeout(() => {
+        if (!active) return
+        loadProfile(sessionUser).finally(() => {
+          if (active) setIsLoading(false)
+        })
+      }, 0)
     })
 
     return () => {
