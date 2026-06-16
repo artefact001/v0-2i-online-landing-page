@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { 
   FORMATIONS, 
@@ -287,41 +288,53 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button 
-                  variant="outline" 
+                <Button
+                  asChild
+                  variant="outline"
                   className="h-auto py-6 flex flex-col gap-2 border-[rgba(255,255,255,0.1)] text-white hover:bg-[#C9A227]/10 hover:border-[#C9A227]/50"
                 >
-                  <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                  </svg>
-                  Ajouter un élève
+                  <Link href="/dashboard/admin/users?new=student">
+                    <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Ajouter un élève
+                  </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  asChild
+                  variant="outline"
                   className="h-auto py-6 flex flex-col gap-2 border-[rgba(255,255,255,0.1)] text-white hover:bg-[#C9A227]/10 hover:border-[#C9A227]/50"
                 >
-                  <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Nouveau professeur
+                  <Link href="/dashboard/admin/users?new=professor">
+                    <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Nouveau professeur
+                  </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  asChild
+                  variant="outline"
                   className="h-auto py-6 flex flex-col gap-2 border-[rgba(255,255,255,0.1)] text-white hover:bg-[#C9A227]/10 hover:border-[#C9A227]/50"
                 >
-                  <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Lancer un live
+                  <Link href="/dashboard/admin/live-sessions">
+                    <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Lancer un live
+                  </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  asChild
+                  variant="outline"
                   className="h-auto py-6 flex flex-col gap-2 border-[rgba(255,255,255,0.1)] text-white hover:bg-[#C9A227]/10 hover:border-[#C9A227]/50"
                 >
-                  <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Voir rapports
+                  <Link href="/dashboard/admin/analytics">
+                    <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Voir rapports
+                  </Link>
                 </Button>
               </div>
             </CardContent>
