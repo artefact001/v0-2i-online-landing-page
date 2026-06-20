@@ -15,6 +15,8 @@ interface Lesson {
   title: string
   description: string
   video_url: string | null
+  content: string | null
+  content_type: string | null
   duration_minutes: number
   order_index: number
   is_published: boolean
