@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, Play, Eye, Upload } from 'lucide-react'
+import { Edit, Trash2, Plus, Play, Eye, Upload, FileText } from 'lucide-react'
 
 interface Lesson {
   id: string
@@ -53,11 +53,15 @@ export default function LessonsPage() {
     title: '',
     description: '',
     video_url: '',
+    content: '',
+    content_type: 'video',
     duration_minutes: 0,
     order_index: 0,
     is_published: false,
     is_free_preview: false,
   })
+  const [pdfName, setPdfName] = useState('')
+  const [pdfUploading, setPdfUploading] = useState(false)
 
   const supabase = createClient()
 
@@ -186,13 +190,44 @@ export default function LessonsPage() {
       title: '',
       description: '',
       video_url: '',
+      content: '',
+      content_type: 'video',
       duration_minutes: 0,
       order_index: 0,
       is_published: false,
       is_free_preview: false,
     })
+    setPdfName('')
     setEditingId(null)
     setIsCreating(false)
+  }
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.type !== 'application/pdf') {
+      alert('Veuillez sélectionner un fichier PDF.')
+      return
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      alert('Le PDF doit faire moins de 4 Mo. Pour des fichiers plus volumineux, collez une URL publique du PDF.')
+      return
+    }
+    setPdfUploading(true)
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      setFormData((prev) => ({ ...prev, content: dataUrl, content_type: 'pdf' }))
+      setPdfName(file.name)
+    } catch {
+      alert('Échec du chargement du PDF.')
+    } finally {
+      setPdfUploading(false)
+    }
   }
 
   const handleEdit = (lesson: Lesson) => {
@@ -200,11 +235,14 @@ export default function LessonsPage() {
       title: lesson.title,
       description: lesson.description,
       video_url: lesson.video_url || '',
+      content: lesson.content || '',
+      content_type: lesson.content_type || 'video',
       duration_minutes: lesson.duration_minutes,
       order_index: lesson.order_index,
       is_published: lesson.is_published,
       is_free_preview: lesson.is_free_preview,
     })
+    setPdfName(lesson.content_type === 'pdf' && lesson.content ? 'Document PDF joint' : '')
     setEditingId(lesson.id)
     setIsCreating(true)
   }
@@ -312,6 +350,56 @@ export default function LessonsPage() {
                 </p>
               </div>
 
+              {/* PDF support */}
+              <div className="space-y-2 rounded-lg border border-dashed border-[rgba(201,162,39,0.3)] p-4">
+                <Label className="text-[rgba(255,255,255,0.8)] flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#C9A227]" />
+                  Support de cours (PDF)
+                </Label>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-[rgba(255,255,255,0.05)] px-4 py-2 text-sm text-white transition-colors hover:bg-[rgba(255,255,255,0.1)]">
+                    <Upload className="h-4 w-4" />
+                    {pdfUploading ? 'Chargement...' : 'Choisir un PDF'}
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handlePdfUpload}
+                      className="hidden"
+                      disabled={pdfUploading}
+                    />
+                  </label>
+                  {(pdfName || (formData.content_type === 'pdf' && formData.content)) && (
+                    <div className="flex items-center gap-2 text-sm text-[#C9A227]">
+                      <FileText className="h-4 w-4" />
+                      <span className="truncate max-w-[200px]">{pdfName || 'Document PDF joint'}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, content: '', content_type: formData.video_url ? 'video' : 'text' })
+                          setPdfName('')
+                        }}
+                        className="text-[rgba(255,255,255,0.5)] hover:text-red-400"
+                        aria-label="Retirer le PDF"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-[rgba(255,255,255,0.5)]">
+                  Téléversez un PDF (max 4 Mo) ou collez une URL publique ci-dessous.
+                </p>
+                <Input
+                  value={formData.content_type === 'pdf' && !formData.content?.startsWith('data:') ? formData.content : ''}
+                  onChange={(e) => {
+                    setFormData({ ...formData, content: e.target.value, content_type: 'pdf' })
+                    setPdfName(e.target.value ? 'Lien PDF externe' : '')
+                  }}
+                  placeholder="https://exemple.com/support-de-cours.pdf"
+                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-[rgba(255,255,255,0.8)]">Durée (minutes)</Label>
@@ -408,6 +496,11 @@ export default function LessonsPage() {
                     <span>Durée: {lesson.duration_minutes} min</span>
                     <span>Ordre: {lesson.order_index}</span>
                     {lesson.video_url && <span className="text-[#C9A227]">✓ Vidéo jointe</span>}
+                    {lesson.content_type === 'pdf' && lesson.content && (
+                      <span className="text-[#C9A227] flex items-center gap-1">
+                        <FileText className="w-3 h-3" /> PDF joint
+                      </span>
+                    )}
                   </div>
                 </div>
 
