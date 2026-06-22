@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, Book, Eye } from 'lucide-react'
+import { Edit, Trash2, Plus, Book, Layers, CheckCircle2, FileText } from 'lucide-react'
+import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 
 interface Module {
   id: string
@@ -166,40 +166,35 @@ export default function ModulesPage() {
     setIsCreating(true)
   }
 
+  const publishedCount = modules.filter((m) => m.is_published).length
+  const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-serif font-bold text-white">Gestion des modules</h1>
-        <Button
-          onClick={() => setIsCreating(!isCreating)}
-          className="bg-[#C9A227] hover:bg-[#B8860B] text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouveau module
-        </Button>
+      <SectionHeader
+        icon={<Layers className="h-7 w-7" />}
+        title="Gestion des modules"
+        description="Organisez votre formation en modules thématiques. Chaque module regroupe plusieurs leçons et exercices."
+        action={
+          <Button onClick={() => setIsCreating(!isCreating)} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            Nouveau module
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Modules" value={modules.length} icon={<Book className="h-5 w-5" />} />
+        <StatCard label="Publiés" value={publishedCount} icon={<CheckCircle2 className="h-5 w-5" />} />
+        <StatCard label="Leçons totales" value={totalLessons} icon={<FileText className="h-5 w-5" />} />
       </div>
 
-      {/* Formation Selector */}
-      <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
-        <CardHeader>
-          <CardTitle className="text-white">Sélectionner une formation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedFormation} onValueChange={setSelectedFormation}>
-            <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-              {formations.map((f) => (
-                <SelectItem key={f.id} value={f.id} className="text-white">
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      {formations.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Formation</p>
+          <FormationPills formations={formations} selected={selectedFormation} onSelect={setSelectedFormation} />
+        </div>
+      )}
 
       {/* Create/Edit Form */}
       {isCreating && (
@@ -283,57 +278,69 @@ export default function ModulesPage() {
       {/* Modules List */}
       <div className="space-y-3">
         {modules.map((module) => (
-          <Card key={module.id} className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Book className="w-5 h-5 text-[#C9A227]" />
-                    <h3 className="text-lg font-semibold text-white">{module.title}</h3>
-                    {module.is_published && (
-                      <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">
-                        Publié
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2">{module.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
-                    <span>Ordre: {module.order_index}</span>
-                    <span>Leçons: {module.lessons?.length || 0}</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleEdit(module)}
-                    variant="outline"
-                    size="sm"
-                    className="border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    onClick={() => handleDelete(module.id)}
-                    variant="outline"
-                    size="sm"
-                    className="border-red-500/20 text-red-400 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+          <div
+            key={module.id}
+            className="group flex items-start gap-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5 transition-all hover:border-[rgba(201,162,39,0.4)] hover:bg-[#1d1d33]"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#C9A227]/10 text-lg font-bold text-[#C9A227]">
+              {module.order_index || '–'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex flex-wrap items-center gap-3">
+                <h3 className="text-lg font-semibold text-white">{module.title}</h3>
+                {module.is_published ? (
+                  <span className="rounded-full bg-green-500/15 px-2.5 py-0.5 text-xs font-medium text-green-400">
+                    Publié
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2.5 py-0.5 text-xs font-medium text-[rgba(255,255,255,0.5)]">
+                    Brouillon
+                  </span>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              <p className="mb-3 line-clamp-2 text-sm text-[rgba(255,255,255,0.55)]">{module.description}</p>
+              <div className="flex items-center gap-2 text-xs text-[rgba(255,255,255,0.5)]">
+                <FileText className="h-3.5 w-3.5 text-[#C9A227]" />
+                <span>{module.lessons?.length || 0} leçon(s)</span>
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                onClick={() => handleEdit(module)}
+                variant="outline"
+                size="sm"
+                className="border-[rgba(255,255,255,0.15)] text-white hover:border-[#C9A227]/50 hover:bg-[#C9A227]/10"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={() => handleDelete(module.id)}
+                variant="outline"
+                size="sm"
+                className="border-red-500/20 text-red-400 hover:bg-red-500/10"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 
       {modules.length === 0 && !isCreating && (
-        <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
-          <CardContent className="pt-12 text-center">
-            <Book className="w-12 h-12 text-[rgba(255,255,255,0.2)] mx-auto mb-4" />
-            <p className="text-[rgba(255,255,255,0.6)]">Aucun module créé</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-dashed border-[rgba(255,255,255,0.15)] bg-[#1a1a2e] py-16 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(255,255,255,0.04)]">
+            <Layers className="h-8 w-8 text-[rgba(255,255,255,0.25)]" />
+          </div>
+          <p className="text-[rgba(255,255,255,0.6)]">Aucun module pour cette formation</p>
+          <Button
+            onClick={() => setIsCreating(true)}
+            variant="outline"
+            className="mt-4 border-[#C9A227]/40 text-[#C9A227] hover:bg-[#C9A227]/10"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Créer le premier module
+          </Button>
+        </div>
       )}
     </div>
   )

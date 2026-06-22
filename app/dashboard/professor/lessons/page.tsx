@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, Play, Eye, Upload, FileText } from 'lucide-react'
+import { Edit, Trash2, Plus, Play, Eye, Upload, FileText, BookOpen } from 'lucide-react'
+import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 
 interface Lesson {
   id: string
@@ -247,61 +248,50 @@ export default function LessonsPage() {
     setIsCreating(true)
   }
 
+  const publishedLessons = lessons.filter((l) => l.is_published).length
+  const pdfLessons = lessons.filter((l) => l.content_type === 'pdf' && l.content).length
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-serif font-bold text-white">Gestion des leçons</h1>
-        <Button
-          onClick={() => setIsCreating(!isCreating)}
-          className="bg-[#C9A227] hover:bg-[#B8860B] text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvelle leçon
-        </Button>
+      <SectionHeader
+        icon={<BookOpen className="h-7 w-7" />}
+        title="Gestion des leçons"
+        description="Créez vos leçons avec vidéos et supports PDF. Sélectionnez une formation et un module pour commencer."
+        action={
+          <Button onClick={() => setIsCreating(!isCreating)} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle leçon
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Leçons" value={lessons.length} icon={<BookOpen className="h-5 w-5" />} />
+        <StatCard label="Publiées" value={publishedLessons} icon={<Eye className="h-5 w-5" />} />
+        <StatCard label="Avec PDF" value={pdfLessons} icon={<FileText className="h-5 w-5" />} />
       </div>
 
       {/* Selectors */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
-          <CardHeader>
-            <CardTitle className="text-white text-sm">Formation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedFormation} onValueChange={setSelectedFormation}>
-              <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                {formations.map((f) => (
-                  <SelectItem key={f.id} value={f.id} className="text-white">
-                    {f.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
-          <CardHeader>
-            <CardTitle className="text-white text-sm">Module</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedModule} onValueChange={setSelectedModule}>
-              <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                {modules.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-white">
-                    {m.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+      <div className="space-y-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5">
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Formation</p>
+          <FormationPills formations={formations} selected={selectedFormation} onSelect={setSelectedFormation} />
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Module</p>
+          <Select value={selectedModule} onValueChange={setSelectedModule}>
+            <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white max-w-md">
+              <SelectValue placeholder="Sélectionnez un module" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+              {modules.map((m) => (
+                <SelectItem key={m.id} value={m.id} className="text-white">
+                  {m.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Create/Edit Form */}
