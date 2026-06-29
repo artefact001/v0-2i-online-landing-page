@@ -35,7 +35,8 @@ export default function ModulesPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
+  const [formError, setFormError] = useState('')
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -92,37 +93,48 @@ export default function ModulesPage() {
     }
   }
 
+  const validateForm = () => {
+    if (!selectedFormation) return 'Veuillez sélectionner une formation.'
+    if (!formData.title.trim()) return 'Le titre du module est obligatoire.'
+    if (formData.title.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
+    if (formData.order_index < 0) return "L'ordre ne peut pas être négatif."
+    return ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedFormation) return
+    if (isLoading) return
+
+    const validationError = validateForm()
+    if (validationError) {
+      setFormError(validationError)
+      return
+    }
+    setFormError('')
 
     setIsLoading(true)
     try {
+      const payload = {
+        ...formData,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+      }
       if (editingId) {
-        // Update
-        const { error } = await supabase
-          .from('modules')
-          .update(formData)
-          .eq('id', editingId)
-
+        const { error } = await supabase.from('modules').update(payload).eq('id', editingId)
         if (error) throw error
       } else {
-        // Create
-        const { error } = await supabase
-          .from('modules')
-          .insert({
-            ...formData,
-            formation_id: selectedFormation,
-          })
-
+        const { error } = await supabase.from('modules').insert({
+          ...payload,
+          formation_id: selectedFormation,
+        })
         if (error) throw error
       }
 
-      // Reload modules
       await loadModules()
       resetForm()
     } catch (error) {
-      console.error('Error:', error)
+      console.error('[v0] Error saving module:', error)
+      setFormError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
     } finally {
       setIsLoading(false)
     }
@@ -151,6 +163,7 @@ export default function ModulesPage() {
       order_index: 0,
       is_published: false,
     })
+    setFormError('')
     setEditingId(null)
     setIsCreating(false)
   }
@@ -205,7 +218,12 @@ export default function ModulesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              {formError && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
+                  {formError}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
                 <Input

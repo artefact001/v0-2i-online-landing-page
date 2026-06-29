@@ -49,7 +49,8 @@ export default function LessonsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
+  const [formError, setFormError] = useState('')
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -137,34 +138,52 @@ export default function LessonsPage() {
     }
   }
 
+  const validateForm = () => {
+    if (!selectedModule) return 'Veuillez sélectionner un module.'
+    if (!formData.title.trim()) return 'Le titre de la leçon est obligatoire.'
+    if (formData.title.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
+    if (formData.duration_minutes < 0) return 'La durée ne peut pas être négative.'
+    if (formData.order_index < 0) return "L'ordre ne peut pas être négatif."
+    const url = formData.video_url.trim()
+    if (url && !/^https?:\/\//i.test(url)) return "L'URL de la vidéo doit commencer par http:// ou https://."
+    return ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedModule) return
+    if (isLoading) return
+
+    const validationError = validateForm()
+    if (validationError) {
+      setFormError(validationError)
+      return
+    }
+    setFormError('')
 
     setIsLoading(true)
     try {
+      const payload = {
+        ...formData,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        video_url: formData.video_url.trim() || null,
+      }
       if (editingId) {
-        const { error } = await supabase
-          .from('lessons')
-          .update(formData)
-          .eq('id', editingId)
-
+        const { error } = await supabase.from('lessons').update(payload).eq('id', editingId)
         if (error) throw error
       } else {
-        const { error } = await supabase
-          .from('lessons')
-          .insert({
-            ...formData,
-            module_id: selectedModule,
-          })
-
+        const { error } = await supabase.from('lessons').insert({
+          ...payload,
+          module_id: selectedModule,
+        })
         if (error) throw error
       }
 
       await loadLessons()
       resetForm()
     } catch (error) {
-      console.error('Error:', error)
+      console.error('[v0] Error saving lesson:', error)
+      setFormError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
     } finally {
       setIsLoading(false)
     }
@@ -199,6 +218,7 @@ export default function LessonsPage() {
       is_free_preview: false,
     })
     setPdfName('')
+    setFormError('')
     setEditingId(null)
     setIsCreating(false)
   }
@@ -303,9 +323,14 @@ export default function LessonsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                {formError && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
+                    {formError}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
