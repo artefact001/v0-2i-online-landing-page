@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
+import { TablePagination } from '@/components/admin/table-pagination'
 import { PROFESSORS, FORMATIONS, STUDENTS } from '@/lib/platform-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
