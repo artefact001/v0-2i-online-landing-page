@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { DashboardSidebar, DashboardHeader } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -56,7 +56,13 @@ const ROLE_STYLES: Record<ManagedUser["role"], string> = {
 
 type Feedback = { type: "success" | "error"; message: string } | null
 
-export function UsersManager({ initialUsers }: { initialUsers: ManagedUser[] }) {
+export function UsersManager({
+  initialUsers,
+  initialNewRole,
+}: {
+  initialUsers: ManagedUser[]
+  initialNewRole?: ManagedUser["role"] | null
+}) {
   const [users, setUsers] = useState<ManagedUser[]>(initialUsers)
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
@@ -91,16 +97,23 @@ export function UsersManager({ initialUsers }: { initialUsers: ManagedUser[] }) 
     }
   }
 
-  function openCreate() {
+  function openCreate(presetRole: ManagedUser["role"] = "student") {
     setEditing(null)
     setFirstName("")
     setLastName("")
     setEmail("")
     setPhone("")
     setPassword("")
-    setRole("student")
+    setRole(presetRole)
     setFormOpen(true)
   }
+
+  useEffect(() => {
+    if (initialNewRole) {
+      openCreate(initialNewRole)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialNewRole])
 
   function openEdit(u: ManagedUser) {
     setEditing(u)
@@ -265,7 +278,7 @@ export function UsersManager({ initialUsers }: { initialUsers: ManagedUser[] }) 
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={openCreate} className="bg-[#C9A227] text-[#0a0a1a] hover:bg-[#b8941f] font-medium">
+            <Button onClick={() => openCreate()} className="bg-[#C9A227] text-[#0a0a1a] hover:bg-[#b8941f] font-medium">
               + Nouvel utilisateur
             </Button>
           </div>

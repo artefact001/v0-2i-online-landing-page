@@ -7,6 +7,7 @@ import { CoursesNavbar } from "@/components/courses-navbar"
 import { liveCourses, type LiveCourse } from "@/lib/courses-data"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { AuthGuard } from "@/components/auth-guard"
 
 function LiveCourseCard({ course }: { course: LiveCourse }) {
   return (
@@ -115,7 +116,7 @@ function LiveCourseCard({ course }: { course: LiveCourse }) {
   )
 }
 
-export default function CoursLivePage() {
+function CoursLivePageContent() {
   const [filter, setFilter] = useState<string>("all")
   
   const categories = ["all", ...new Set(liveCourses.map(c => c.category))]
@@ -277,5 +278,13 @@ export default function CoursLivePage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function CoursLivePage() {
+  return (
+    <AuthGuard>
+      <CoursLivePageContent />
+    </AuthGuard>
   )
 }

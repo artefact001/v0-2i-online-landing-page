@@ -53,6 +53,27 @@ export default function StudentsPage() {
     formation: '',
   })
 
+  type Student = (typeof STUDENTS)[number]
+  const [viewStudent, setViewStudent] = useState<Student | null>(null)
+  const [editStudent, setEditStudent] = useState<Student | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '', formation: '', status: 'active' })
+
+  const openView = (student: Student) => setViewStudent(student)
+  const openEdit = (student: Student) => {
+    setEditStudent(student)
+    setEditForm({
+      name: student.name,
+      email: student.email,
+      phone: (student as { phone?: string }).phone ?? '',
+      formation: student.formation,
+      status: student.status,
+    })
+  }
+  const handleSaveEdit = () => {
+    console.log('[v0] Saving student edit:', editStudent?.id, editForm)
+    setEditStudent(null)
+  }
+
   const filteredStudents = STUDENTS.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -363,11 +384,11 @@ export default function StudentsPage() {
                           </div>
 
                           <div className="flex gap-2 mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
-                            <Button variant="outline" size="sm" className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]">
+                            <Button onClick={() => openView(student)} variant="outline" size="sm" className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]">
                               Voir profil
                             </Button>
-                            <Button variant="outline" size="sm" className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]">
-                              Contacter
+                            <Button onClick={() => openEdit(student)} variant="outline" size="sm" className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]">
+                              Modifier
                             </Button>
                           </div>
                         </CardContent>
@@ -419,13 +440,13 @@ export default function StudentsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-[rgba(255,255,255,0.5)] hover:text-white">
+                                <Button onClick={() => openView(student)} variant="ghost" size="icon" className="h-8 w-8 text-[rgba(255,255,255,0.5)] hover:text-white" aria-label="Voir le profil">
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                   </svg>
                                 </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-[rgba(255,255,255,0.5)] hover:text-white">
+                                <Button onClick={() => openEdit(student)} variant="ghost" size="icon" className="h-8 w-8 text-[rgba(255,255,255,0.5)] hover:text-white" aria-label="Modifier l'élève">
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                   </svg>
@@ -487,6 +508,154 @@ export default function StudentsPage() {
           </Tabs>
         </div>
       </main>
+
+      {/* View student dialog */}
+      <Dialog open={!!viewStudent} onOpenChange={(open) => !open && setViewStudent(null)}>
+        <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white max-w-lg">
+          {viewStudent && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-serif">Profil de l&apos;élève</DialogTitle>
+                <DialogDescription className="text-[rgba(255,255,255,0.5)]">
+                  Informations détaillées et progression
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-5 py-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden">
+                    <Image src={viewStudent.avatar} alt={viewStudent.name} fill className="object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg">{viewStudent.name}</h3>
+                    <p className="text-[rgba(255,255,255,0.5)] text-sm">{viewStudent.email}</p>
+                    <div className="mt-1">{getStatusBadge(viewStudent.status)}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg bg-[rgba(255,255,255,0.03)]">
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Formation</p>
+                    <p className="text-white text-sm mt-1">{FORMATIONS.find(f => f.id === viewStudent.formation)?.name ?? '—'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[rgba(255,255,255,0.03)]">
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Progression</p>
+                    <p className="text-[#C9A227] text-sm mt-1 font-medium">{viewStudent.progress}%</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[rgba(255,255,255,0.03)]">
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Cours terminés</p>
+                    <p className="text-white text-sm mt-1">{viewStudent.completedCourses}/{viewStudent.totalCourses}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-[rgba(255,255,255,0.03)]">
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Dernière activité</p>
+                    <p className="text-white text-sm mt-1">{new Date(viewStudent.lastActive).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-[rgba(255,255,255,0.5)]">Avancement global</span>
+                    <span className="text-[#C9A227] font-medium">{viewStudent.progress}%</span>
+                  </div>
+                  <Progress value={viewStudent.progress} className="h-2" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setViewStudent(null)} className="text-[rgba(255,255,255,0.7)]">
+                  Fermer
+                </Button>
+                <Button
+                  onClick={() => {
+                    openEdit(viewStudent)
+                    setViewStudent(null)
+                  }}
+                  className="bg-[#C9A227] hover:bg-[#B8860B]"
+                >
+                  Modifier
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit student dialog */}
+      <Dialog open={!!editStudent} onOpenChange={(open) => !open && setEditStudent(null)}>
+        <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-serif">Modifier l&apos;élève</DialogTitle>
+            <DialogDescription className="text-[rgba(255,255,255,0.5)]">
+              Mettez à jour les informations de l&apos;élève
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nom complet</Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Téléphone</Label>
+              <Input
+                id="edit-phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                placeholder="+225 XX XX XX XX"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-formation">Formation</Label>
+                <Select value={editForm.formation} onValueChange={(value) => setEditForm({ ...editForm, formation: value })}>
+                  <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                    <SelectValue placeholder="Formation" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                    {FORMATIONS.map((formation) => (
+                      <SelectItem key={formation.id} value={formation.id} className="text-white focus:bg-[rgba(255,255,255,0.1)]">
+                        {formation.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Statut</Label>
+                <Select value={editForm.status} onValueChange={(value) => setEditForm({ ...editForm, status: value })}>
+                  <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                    <SelectValue placeholder="Statut" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                    <SelectItem value="active" className="text-white focus:bg-[rgba(255,255,255,0.1)]">Actif</SelectItem>
+                    <SelectItem value="inactive" className="text-white focus:bg-[rgba(255,255,255,0.1)]">Inactif</SelectItem>
+                    <SelectItem value="graduated" className="text-white focus:bg-[rgba(255,255,255,0.1)]">Diplômé</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setEditStudent(null)} className="text-[rgba(255,255,255,0.7)]">
+              Annuler
+            </Button>
+            <Button onClick={handleSaveEdit} className="bg-[#C9A227] hover:bg-[#B8860B]">
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

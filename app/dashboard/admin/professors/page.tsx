@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
+import { TablePagination } from '@/components/admin/table-pagination'
 import { PROFESSORS, FORMATIONS, STUDENTS } from '@/lib/platform-data'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -25,9 +26,15 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
+type Professor = (typeof PROFESSORS)[number]
+
 export default function ProfessorsPage() {
+  const [professors, setProfessors] = useState<Professor[]>(PROFESSORS)
   const [searchQuery, setSearchQuery] = useState('')
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [viewingProfessor, setViewingProfessor] = useState<Professor | null>(null)
+  const [editingProfessor, setEditingProfessor] = useState<Professor | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', email: '', speciality: '', bio: '' })
   const [newProfessor, setNewProfessor] = useState({
     name: '',
     email: '',
@@ -36,7 +43,7 @@ export default function ProfessorsPage() {
     formations: [] as string[],
   })
 
-  const filteredProfessors = PROFESSORS.filter(
+  const filteredProfessors = professors.filter(
     (professor) =>
       professor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       professor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -44,20 +51,53 @@ export default function ProfessorsPage() {
   )
 
   const handleAddProfessor = () => {
-    // In a real app, this would send data to the backend
-    console.log('Adding professor:', newProfessor)
+    const created: Professor = {
+      ...PROFESSORS[0],
+      id: `prof-${Date.now()}`,
+      name: newProfessor.name,
+      email: newProfessor.email,
+      speciality: newProfessor.speciality,
+      bio: newProfessor.bio,
+      formations: newProfessor.formations,
+      studentsCount: 0,
+      coursesCount: 0,
+      rating: 0,
+    }
+    setProfessors((prev) => [created, ...prev])
     setIsAddDialogOpen(false)
     setNewProfessor({ name: '', email: '', speciality: '', bio: '', formations: [] })
+  }
+
+  const openEdit = (professor: Professor) => {
+    setEditingProfessor(professor)
+    setEditForm({
+      name: professor.name,
+      email: professor.email,
+      speciality: professor.speciality,
+      bio: professor.bio,
+    })
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingProfessor) return
+    setProfessors((prev) =>
+      prev.map((p) =>
+        p.id === editingProfessor.id
+          ? { ...p, name: editForm.name, email: editForm.email, speciality: editForm.speciality, bio: editForm.bio }
+          : p
+      )
+    )
+    setEditingProfessor(null)
   }
 
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      
+
       <main className="ml-64">
-        <DashboardHeader 
-          title="Gestion des Professeurs" 
-          subtitle={`${PROFESSORS.length} professeurs actifs`}
+        <DashboardHeader
+          title="Gestion des Professeurs"
+          subtitle={`${professors.length} professeurs actifs`}
         />
 
         <div className="p-8 space-y-6">
@@ -76,7 +116,7 @@ export default function ProfessorsPage() {
                 />
               </div>
             </div>
-            
+
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-[#C9A227] to-[#B8860B] hover:from-[#B8860B] hover:to-[#C9A227]">
@@ -167,15 +207,14 @@ export default function ProfessorsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredProfessors.map((professor) => {
               const professorFormations = FORMATIONS.filter(f => professor.formations.includes(f.id))
-              const professorStudents = STUDENTS.filter(s => professor.formations.includes(s.formation))
-              
+
               return (
                 <Card key={professor.id} className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)] hover:border-[#C9A227]/30 transition-colors">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
                       <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-                        <Image 
-                          src={professor.avatar} 
+                        <Image
+                          src={professor.avatar}
                           alt={professor.name}
                           fill
                           className="object-cover"
@@ -199,12 +238,12 @@ export default function ProfessorsPage() {
 
                     <div className="flex flex-wrap gap-2 mb-4">
                       {professorFormations.map((formation) => (
-                        <span 
+                        <span
                           key={formation.id}
                           className="px-2 py-1 text-xs rounded-full"
-                          style={{ 
+                          style={{
                             backgroundColor: `${formation.color}20`,
-                            color: formation.color 
+                            color: formation.color
                           }}
                         >
                           {formation.name}
@@ -228,14 +267,24 @@ export default function ProfessorsPage() {
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                      <Button variant="outline" size="sm" className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewingProfessor(professor)}
+                        className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] bg-transparent"
+                      >
                         <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                         Voir
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEdit(professor)}
+                        className="flex-1 border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] bg-transparent"
+                      >
                         <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
@@ -258,6 +307,139 @@ export default function ProfessorsPage() {
           )}
         </div>
       </main>
+
+      {/* View Professor Dialog */}
+      <Dialog open={!!viewingProfessor} onOpenChange={(open) => !open && setViewingProfessor(null)}>
+        <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white max-w-lg">
+          {viewingProfessor && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-serif">Détails du professeur</DialogTitle>
+                <DialogDescription className="text-[rgba(255,255,255,0.5)]">
+                  Informations complètes du profil
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-5 py-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src={viewingProfessor.avatar} alt={viewingProfessor.name} fill className="object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-semibold text-lg">{viewingProfessor.name}</h3>
+                    <p className="text-[#C9A227] text-sm">{viewingProfessor.speciality}</p>
+                    <p className="text-[rgba(255,255,255,0.5)] text-sm">{viewingProfessor.email}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[rgba(255,255,255,0.4)] text-xs uppercase tracking-wide mb-1">Biographie</p>
+                  <p className="text-[rgba(255,255,255,0.8)] text-sm leading-relaxed">{viewingProfessor.bio}</p>
+                </div>
+
+                <div>
+                  <p className="text-[rgba(255,255,255,0.4)] text-xs uppercase tracking-wide mb-2">Formations</p>
+                  <div className="flex flex-wrap gap-2">
+                    {FORMATIONS.filter(f => viewingProfessor.formations.includes(f.id)).map((formation) => (
+                      <span
+                        key={formation.id}
+                        className="px-2 py-1 text-xs rounded-full"
+                        style={{ backgroundColor: `${formation.color}20`, color: formation.color }}
+                      >
+                        {formation.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+                  <div className="text-center">
+                    <p className="text-white font-bold text-lg">{viewingProfessor.studentsCount}</p>
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Élèves</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white font-bold text-lg">{viewingProfessor.coursesCount}</p>
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Cours</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white font-bold text-lg">{viewingProfessor.rating}</p>
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Note</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setViewingProfessor(null)} className="text-[rgba(255,255,255,0.7)] hover:bg-[rgba(255,255,255,0.05)]">
+                  Fermer
+                </Button>
+                <Button
+                  onClick={() => { openEdit(viewingProfessor); setViewingProfessor(null) }}
+                  className="bg-[#C9A227] hover:bg-[#B8860B]"
+                >
+                  Modifier
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Professor Dialog */}
+      <Dialog open={!!editingProfessor} onOpenChange={(open) => !open && setEditingProfessor(null)}>
+        <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-serif">Modifier le professeur</DialogTitle>
+            <DialogDescription className="text-[rgba(255,255,255,0.5)]">
+              Mettez à jour les informations du professeur
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nom complet</Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-speciality">Spécialité</Label>
+              <Input
+                id="edit-speciality"
+                value={editForm.speciality}
+                onChange={(e) => setEditForm({ ...editForm, speciality: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-bio">Biographie</Label>
+              <Textarea
+                id="edit-bio"
+                value={editForm.bio}
+                onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white min-h-[100px]"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setEditingProfessor(null)} className="text-[rgba(255,255,255,0.7)] hover:bg-[rgba(255,255,255,0.05)]">
+              Annuler
+            </Button>
+            <Button onClick={handleSaveEdit} className="bg-[#C9A227] hover:bg-[#B8860B]">
+              Enregistrer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
