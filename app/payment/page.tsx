@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -20,18 +20,18 @@ interface Enrollment {
   }
 }
 
-export default function PaymentPage() {
+function PaymentContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const enrollmentId = searchParams.get('enrollment_id')
-  
+
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null)
   const [phone, setPhone] = useState('')
   const [selectedMethod, setSelectedMethod] = useState<'wave' | 'orange_money' | 'free_money' | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  
+
   const supabase = createClient()
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function PaymentPage() {
       if (response.success && response.redirectUrl) {
         // In a real implementation, redirect to payment provider
         // window.location.href = response.redirectUrl
-        
+
         // For demo, simulate successful payment
         await paymentService.updatePaymentStatus(response.transactionId!, 'completed')
         setSuccess(true)
@@ -314,5 +314,23 @@ export default function PaymentPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center p-8">
+          <Card className="w-full max-w-md bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
+            <CardHeader>
+              <Loader className="w-8 h-8 animate-spin mx-auto text-[#C9A227]" />
+            </CardHeader>
+          </Card>
+        </div>
+      }
+    >
+      <PaymentContent />
+    </Suspense>
   )
 }
