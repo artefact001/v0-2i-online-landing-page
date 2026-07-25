@@ -206,10 +206,10 @@ export default function LoginPage() {
               <span className="text-[#C9A227] text-sm font-medium uppercase tracking-wider">Formation d&apos;excellence</span>
             </div>
             <h2 className="text-3xl font-serif font-bold text-white mb-4">
-              Rejoignez plus de 500 professionnels formés
+              Rejoignez le réseau de nos professionnels formés
             </h2>
             <p className="text-[rgba(255,255,255,0.7)]">
-              Accédez à des cours de qualité dispensés par des experts de l&apos;industrie hôtelière et culinaire.
+              Accédez à des cours de qualité dispensés par des formateurs spécialisés et des chefs reconnus .
             </p>
           </div>
         </div>

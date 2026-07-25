@@ -46,9 +46,9 @@ export function Hero() {
         {/* Eyebrow */}
         <div className="flex items-center gap-4 mb-8 opacity-0 translate-y-5 animate-fade-up delay-300">
           <div className="w-10 h-[1px] bg-[#C9A227]" />
-          <span className="text-[10px] font-semibold tracking-[4px] uppercase text-[#C9A227]">
+         {/* <span className="text-[10px] font-semibold tracking-[4px] uppercase text-[#C9A227]">
             Diplome Reconnu par l&apos;Etat
-          </span>
+          </span>*/}
         </div>
 
         {/* Title */}
@@ -65,7 +65,7 @@ export function Hero() {
 
         {/* Description */}
         <p className="text-base font-light text-[#d0daf0] leading-relaxed max-w-[520px] mb-10 opacity-0 translate-y-5 animate-fade-up delay-900">
-          Formations certifiantes accessibles 100% depuis votre mobile. Concues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
+          Formations certifiantes accessibles 100% depuis votre mobile ou Pc. Concues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
         </p>
 
         {/* Actions */}
@@ -117,9 +117,9 @@ export function Hero() {
       {/* Stats */}
       <div className="absolute bottom-[60px] right-[60px] hidden lg:flex gap-12 opacity-0 animate-fade-up delay-1300">
         {[
-          { num: "40+", label: "Formations" },
-          { num: "2 000+", label: "Apprenants vises" },
-          { num: "15+", label: "Pays couverts" },
+          { num: "9+", label: "Formations" },
+          { num: "1000+", label: "Apprenants vises / an" },
+          { num: "1", label: "Pays couverts" },
         ].map((stat) => (
           <div key={stat.label} className="text-right">
             <div className="font-serif text-[42px] font-bold text-[#C9A227] leading-none">{stat.num}</div>
