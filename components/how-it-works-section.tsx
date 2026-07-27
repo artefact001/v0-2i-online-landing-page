@@ -27,7 +27,7 @@ const partners = [
   {
     name: "Paydunya",
     domain: "Gestionnaire de transaction Monétaire",
-    image: "/images/FB_IMG_1785166920328.jpg},",
+    image: "/images/FB_IMG_1785166920328.jpg",
   },
   {
     name: "King Fahd Palace",
