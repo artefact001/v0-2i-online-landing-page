@@ -10,7 +10,7 @@ const testimonials = [
     image: "/images/testimonial-1.jpg",
     name: "Aminata Kone",
     role: "Restauratrice",
-    location: "Abidjan, Cote d'Ivoire",
+    location: "Keur Massar,Dakar,Sénégal",
   },
   {
     stars: 5,
@@ -18,7 +18,7 @@ const testimonials = [
     image: "/images/testimonial-2.jpg",
     name: "Ibrahima Diallo",
     role: "Chef de partie",
-    location: "Casablanca, Maroc",
+    location: "Bargny,Dakar,Sénégal",
   },
   {
     stars: 5,
@@ -26,7 +26,7 @@ const testimonials = [
     image: "/images/testimonial-3.jpg",
     name: "Fatou Sarr",
     role: "Patissiere entrepreneur",
-    location: "Thies, Senegal",
+    location: "Rufisque,Dakar,Sénégal",
   },
 ]
 
@@ -137,7 +137,7 @@ export function TestimonialsSection() {
               </svg>
             </div>
             <div className="text-left">
-              <div className="text-2xl font-serif font-bold text-[#C9A227]">98%</div>
+              <div className="text-2xl font-serif font-bold text-[#C9A227]">90%</div>
               <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider">Satisfaction</div>
             </div>
           </div>
@@ -151,7 +151,7 @@ export function TestimonialsSection() {
               </svg>
             </div>
             <div className="text-left">
-              <div className="text-2xl font-serif font-bold text-[#C9A227]">500+</div>
+              <div className="text-2xl font-serif font-bold text-[#C9A227]">50+</div>
               <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider">Diplomes</div>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function TestimonialsSection() {
               </svg>
             </div>
             <div className="text-left">
-              <div className="text-2xl font-serif font-bold text-[#C9A227]">15+</div>
+              <div className="text-2xl font-serif font-bold text-[#C9A227]">1</div>
               <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider">Pays</div>
             </div>
           </div>
