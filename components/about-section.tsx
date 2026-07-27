@@ -83,11 +83,9 @@ export function AboutSection() {
               pour l&apos;Afrique
             </h2>
             <p className="reveal text-base font-light text-[#d0daf0] leading-relaxed mb-8">
-              <strong className="text-white font-medium">Incub Institut</strong> forme depuis des annees les meilleurs professionnels de l&apos;hotellerie et de la restauration au Senegal. <strong className="text-[#C9A227]">2I Online</strong> porte cette expertise sur le digital pour rendre la formation professionnelle accessible partout en Afrique.
+              <strong className="text-white font-medium">Incub Institut</strong> forme depuis des annees les professionnels de l&apos;hotellerie et de la restauration au Senegal. <strong className="text-[#C9A227]">2I Online</strong> porte cette expertise sur le digital pour rendre la formation professionnelle accessible partout en Afrique.
             </p>
-            <p className="reveal text-base font-light text-[#d0daf0] leading-relaxed mb-10">
-              Notre objectif: donner a chaque jeune et a chaque femme les cles pour reussir dans les metiers de l&apos;<strong className="text-white">hotellerie, de la restauration et du tourisme</strong>.
-            </p>
+          
 
             {/* Features Grid */}
             <div className="reveal grid grid-cols-2 gap-4">

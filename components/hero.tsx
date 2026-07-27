@@ -65,7 +65,7 @@ export function Hero() {
 
         {/* Description */}
         <p className="text-base font-light text-[#d0daf0] leading-relaxed max-w-[520px] mb-10 opacity-0 translate-y-5 animate-fade-up delay-900">
-          Formations certifiantes accessibles 100% depuis votre mobile. Concues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
+          Formations certifiantes accessibles 100% depuis votre mobile ET PC. Concues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
         </p>
 
         {/* Actions */}
@@ -117,8 +117,8 @@ export function Hero() {
       {/* Stats */}
       <div className="absolute bottom-[60px] right-[60px] hidden lg:flex gap-12 opacity-0 animate-fade-up delay-1300">
         {[
-          { num: "40+", label: "Formations" },
-          { num: "2 000+", label: "Apprenants vises" },
+          { num: "6+", label: "Formations" },
+          { num: "1 000+", label: "Apprenants vises" },
           { num: "15+", label: "Pays couverts" },
         ].map((stat) => (
           <div key={stat.label} className="text-right">
