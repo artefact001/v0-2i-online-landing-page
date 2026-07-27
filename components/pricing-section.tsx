@@ -124,7 +124,7 @@ const pricingCategories = [
         price: "150 000",
         monthly: null,
         features: [
-          { text: "Reconnaissance de compétences", included: true },
+          { text: "Reconnaissance des compétences", included: true },
           { text: "Portfolio et evaluation", included: true },
           { text: "Mentoring personnalisé", included: true },
           { text: "Documentation complète (Livret 1 , Livret 2)", included: true },
