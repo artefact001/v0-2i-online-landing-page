@@ -94,7 +94,7 @@ export function PartnersSection() {
 
         {/* Partners Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {partners.map((partner, index) => (
+          {partners.map((images, index) => (
             <div
               key={partner.name}
               className="reveal group"
@@ -102,8 +102,8 @@ export function PartnersSection() {
             >
               <div className="relative aspect-square rounded-xl overflow-hidden border border-[rgba(201,162,39,0.15)] transition-all duration-300 group-hover:border-[#C9A227] group-hover:scale-[1.03]">
                 <Image
-                  src={partner.image}
-                  alt={partner.name}
+                  src={images.image}
+                  alt={images.name}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -112,10 +112,10 @@ export function PartnersSection() {
 
               <div className="text-center mt-4">
                 <h3 className="font-serif text-base font-semibold text-white">
-                  {partner.name}
+                  {images.name}
                 </h3>
                 <p className="text-[10px] font-medium tracking-[1.5px] uppercase text-[#C9A227] mt-1">
-                  {partner.domain}
+                  {images.domain}
                 </p>
               </div>
             </div>
