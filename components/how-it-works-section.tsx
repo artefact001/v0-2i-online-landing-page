@@ -5,44 +5,44 @@ import Image from "next/image"
 
 const partners = [
   {
-    name: "Hotel Terrou-Bi",
-    domain: "Hotellerie de luxe",
-    image: "/images/partners/terrou-bi.jpg",
+    name: "Minitaire de la Formation Professionnel",
+    domain: "Formation Professionnel",
+    image: "public/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "Radisson Blu Dakar",
     domain: "Hotellerie internationale",
-    image: "/images/partners/radisson-blu.jpg",
+    image: "public/images/1000769413.jpg",
   },
   {
     name: "Chez Loutcha",
     domain: "Restauration traditionnelle",
-    image: "/images/partners/chez-loutcha.jpg",
+    image: "public/images/1000797646.jpg",
   },
   {
     name: "Pullman Dakar",
     domain: "Hotellerie d'affaires",
-    image: "/images/partners/pullman-dakar.jpg",
+    image: "public/images/1000797760.jpg",
   },
   {
     name: "Le Lagon 1",
     domain: "Restauration gastronomique",
-    image: "/images/partners/le-lagon.jpg",
+    image: "public/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "King Fahd Palace",
     domain: "Hotellerie & evenementiel",
-    image: "/images/partners/king-fahd.jpg",
+    image: "public/images/IMG-20250425-WA0017.jpg",
   },
   {
     name: "Farid Restaurant",
     domain: "Arts culinaires",
-    image: "/images/partners/farid.jpg",
+    image: "public/images/logo mairie bargny.jpg",
   },
   {
     name: "Azalai Hotel",
     domain: "Hotellerie regionale",
-    image: "/images/partners/azalai.jpg",
+    image: "public/images/1000917129.jpg",
   },
 ]
 
