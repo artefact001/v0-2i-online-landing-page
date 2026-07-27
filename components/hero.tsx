@@ -68,11 +68,7 @@ export function Hero() {
 
         {/* Description */}
         <p className="text-base font-light text-[#d0daf0] leading-relaxed max-w-[520px] mb-10 opacity-0 translate-y-5 animate-fade-up delay-900">
-<<<<<<< HEAD
           Formations certifiantes accessibles 100&nbsp;% depuis votre mobile ou PC. Conçues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
-=======
-          Formations certifiantes accessibles 100% depuis votre mobile ET PC. Concues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
->>>>>>> ff849b5a9d48681a7d8215fd8ff976e2784e086d
         </p>
 
         {/* Actions */}
@@ -124,15 +120,10 @@ export function Hero() {
       {/* Stats */}
       <div className="absolute bottom-[60px] right-[60px] hidden lg:flex gap-12 opacity-0 animate-fade-up delay-1300">
         {[
-<<<<<<< HEAD
           { num: "9+", label: "Formations" },
           { num: "1000+", label: "Apprenants visés / an" },
           { num: "1", label: "Pays couverts" },
-=======
-          { num: "6+", label: "Formations" },
-          { num: "1 000+", label: "Apprenants vises" },
-          { num: "15+", label: "Pays couverts" },
->>>>>>> ff849b5a9d48681a7d8215fd8ff976e2784e086d
+        
         ].map((stat) => (
           <div key={stat.label} className="text-right">
             <div className="font-serif text-[42px] font-bold text-[#C9A227] leading-none">{stat.num}</div>
