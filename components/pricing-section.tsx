@@ -15,10 +15,10 @@ const pricingCategories = [
         features: [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
-          { text: "24 modules complets", included: true },
+          { text: "Hybride", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
-          { text: "Certificat numerique", included: true },
+          { text: "Diplôme d'Etat", included: true },
         ],
         icon: "👨‍🍳",
       },
@@ -29,10 +29,10 @@ const pricingCategories = [
         features: [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
-          { text: "21 modules complets", included: true },
+          { text: "Hybride", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
-          { text: "Certificat numerique", included: true },
+          { text: "Diplôme d'Etat", included: true },
         ],
         icon: "🧁",
       },
@@ -43,10 +43,10 @@ const pricingCategories = [
         features: [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
-          { text: "18 modules complets", included: true },
+          { text: "Hybride", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
-          { text: "Certificat numerique", included: true },
+          { text: "Diplôme d'Etat", included: true },
         ],
         icon: "🍽️",
       },
@@ -61,12 +61,11 @@ const pricingCategories = [
         price: "100 000",
         monthly: null,
         features: [
+          { text: "100 % en ligne", included: true },
           { text: "Certification HACCP", included: true },
           { text: "Normes de sécurité alimentaire", included: true },
-          { text: "12 modules intensifs", included: true },
           { text: "Quiz pratiques", included: true },
           { text: "Certificat numerique", included: true },
-          { text: "Durée: 4 semaines", included: true },
         ],
         icon: "🛡️",
         featured: false,
@@ -76,27 +75,26 @@ const pricingCategories = [
         price: "100 000",
         monthly: null,
         features: [
+          { text: "100 % en ligne", included: true },
           { text: "Management avancé", included: true },
           { text: "Gestion financière", included: true },
           { text: "Stratégie commerciale", included: true },
           { text: "Gestion d'équipe", included: true },
           { text: "Certificat numerique", included: true },
-          { text: "Durée: 5 semaines", included: true },
         ],
         icon: "🏢",
         featured: false,
       },
       {
-        name: "Certificat Spécialité",
+        name: "Certificat Professionel de Spécialité",
         inscription: "60 000",
         monthly: "30 000",
         features: [
           { text: "Spécialisation avancée", included: true },
-          { text: "Modules à la carte", included: true },
           { text: "Flexibilité horaire", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
-          { text: "Certificat numerique", included: true },
+          { text: "Certification en présentiel obligatoire", included: true },
         ],
         icon: "📜",
         featured: false,
@@ -108,13 +106,12 @@ const pricingCategories = [
     description: "Formations avancées et VAE",
     plans: [
       {
-        name: "Incubation Entrepreneuriale",
+        name: "Incubation Entrepreneuriale (street Food)",
         price: "100 000",
         monthly: null,
         features: [
           { text: "Créer votre projet", included: true },
           { text: "Business plan complet", included: true },
-          { text: "Financement et investisseurs", included: true },
           { text: "Marketing digital", included: true },
           { text: "Support entrepreneurial", included: true },
           { text: "Réseau d'affaires", included: true },
@@ -123,16 +120,15 @@ const pricingCategories = [
         featured: true,
       },
       {
-        name: "VAE - Validation Acquis",
+        name: "VAE - Validation des Acquis de l'Expérience",
         price: "150 000",
         monthly: null,
         features: [
-          { text: "Reconnaissance diplôme", included: true },
+          { text: "Reconnaissance des compétences", included: true },
           { text: "Portfolio et evaluation", included: true },
           { text: "Mentoring personnalisé", included: true },
-          { text: "Documentation complète", included: true },
+          { text: "Documentation complète (Livret 1 , Livret 2)", included: true },
           { text: "Support administratif", included: true },
-          { text: "Inscription officielle", included: true },
         ],
         icon: "🎓",
         featured: true,
@@ -148,12 +144,11 @@ const pricingCategories = [
         price: "60 000",
         monthly: null,
         features: [
-          { text: "Formation 100% en ligne", included: true },
+          { text: "Formation en ligne / Hybride", included: true },
           { text: "Flexible et autonome", included: true },
           { text: "Contenu téléchargeable", included: true },
           { text: "Forum d'entraide", included: true },
-          { text: "Certificat de completion", included: true },
-          { text: "Accès illimité", included: true },
+          { text: "Certificat", included: true },
         ],
         icon: "🏠",
       },
@@ -162,11 +157,8 @@ const pricingCategories = [
         price: "10 000",
         monthly: null,
         features: [
-          { text: "Atelier unique de 2h", included: true },
+          { text: "Atelier unique de 5h", included: true },
           { text: "Pratique intensive", included: true },
-          { text: "Petit groupe (max 15)", included: true },
-          { text: "Matériel fourni", included: true },
-          { text: "Attestation de presence", included: true },
           { text: "Accès à la communauté", included: true },
         ],
         icon: "🎪",
@@ -321,36 +313,6 @@ export function PricingSection() {
           </div>
         ))}
 
-        {/* Payment Methods */}
-        <div className="reveal mt-16 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-2xl p-8 text-center">
-          <h3 className="text-white font-semibold mb-6">Moyens de Paiement Acceptés</h3>
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl">📱</div>
-              <span className="text-sm text-[#d0daf0]">Wave</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl">📱</div>
-              <span className="text-sm text-[#d0daf0]">Orange Money</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl">📱</div>
-              <span className="text-sm text-[#d0daf0]">Free Money</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Guarantee */}
-        <div className="reveal mt-12 text-center">
-          <div className="inline-flex items-center gap-3 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-full px-6 py-3">
-            <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span className="text-sm text-[#d0daf0]">
-              Garantie satisfait ou rembourse 14 jours
-            </span>
-          </div>
-        </div>
       </div>
     </section>
   )
