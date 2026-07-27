@@ -27,7 +27,7 @@ const partners = [
   {
     name: "Le Lagon 1",
     domain: "Restauration gastronomique",
-    image: "/images/FB_IMG_1776855096946.jpg",
+    image: "/images/FB_IMG_1785166920328.jpg},",
   },
   {
     name: "King Fahd Palace",
