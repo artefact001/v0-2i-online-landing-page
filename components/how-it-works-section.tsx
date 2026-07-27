@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react"
 import Image from "next/image"
 
-const partners = [
+const images = [
   {
     name: "Minitaire de la Formation Professionnel",
     domain: "Formation Professionnel",
