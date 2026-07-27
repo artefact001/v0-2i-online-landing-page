@@ -7,42 +7,42 @@ const partners = [
   {
     name: "Minitaire de la Formation Professionnel",
     domain: "Formation Professionnel",
-    image: "public/images/FB_IMG_1776855096946.jpg",
+    image: "/public/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "Radisson Blu Dakar",
     domain: "Hotellerie internationale",
-    image: "public/images/1000769413.jpg",
+    image: "/public/images/1000769413.jpg",
   },
   {
     name: "Chez Loutcha",
     domain: "Restauration traditionnelle",
-    image: "public/images/1000797646.jpg",
+    image: "/public/images/1000797646.jpg",
   },
   {
     name: "Pullman Dakar",
     domain: "Hotellerie d'affaires",
-    image: "public/images/1000797760.jpg",
+    image: "/public/images/1000797760.jpg",
   },
   {
     name: "Le Lagon 1",
     domain: "Restauration gastronomique",
-    image: "public/images/FB_IMG_1776855096946.jpg",
+    image: "/public/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "King Fahd Palace",
     domain: "Hotellerie & evenementiel",
-    image: "public/images/IMG-20250425-WA0017.jpg",
+    image: "/public/images/IMG-20250425-WA0017.jpg",
   },
   {
     name: "Farid Restaurant",
     domain: "Arts culinaires",
-    image: "public/images/logo mairie bargny.jpg",
+    image: "/public/images/logo mairie bargny.jpg",
   },
   {
     name: "Azalai Hotel",
     domain: "Hotellerie regionale",
-    image: "public/images/1000917129.jpg",
+    image: "/public/images/1000917129.jpg",
   },
 ]
 
