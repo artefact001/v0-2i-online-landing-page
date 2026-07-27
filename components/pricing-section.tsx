@@ -106,7 +106,7 @@ const pricingCategories = [
     description: "Formations avancées et VAE",
     plans: [
       {
-        name: "Incubation Entrepreneuriale",
+        name: "Incubation Entrepreneuriale (street Food)",
         price: "100 000",
         monthly: null,
         features: [
@@ -124,12 +124,11 @@ const pricingCategories = [
         price: "150 000",
         monthly: null,
         features: [
-          { text: "Reconnaissance diplôme", included: true },
+          { text: "Reconnaissance de compétences", included: true },
           { text: "Portfolio et evaluation", included: true },
           { text: "Mentoring personnalisé", included: true },
           { text: "Documentation complète (Livret 1 , Livret 2)", included: true },
           { text: "Support administratif", included: true },
-          { text: "Inscription officielle", included: true },
         ],
         icon: "🎓",
         featured: true,
