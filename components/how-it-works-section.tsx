@@ -3,46 +3,46 @@
 import { useEffect, useRef } from "react"
 import Image from "next/image"
 
-const images = [
+const partners = [
   {
-    name: "Minitaire de la Formation Professionnel",
-    domain: "Formation Professionnel",
-    image: "/public/images/FB_IMG_1776855096946.jpg",
+    name: "Ministere de la Formation Professionnelle",
+    domain: "Formation Professionnelle",
+    image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "Radisson Blu Dakar",
     domain: "Hotellerie internationale",
-    image: "/public/images/1000769413.jpg",
+    image: "/images/1000769413.jpg",
   },
   {
     name: "Chez Loutcha",
     domain: "Restauration traditionnelle",
-    image: "/public/images/1000797646.jpg",
+    image: "/images/1000797646.jpg",
   },
   {
     name: "Pullman Dakar",
     domain: "Hotellerie d'affaires",
-    image: "/public/images/1000797760.jpg",
+    image: "/images/1000797760.jpg",
   },
   {
     name: "Le Lagon 1",
     domain: "Restauration gastronomique",
-    image: "/public/images/FB_IMG_1776855096946.jpg",
+    image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "King Fahd Palace",
     domain: "Hotellerie & evenementiel",
-    image: "/public/images/IMG-20250425-WA0017.jpg",
+    image: "/images/IMG-20250425-WA0017.jpg",
   },
   {
     name: "Farid Restaurant",
     domain: "Arts culinaires",
-    image: "/public/images/logo mairie bargny.jpg",
+    image: "/images/logo-mairie-bargny.jpg",
   },
   {
     name: "Azalai Hotel",
     domain: "Hotellerie regionale",
-    image: "/public/images/1000917129.jpg",
+    image: "/images/1000917129.jpg",
   },
 ]
 
@@ -94,7 +94,7 @@ export function PartnersSection() {
 
         {/* Partners Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {partners.map((images, index) => (
+          {partners.map((partner, index) => (
             <div
               key={partner.name}
               className="reveal group"
@@ -102,8 +102,8 @@ export function PartnersSection() {
             >
               <div className="relative aspect-square rounded-xl overflow-hidden border border-[rgba(201,162,39,0.15)] transition-all duration-300 group-hover:border-[#C9A227] group-hover:scale-[1.03]">
                 <Image
-                  src={images.image}
-                  alt={images.name}
+                  src={partner.image}
+                  alt={partner.name}
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -112,10 +112,10 @@ export function PartnersSection() {
 
               <div className="text-center mt-4">
                 <h3 className="font-serif text-base font-semibold text-white">
-                  {images.name}
+                  {partner.name}
                 </h3>
                 <p className="text-[10px] font-medium tracking-[1.5px] uppercase text-[#C9A227] mt-1">
-                  {images.domain}
+                  {partner.domain}
                 </p>
               </div>
             </div>
