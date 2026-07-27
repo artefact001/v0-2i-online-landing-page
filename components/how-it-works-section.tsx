@@ -25,8 +25,8 @@ const partners = [
     image: "/images/1000797760.jpg",
   },
   {
-    name: "Le Lagon 1",
-    domain: "Restauration gastronomique",
+    name: "Paydunya",
+    domain: "Gestionnaire de transaction Monétaire",
     image: "/images/FB_IMG_1785166920328.jpg},",
   },
   {
