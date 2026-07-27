@@ -83,9 +83,15 @@ export function AboutSection() {
               en ;Afrique
             </h2>
             <p className="reveal text-base font-light text-[#d0daf0] leading-relaxed mb-8">
+<<<<<<< HEAD
               <strong className="text-white font-medium">Incub Institut</strong> forme depuis des annees des professionnels de l&apos;hotellerie et de la restauration au Senegal. <strong className="text-[#C9A227]">2I Online</strong> porte cette expertise sur le digital pour rendre la formation professionnelle HORETO accessible partout en Afrique.
             </p>
            
+=======
+              <strong className="text-white font-medium">Incub Institut</strong> forme depuis des annees les professionnels de l&apos;hotellerie et de la restauration au Senegal. <strong className="text-[#C9A227]">2I Online</strong> porte cette expertise sur le digital pour rendre la formation professionnelle accessible partout en Afrique.
+            </p>
+          
+>>>>>>> ff849b5a9d48681a7d8215fd8ff976e2784e086d
 
             {/* Features Grid */}
             <div className="reveal grid grid-cols-2 gap-4">
