@@ -15,7 +15,6 @@ const pricingCategories = [
         features: [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
-          { text: "24 modules complets", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
           { text: "Certificat numerique", included: true },
@@ -29,7 +28,6 @@ const pricingCategories = [
         features: [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
-          { text: "21 modules complets", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
           { text: "Certificat numerique", included: true },
@@ -43,7 +41,6 @@ const pricingCategories = [
         features: [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
-          { text: "18 modules complets", included: true },
           { text: "Videos HD + fiches PDF", included: true },
           { text: "Quiz et evaluations", included: true },
           { text: "Certificat numerique", included: true },
@@ -63,7 +60,6 @@ const pricingCategories = [
         features: [
           { text: "Certification HACCP", included: true },
           { text: "Normes de sécurité alimentaire", included: true },
-          { text: "12 modules intensifs", included: true },
           { text: "Quiz pratiques", included: true },
           { text: "Certificat numerique", included: true },
           { text: "Durée: 4 semaines", included: true },
@@ -162,11 +158,9 @@ const pricingCategories = [
         price: "10 000",
         monthly: null,
         features: [
-          { text: "Atelier unique de 2h", included: true },
+          { text: "Atelier unique de 5h", included: true },
           { text: "Pratique intensive", included: true },
           { text: "Petit groupe (max 15)", included: true },
-          { text: "Matériel fourni", included: true },
-          { text: "Attestation de presence", included: true },
           { text: "Accès à la communauté", included: true },
         ],
         icon: "🎪",
@@ -321,36 +315,6 @@ export function PricingSection() {
           </div>
         ))}
 
-        {/* Payment Methods */}
-        <div className="reveal mt-16 bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-2xl p-8 text-center">
-          <h3 className="text-white font-semibold mb-6">Moyens de Paiement Acceptés</h3>
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl">📱</div>
-              <span className="text-sm text-[#d0daf0]">Wave</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl">📱</div>
-              <span className="text-sm text-[#d0daf0]">Orange Money</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl">📱</div>
-              <span className="text-sm text-[#d0daf0]">Free Money</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Guarantee */}
-        <div className="reveal mt-12 text-center">
-          <div className="inline-flex items-center gap-3 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-full px-6 py-3">
-            <svg className="w-5 h-5 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span className="text-sm text-[#d0daf0]">
-              Garantie satisfait ou rembourse 14 jours
-            </span>
-          </div>
-        </div>
       </div>
     </section>
   )
