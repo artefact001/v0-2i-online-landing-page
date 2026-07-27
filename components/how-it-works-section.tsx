@@ -32,7 +32,7 @@ const partners = [
   {
     name: "King Fahd Palace",
     domain: "Hotellerie & evenementiel",
-    image: "/images/IMG-20250425-WA0017.jpg",
+    image: "/images/FB_IMG_1778935589425.jpg",
   },
   {
     name: "Farid Restaurant",
