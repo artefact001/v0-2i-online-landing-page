@@ -37,7 +37,7 @@ const partners = [
   {
     name: "Farid Restaurant",
     domain: "Arts culinaires",
-    image: "/images/logo-mairie-bargny.jpg",
+    image: "/images/logo mairie bargny.jpg",
   },
   {
     name: "Azalai Hotel",
