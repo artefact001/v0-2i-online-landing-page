@@ -46,9 +46,12 @@ export function Hero() {
         {/* Eyebrow */}
         <div className="flex items-center gap-4 mb-8 opacity-0 translate-y-5 animate-fade-up delay-300">
           <div className="w-10 h-[1px] bg-[#C9A227]" />
-         {/* <span className="text-[10px] font-semibold tracking-[4px] uppercase text-[#C9A227]">
-            Diplome Reconnu par l&apos;Etat
-          </span>*/}
+
+          <div><span><br /></span></div>
+          
+          <span className="text-[10px] font-semibold tracking-[4px] uppercase text-[#C9A227]">
+            Diplôme Reconnu par l&apos;État
+          </span>
         </div>
 
         {/* Title */}
@@ -60,12 +63,12 @@ export function Hero() {
 
         {/* Subtitle */}
         <p className="font-serif text-[clamp(18px,2.5vw,26px)] font-light italic text-[rgba(255,255,255,0.6)] mb-8 opacity-0 translate-y-5 animate-fade-up delay-700">
-          Hotellerie - Restauration - Arts Culinaires
+          Hôtellerie - Restauration - Arts Culinaires
         </p>
 
         {/* Description */}
         <p className="text-base font-light text-[#d0daf0] leading-relaxed max-w-[520px] mb-10 opacity-0 translate-y-5 animate-fade-up delay-900">
-          Formations certifiantes accessibles 100% depuis votre mobile ou Pc. Concues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
+          Formations certifiantes accessibles 100&nbsp;% depuis votre mobile ou PC. Conçues pour l&apos;Afrique, reconnues sur tout le continent et dans la diaspora.
         </p>
 
         {/* Actions */}
@@ -109,7 +112,7 @@ export function Hero() {
             <div className="text-[#C9A227] text-sm">
               {"★★★★★"}
             </div>
-            <span className="text-xs text-[rgba(255,255,255,0.4)]">4.9/5 avis</span>
+            <span className="text-xs text-[rgba(255,255,255,0.4)]">4,9/5 avis</span>
           </div>
         </div>
       </div>
@@ -118,7 +121,7 @@ export function Hero() {
       <div className="absolute bottom-[60px] right-[60px] hidden lg:flex gap-12 opacity-0 animate-fade-up delay-1300">
         {[
           { num: "9+", label: "Formations" },
-          { num: "1000+", label: "Apprenants vises / an" },
+          { num: "1000+", label: "Apprenants visés / an" },
           { num: "1", label: "Pays couverts" },
         ].map((stat) => (
           <div key={stat.label} className="text-right">
@@ -131,7 +134,7 @@ export function Hero() {
       {/* Scroll Indicator */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 animate-fade-up delay-1300">
         <div className="w-[1px] h-12 bg-gradient-to-b from-transparent to-[#C9A227] animate-scroll-pulse" />
-        <span className="text-[8px] tracking-[3px] uppercase text-[rgba(255,255,255,0.25)]">Defiler</span>
+        <span className="text-[8px] tracking-[3px] uppercase text-[rgba(255,255,255,0.25)]">Défiler</span>
       </div>
     </section>
   )

@@ -3,7 +3,7 @@ import { Hero } from "@/components/hero"
 import { Divider } from "@/components/divider"
 import { AboutSection } from "@/components/about-section"
 import { CoursesSection } from "@/components/courses-section"
-import { HowItWorksSection } from "@/components/how-it-works-section"
+import { PartnersSection } from "@/components/how-it-works-section"
 import { TestimonialsSection } from "@/components/testimonials-section"
 import { PricingSection } from "@/components/pricing-section"
 import { FAQSection } from "@/components/faq-section"
@@ -21,7 +21,7 @@ export default function Home() {
       <Divider />
       <CoursesSection />
       <Divider />
-      <HowItWorksSection />
+      <PartnersSection />
       <Divider />
       <TestimonialsSection />
       <Divider />

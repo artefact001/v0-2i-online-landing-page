@@ -123,7 +123,7 @@ export function CTASection() {
         </div>
 
         {/* Payment methods */}
-        <div className="mt-10 pt-10 border-t border-[rgba(255,255,255,0.06)]">
+        {/* <div className="mt-10 pt-10 border-t border-[rgba(255,255,255,0.06)]">
           <p className="text-[11px] text-[rgba(255,255,255,0.3)] uppercase tracking-[2px] mb-4">
             Moyens de paiement acceptes
           </p>
@@ -137,7 +137,7 @@ export function CTASection() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   )

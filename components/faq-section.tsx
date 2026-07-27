@@ -5,6 +5,10 @@ import Link from "next/link"
 
 const faqItems = [
   {
+    question: "Comment se deroule le parcours de formation ?",
+    answer: "En 4 etapes simples : 1) Choisissez votre formation dans le catalogue depuis votre telephone (programme, duree, certificat et tarif detailles). 2) Payez en Mobile Money via Wave, Orange Money ou Free Money — l'acces est active instantanement. 3) Apprenez a votre rythme avec des videos HD, des fiches PDF telechargeables, des quiz et des exercices pratiques, depuis n'importe ou. 4) Obtenez votre certificat numerique Incub Institut, verifiable en ligne et reconnu par les employeurs.",
+  },
+  {
     question: "Les diplomes 2I Online sont-ils reconnus par l'Etat ?",
     answer: "Oui. Incub Institut est un centre de formation agree. Les certifications CAP HCR (Cuisinier, Patissier, Serveur) sont des diplomes nationaux reconnus par l'Etat senegalais et par les partenaires employeurs de la filiere hotellerie-restauration en Afrique de l'Ouest.",
   },
@@ -86,7 +90,7 @@ export function FAQSection() {
                 </div>
               </div>
               <Link
-                href="https://wa.me/221771234567"
+                href="https://wa.me/221774662921"
                 target="_blank"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-white text-sm font-semibold rounded-lg transition-all hover:bg-[#20bd5a] hover:scale-[1.02]"
               >
