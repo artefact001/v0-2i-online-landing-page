@@ -120,7 +120,7 @@ const pricingCategories = [
         featured: true,
       },
       {
-        name: "VAE - Validation Acquis",
+        name: "VAE - Validation des Acquis de l'Expérience",
         price: "150 000",
         monthly: null,
         features: [
