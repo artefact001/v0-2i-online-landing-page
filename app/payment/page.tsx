@@ -333,8 +333,3 @@ export default function PaymentPage() {
       <PaymentContent />
     </Suspense>
   )
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> fef2a763fef25fdd05d424513b69373be88fdd38

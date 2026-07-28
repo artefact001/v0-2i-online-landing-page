@@ -5,44 +5,43 @@ import Image from "next/image"
 
 const partners = [
   {
-    name: "Ministere de la Formation Professionnelle",
-    domain: "Formation Professionnelle",
-    image: "/images/FB_IMG_1776855096946.jpg",
+    name: "Minitaire de la Formation Professionnel",
+    domain: "Formation Professionnel",
+    image: "public/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "Radisson Blu Dakar",
     domain: "Hotellerie internationale",
-    image: "/images/1000769413.jpg",
+    image: "public/images/1000769413.jpg",
   },
   {
     name: "Chez Loutcha",
     domain: "Restauration traditionnelle",
-    image: "/images/1000797646.jpg",
+    image: "public/images/1000797646.jpg",
   },
   {
     name: "Pullman Dakar",
     domain: "Hotellerie d'affaires",
-    image: "/images/1000797760.jpg",
+    image: "public/images/1000797760.jpg",
   },
   {
-    name: "Paydunya",
-    domain: "Gestionnaire de transaction Monétaire",
-    image: "/images/FB_IMG_1785166920328.jpg",
+    name: "Le Lagon 1",
+    domain: "Restauration gastronomique",
+    image: "public/images/FB_IMG_1776855096946.jpg",
   },
   {
     name: "King Fahd Palace",
     domain: "Hotellerie & evenementiel",
-    image: "/images/FB_IMG_1778935589425.jpg",
+    image: "public/images/IMG-20250425-WA0017.jpg",
   },
   {
     name: "Farid Restaurant",
     domain: "Arts culinaires",
-    image: "/images/logo mairie bargny.jpg",
-  },
+    image: "public/images/logo mairie bargny.jpg",
   {
     name: "Azalai Hotel",
     domain: "Hotellerie regionale",
-    image: "/images/1000917129.jpg",
+    image: "public/images/1000917129.jpg",
   },
 ]
 
