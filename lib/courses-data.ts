@@ -81,7 +81,7 @@ export const courseClasses: CourseClass[] = [
     description: "L'art du vin et de l'accord mets-vins",
     icon: "Wine",
     color: "#A855F7",
-    coursesCount: disponible bientôt
+    coursesCount: 0
   },
   {
     id: "management",
@@ -89,7 +89,7 @@ export const courseClasses: CourseClass[] = [
     description: "Gestion et direction d'établissements",
     icon: "Building2",
     color: "#3B82F6",
-    coursesCount: disponible bientôt
+    coursesCount: 0
   }
 ]
 
