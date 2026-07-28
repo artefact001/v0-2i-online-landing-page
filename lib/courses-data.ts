@@ -49,7 +49,7 @@ export const courseClasses: CourseClass[] = [
     description: "Formation complète aux techniques culinaires professionnelles",
     icon: "ChefHat",
     color: "#C9A227",
-    coursesCount: 24
+    coursesCount: 0
   },
   {
     id: "cap-service",
@@ -57,7 +57,7 @@ export const courseClasses: CourseClass[] = [
     description: "Maîtrisez l'art du service en restauration",
     icon: "UtensilsCrossed",
     color: "#E8C050",
-    coursesCount: 18
+    coursesCount: 0
   },
   {
     id: "cap-patisserie",
@@ -65,7 +65,7 @@ export const courseClasses: CourseClass[] = [
     description: "L'excellence de la pâtisserie française",
     icon: "Cake",
     color: "#F5E9C4",
-    coursesCount: 21
+    coursesCount: 0
   },
   {
     id: "haccp",
@@ -73,7 +73,7 @@ export const courseClasses: CourseClass[] = [
     description: "Normes de sécurité alimentaire internationales",
     icon: "ShieldCheck",
     color: "#4ADE80",
-    coursesCount: 12
+    coursesCount: 0
   },
   {
     id: "sommellerie",
@@ -81,7 +81,7 @@ export const courseClasses: CourseClass[] = [
     description: "L'art du vin et de l'accord mets-vins",
     icon: "Wine",
     color: "#A855F7",
-    coursesCount: 15
+    coursesCount: 0
   },
   {
     id: "management",
@@ -89,7 +89,7 @@ export const courseClasses: CourseClass[] = [
     description: "Gestion et direction d'établissements",
     icon: "Building2",
     color: "#3B82F6",
-    coursesCount: 16
+    coursesCount: 0
   }
 ]
 
@@ -335,21 +335,7 @@ export const recordedCourses: RecordedCourse[] = [
     className: "HACCP & Hygiène"
   },
   // Sommellerie
-  {
-    id: "rec-10",
-    title: "Dégustation : Les grands crus de Bourgogne",
-    instructor: "Sommelier Amadou Diallo",
-    instructorRole: "Maître Sommelier",
-    date: "12 Avril 2024",
-    duration: "2h",
-    category: "Sommellerie",
-    level: "Avancé",
-    description: "Analyse organoleptique des vins de Bourgogne prestigieux.",
-    thumbnail: "/images/course-sommelier.jpg",
-    views: 876,
-    classId: "sommellerie",
-    className: "Sommellerie"
-  },
+  
   {
     id: "rec-11",
     title: "Accords mets et vins africains",
