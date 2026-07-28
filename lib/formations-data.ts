@@ -242,7 +242,7 @@ export const formations: FormationDetail[] = [
     diploma: "Certificat de completion",
   },
   {
-    slug: "Hygene-securite",
+    slug: "haccp",
     badge: "Certifiant",
     name: "HACCP",
     mode: "100% en ligne",
