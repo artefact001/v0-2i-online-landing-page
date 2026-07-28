@@ -73,7 +73,7 @@ export const courseClasses: CourseClass[] = [
     description: "Normes de sécurité alimentaire internationales",
     icon: "ShieldCheck",
     color: "#4ADE80",
-    coursesCount: 12
+    coursesCount: disponible bientôt
   },
   {
     id: "sommellerie",
@@ -81,7 +81,7 @@ export const courseClasses: CourseClass[] = [
     description: "L'art du vin et de l'accord mets-vins",
     icon: "Wine",
     color: "#A855F7",
-    coursesCount: 15
+    coursesCount: disponible bientôt
   },
   {
     id: "management",
@@ -89,7 +89,7 @@ export const courseClasses: CourseClass[] = [
     description: "Gestion et direction d'établissements",
     icon: "Building2",
     color: "#3B82F6",
-    coursesCount: 16
+    coursesCount: disponible bientôt
   }
 ]
 
@@ -335,21 +335,7 @@ export const recordedCourses: RecordedCourse[] = [
     className: "HACCP & Hygiène"
   },
   // Sommellerie
-  {
-    id: "rec-10",
-    title: "Dégustation : Les grands crus de Bourgogne",
-    instructor: "Sommelier Amadou Diallo",
-    instructorRole: "Maître Sommelier",
-    date: "12 Avril 2024",
-    duration: "2h",
-    category: "Sommellerie",
-    level: "Avancé",
-    description: "Analyse organoleptique des vins de Bourgogne prestigieux.",
-    thumbnail: "/images/course-sommelier.jpg",
-    views: 876,
-    classId: "sommellerie",
-    className: "Sommellerie"
-  },
+  
   {
     id: "rec-11",
     title: "Accords mets et vins africains",

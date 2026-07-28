@@ -181,7 +181,7 @@ function CoursLivePageContent() {
               </div>
               <div className="text-center">
                 <p className="font-serif text-3xl font-bold text-white">12+</p>
-                <p className="text-sm text-[rgba(255,255,255,0.6)]">Experts formateurs</p>
+                <p className="text-sm text-[rgba(255,255,255,0.6)]">chefs formateurs</p>
               </div>
             </div>
           </div>
