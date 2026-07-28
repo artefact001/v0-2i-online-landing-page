@@ -70,8 +70,10 @@ function CourseCard({ course, index }: { course: (typeof formations)[number]; in
             </div>
           ) : (
             <div>
-              <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider">Diplome</span>
-              <div className="text-sm font-medium text-white">Reconnu Etat</div>
+              <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider"> 
+                 
+              </span>
+              <div className="text-sm font-medium text-white">Diplome d'Etat</div>
             </div>
           )}
 
