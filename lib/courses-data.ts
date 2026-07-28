@@ -49,7 +49,7 @@ export const courseClasses: CourseClass[] = [
     description: "Formation complète aux techniques culinaires professionnelles",
     icon: "ChefHat",
     color: "#C9A227",
-    coursesCount: 24
+    coursesCount: 0
   },
   {
     id: "cap-service",
@@ -57,7 +57,7 @@ export const courseClasses: CourseClass[] = [
     description: "Maîtrisez l'art du service en restauration",
     icon: "UtensilsCrossed",
     color: "#E8C050",
-    coursesCount: 18
+    coursesCount: 0
   },
   {
     id: "cap-patisserie",
@@ -65,7 +65,7 @@ export const courseClasses: CourseClass[] = [
     description: "L'excellence de la pâtisserie française",
     icon: "Cake",
     color: "#F5E9C4",
-    coursesCount: 21
+    coursesCount: 0
   },
   {
     id: "haccp",
