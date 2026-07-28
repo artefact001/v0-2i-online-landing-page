@@ -22,7 +22,7 @@ const testimonials = [
   },
   {
     stars: 5,
-    text: "Ancienne étudiante à l'UVS, j'ai rejoint Incub Institut pour cette formation qui a répondu à mes attentes. J'y ai acquis des compétences solides en cuisine, pâtisserie, service et normes d'hygiène. Le déroulement très pratique, avec de nombreuses mises en situation, m'a permis de comprendre le rythme réel d'un restaurant. Les formateurs étaient professionnels et disponibles. Je recommande cette école à toute personne qui veut se lancer dans la restauration, car on en ressort avec des bases concrètes. Merci !"
+    text: "Ancienne étudiante à l'UVS, j'ai rejoint Incub Institut pour cette formation qui a répondu à mes attentes. J'y ai acquis des compétences solides en cuisine, pâtisserie, service et normes d'hygiène. Le déroulement très pratique, avec de nombreuses mises en situation, m'a permis de comprendre le rythme réel d'un restaurant. Les formateurs étaient professionnels et disponibles. Je recommande cette école à toute personne qui veut se lancer dans la restauration, car on en ressort avec des bases concrètes. Merci !",
     image: "/images/testimonial-3.jpg",
     name: "Mbayame Ndione",
     role: "Cuisinière",
