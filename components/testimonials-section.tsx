@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react"
 const testimonials = [
   {
     stars: 5,
-    text: "Un grand merci à INCUB Institut pour cette excellente formation en restauration. Les formateurs sont professionnels, accueillants et toujours prêts à accompagner. Je recommande vivement cette école à toute personne souhaitant apprendre un métier et développer ses compétences. Merci à toute l'équipe pour votre engagement !",
+    text: "Un grand merci à Incub Institut pour cette excellente formation en restauration. Les formateurs sont professionnels, accueillants et toujours prêts à accompagner. Je recommande vivement cette école à toute personne souhaitant apprendre un métier et developper ses competences.",
     image: "/images/testimonial-1.jpg",
     name: "Ndeye Aida Niang",
     role: "Restauratrice",
@@ -14,7 +14,7 @@ const testimonials = [
   },
   {
     stars: 5,
-    text: "Étudiantes en CAP2 à Incub Institut, nous avons créé notre petite entreprise, Teranga Délice, en parallèle de notre formation. Merci à toute l'équipe et nos formateurs pour leur accompagnement sur mesure et la qualité de leur enseignement. Cette formation nous a donné les compétences et la confiance pour entreprendre avec sérénité.",
+    text: "Étudiantes en CAP2 à Incub Institut, nous avons créé notre entreprise, Teranga Délice, en parallèle de notre formation. Merci à toute l'équipe pour leur accompagnement sur mesure. Cette formation nous a donné les compétences et la confiance pour entreprendre avec sérénité.",
     image: "/images/testimonial-2.jpg",
     name: "Dieynaba Thioube / Diass Awa Samb",
     role: "Entrepreneuses en restauration",
@@ -22,7 +22,7 @@ const testimonials = [
   },
   {
     stars: 5,
-    text: "Ancienne étudiante à l'UVS, j'ai rejoint Incub Institut pour cette formation qui a répondu à mes attentes. J'y ai acquis des compétences solides en cuisine, pâtisserie, service et normes d'hygiène. Le déroulement très pratique, avec de nombreuses mises en situation, m'a permis de comprendre le rythme réel d'un restaurant. Les formateurs étaient professionnels et disponibles. Je recommande cette école à toute personne qui veut se lancer dans la restauration, car on en ressort avec des bases concrètes. Merci !",
+    text: "J'ai rejoint Incub Institut pour cette formation qui a répondu à mes attentes. J'y ai acquis des compétences solides en cuisine, pâtisserie, service et normes d'hygiène. Le déroulement très pratique m'a permis de comprendre le rythme réel d'un restaurant. Merci à toute l'équipe !",
     image: "/images/testimonial-3.jpg",
     name: "Mbayame Ndione",
     role: "Cuisinière",
