@@ -10,39 +10,23 @@ const testimonials = [
     image: "/images/testimonial-1.jpg",
     name: "Ndeye Aida Niang",
     role: "Restauratrice",
-<<<<<<< HEAD
-    location: "Keur Massar,Dakar,Sénégal",
-=======
     location: "Dakar, Senegal",
->>>>>>> f44ec85e1fde9716c132d7cf21d9348a5284ec63
   },
   {
     stars: 5,
     text: "Étudiantes en CAP2 à Incub Institut, nous avons créé notre petite entreprise, Teranga Délice, en parallèle de notre formation. Merci à toute l'équipe et nos formateurs pour leur accompagnement sur mesure et la qualité de leur enseignement. Cette formation nous a donné les compétences et la confiance pour entreprendre avec sérénité.",
     image: "/images/testimonial-2.jpg",
-<<<<<<< HEAD
-    name: "Ibrahima Diallo",
-    role: "Chef de partie",
-    location: "Bargny,Dakar,Sénégal",
-=======
     name: "Dieynaba Thioube / Diass Awa Samb",
     role: "Entrepreneuses en restauration",
     location: "Dakar, Senegal",
->>>>>>> f44ec85e1fde9716c132d7cf21d9348a5284ec63
   },
   {
     stars: 5,
     text: "Ancienne étudiante à l'UVS, j'ai rejoint Incub Institut pour cette formation qui a répondu à mes attentes. J'y ai acquis des compétences solides en cuisine, pâtisserie, service et normes d'hygiène. Le déroulement très pratique, avec de nombreuses mises en situation, m'a permis de comprendre le rythme réel d'un restaurant. Les formateurs étaient professionnels et disponibles. Je recommande cette école à toute personne qui veut se lancer dans la restauration, car on en ressort avec des bases concrètes. Merci !"
     image: "/images/testimonial-3.jpg",
-<<<<<<< HEAD
-    name: "Fatou Sarr",
-    role: "Patissiere entrepreneur",
-    location: "Rufisque,Dakar,Sénégal",
-=======
     name: "Mbayame Ndione",
     role: "Cuisinière",
     location: "Dakar, Senegal",
->>>>>>> f44ec85e1fde9716c132d7cf21d9348a5284ec63
   },
 ]
 
