@@ -98,7 +98,7 @@ export const liveCourses: LiveCourse[] = [
   {
     id: "live-1",
     title: "Techniques de découpe professionnelle",
-    instructor: "Chef Jean-Baptiste Mensah",
+    instructor: "Chef Boubacar Diop",
     instructorRole: "Chef Exécutif - 15 ans d'expérience",
     date: "Aujourd'hui",
     time: "14:00",
@@ -130,7 +130,7 @@ export const liveCourses: LiveCourse[] = [
   {
     id: "live-3",
     title: "Pâtisserie : Les bases de la viennoiserie",
-    instructor: "Chef Fatou Ndiaye",
+    instructor: "Chef Goudiabi",
     instructorRole: "Chef Pâtissière - Meilleur Ouvrier",
     date: "Demain",
     time: "09:00",
@@ -146,7 +146,7 @@ export const liveCourses: LiveCourse[] = [
   {
     id: "live-4",
     title: "HACCP : Analyse des risques en cuisine",
-    instructor: "Dr. Kofi Asante",
+    instructor: "Mr. Diarra",
     instructorRole: "Expert Sécurité Alimentaire",
     date: "Demain",
     time: "11:00",
@@ -162,7 +162,7 @@ export const liveCourses: LiveCourse[] = [
   {
     id: "live-5",
     title: "Leadership en cuisine : Gérer son équipe",
-    instructor: "Chef Marie-Claire Okonkwo",
+    instructor: "Chef Boubacar Diop",
     instructorRole: "Directrice de Restaurant",
     date: "Vendredi",
     time: "14:00",
@@ -178,7 +178,7 @@ export const liveCourses: LiveCourse[] = [
   {
     id: "live-6",
     title: "L'art du dressage moderne",
-    instructor: "Chef Ibrahima Sow",
+    instructor: "Chef Boubacar Diop",
     instructorRole: "Chef Créatif - 2 étoiles Michelin",
     date: "Samedi",
     time: "10:00",
@@ -199,7 +199,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-1",
     title: "Les sauces mères : Fond et bases",
-    instructor: "Chef Jean-Baptiste Mensah",
+    instructor: "Chef Boubacar Diop",
     instructorRole: "Chef Exécutif",
     date: "15 Avril 2024",
     duration: "2h15",
@@ -214,7 +214,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-2",
     title: "Techniques de cuisson à basse température",
-    instructor: "Chef Jean-Baptiste Mensah",
+    instructor: "Chef Ibrahima Sow",
     instructorRole: "Chef Exécutif",
     date: "12 Avril 2024",
     duration: "1h45",
@@ -229,7 +229,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-3",
     title: "Poissons et fruits de mer : Préparation",
-    instructor: "Chef Aminata Keita",
+    instructor: "Chef Boubacar Diop",
     instructorRole: "Spécialiste Produits de la Mer",
     date: "8 Avril 2024",
     duration: "2h30",
@@ -245,7 +245,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-4",
     title: "Mise en place et dressage de table",
-    instructor: "Maître d'Hôtel Paul Diatta",
+    instructor: "Mr. Ibrahima Ba",
     instructorRole: "Maître d'Hôtel Principal",
     date: "14 Avril 2024",
     duration: "1h30",
@@ -260,7 +260,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-5",
     title: "Service à l'assiette vs service au guéridon",
-    instructor: "Maître d'Hôtel Paul Diatta",
+    instructor: "Mr. Ibrahima Ba",
     instructorRole: "Maître d'Hôtel Principal",
     date: "10 Avril 2024",
     duration: "2h",
@@ -276,7 +276,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-6",
     title: "Macarons : De A à Z",
-    instructor: "Chef Fatou Ndiaye",
+    instructor: "Chef Goudiabi",
     instructorRole: "Chef Pâtissière",
     date: "13 Avril 2024",
     duration: "3h",
@@ -291,7 +291,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-7",
     title: "Pâte feuilletée inversée",
-    instructor: "Chef Fatou Ndiaye",
+    instructor: "Chef Goudiabi",
     instructorRole: "Chef Pâtissière",
     date: "9 Avril 2024",
     duration: "2h30",
@@ -307,14 +307,14 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-8",
     title: "Plan de nettoyage et désinfection",
-    instructor: "Dr. Kofi Asante",
+    instructor: "Mr. Diarra",
     instructorRole: "Expert Sécurité Alimentaire",
     date: "11 Avril 2024",
     duration: "1h45",
     category: "HACCP & Hygiène",
     level: "Tous niveaux",
     description: "Élaborer et mettre en œuvre un PND efficace.",
-    thumbnail: "/images/course-haccp.jpg",
+    thumbnail: "/images/course-haccp2.jpg",
     views: 2156,
     classId: "haccp",
     className: "HACCP & Hygiène"
@@ -322,7 +322,7 @@ export const recordedCourses: RecordedCourse[] = [
   {
     id: "rec-9",
     title: "Traçabilité alimentaire",
-    instructor: "Dr. Kofi Asante",
+    instructor: "Mr. Diarra",
     instructorRole: "Expert Sécurité Alimentaire",
     date: "7 Avril 2024",
     duration: "2h",
