@@ -73,7 +73,7 @@ export const courseClasses: CourseClass[] = [
     description: "Normes de sécurité alimentaire internationales",
     icon: "ShieldCheck",
     color: "#4ADE80",
-    coursesCount: disponible bientôt
+    coursesCount: 0
   },
   {
     id: "sommellerie",
