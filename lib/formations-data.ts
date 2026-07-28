@@ -212,7 +212,7 @@ export const formations: FormationDetail[] = [
     diploma: "Certificat Professionnel de Specialite",
   },
   {
-    slug: "Travail-A-Domicile (TAD)",
+    slug: "Travail-A-Domicile",
     badge: "Certifiant",
     name: "Travail à domicile",
     mode: "100% en ligne ou en hybride",
