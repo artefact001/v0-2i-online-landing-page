@@ -206,7 +206,7 @@ export const recordedCourses: RecordedCourse[] = [
     category: "CAP Cuisine",
     level: "Débutant",
     description: "Maîtrisez les 5 sauces mères de la cuisine française classique.",
-    thumbnail: "/images/course-cuisine.jpg",
+    thumbnail: "/images/sauce-mere.jpeg",
     views: 1234,
     classId: "cap-cuisine",
     className: "CAP Cuisine"
@@ -221,7 +221,7 @@ export const recordedCourses: RecordedCourse[] = [
     category: "CAP Cuisine",
     level: "Intermédiaire",
     description: "Sous-vide et cuisson contrôlée pour des résultats parfaits.",
-    thumbnail: "/images/course-cuisine.jpg",
+    thumbnail: "/images/techniques-cuisson.jpeg",
     views: 892,
     classId: "cap-cuisine",
     className: "CAP Cuisine"
@@ -236,7 +236,7 @@ export const recordedCourses: RecordedCourse[] = [
     category: "CAP Cuisine",
     level: "Intermédiaire",
     description: "Écaillage, filetage et techniques de cuisson des produits de la mer.",
-    thumbnail: "/images/course-cuisine.jpg",
+    thumbnail: "/images/filletage.jpeg",
     views: 756,
     classId: "cap-cuisine",
     className: "CAP Cuisine"
@@ -298,7 +298,7 @@ export const recordedCourses: RecordedCourse[] = [
     category: "CAP Pâtisserie",
     level: "Intermédiaire",
     description: "La technique du feuilletage inversé pour des mille-feuilles exceptionnels.",
-    thumbnail: "/images/course-patisserie.jpg",
+    thumbnail: "/images/chef-patisserie.jpeg",
     views: 1876,
     classId: "cap-patisserie",
     className: "CAP Pâtisserie"
