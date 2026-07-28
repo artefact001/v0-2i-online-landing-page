@@ -242,7 +242,7 @@ export const formations: FormationDetail[] = [
     diploma: "Certificat de completion",
   },
   {
-    slug: "HACCP",
+    slug: "haccp",
     badge: "Certifiant",
     name: "HACCP",
     mode: "100% en ligne",
@@ -269,7 +269,7 @@ export const formations: FormationDetail[] = [
     diploma: "Certification HACCP",
   },
   {
-    slug: "INCUBATION-STREET FOOD",
+    slug: "INCUBATION-STREET-FOOD",
     badge: "Entreprenariat",
     name: "INCUBATION STREET FOOD",
     mode: "Accompagnement entreprenarial",
@@ -299,7 +299,7 @@ export const formations: FormationDetail[] = [
     diploma: "Attestation d'incubation",
   },
   {
-    slug: "Gestion d'un Etablissement de Restaurant",
+    slug: "Gestion-restauration",
     badge: "Entreprenariat",
     name: "Gestion de restauration",
     mode: "100% en ligne",
