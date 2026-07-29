@@ -96,6 +96,25 @@ export function Hero() {
         </div>
 
         {/* Trust badges */}
+        <div className="mt-12 flex items-center gap-8 opacity-0 translate-y-5 animate-fade-up delay-1300">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1B3A6B] to-[#0D2545] border-2 border-[#080F1E] flex items-center justify-center text-xs text-[#C9A227]">
+                  {["A", "I", "F", "M"][i-1]}
+                </div>
+              ))}
+            </div>
+            <span className="text-xs text-[rgba(255,255,255,0.4)]">+500 apprenants</span>
+          </div>
+          <div className="h-6 w-px bg-[rgba(255,255,255,0.1)]" />
+          <div className="flex items-center gap-2">
+            <div className="text-[#C9A227] text-sm">
+              {"★★★★★"}
+            </div>
+            <span className="text-xs text-[rgba(255,255,255,0.4)]">4,9/5 avis</span>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
@@ -104,7 +123,7 @@ export function Hero() {
           { num: "9+", label: "Formations" },
           { num: "1000+", label: "Apprenants visés / an" },
           { num: "1", label: "Pays couverts" },
-        
+
         ].map((stat) => (
           <div key={stat.label} className="text-right">
             <div className="font-serif text-[42px] font-bold text-[#C9A227] leading-none">{stat.num}</div>
