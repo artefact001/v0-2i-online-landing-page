@@ -133,7 +133,7 @@ export function CoursesSection() {
             Catalogue de formations
           </p>
           <h2 className="reveal font-serif text-[clamp(36px,4vw,56px)] font-semibold text-white mb-4">
-            Nos <em className="italic text-[#C9A227] font-light">formations</em> <br /> d&apos;excellence
+            Nos <em className="italic text-[#C9A227] font-light">formations</em> <span></span> d&apos;excellence
           </h2>
           <p className="reveal text-base text-[#d0daf0] max-w-[600px] mx-auto leading-relaxed">
             Des parcours complets concus par des experts du metier. Apprenez a votre rythme, validez vos acquis et
