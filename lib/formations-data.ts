@@ -220,7 +220,7 @@ export const formations: FormationDetail[] = [
       "Formation flexible et autonome, entierement en ligne, accessible a tous.",
     duration: "1 mois",
     price: "60 000 F",
-    image: "/images/course-management.jpg",
+    image: "/images/travail-domicile.jpg",
     longDesc:
       "La formation Travail à domicile est un programme 100% en ligne d'un mois, concu pour ceux qui souhaitent se former a leur rythme depuis chez eux. Contenu telechargeable et accompagnement a distance.",
     objectives: [
@@ -276,7 +276,7 @@ export const formations: FormationDetail[] = [
       "Lancez votre projet dans la restauration : business plan, financement, marketing.",
     duration: "3 mois",
     price: "100 000 F",
-    image: "/images/course-sommelier.jpg",
+    image: "/images/testimonial-2.jpg",
     longDesc:
       "Incubation Food est un programme de 3 mois pour les entrepreneurs de la restauration. De l'idee au lancement, nous vous accompagnons dans la construction de votre business plan, la recherche de financement et votre strategie marketing.",
     objectives: [
