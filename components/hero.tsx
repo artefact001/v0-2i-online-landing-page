@@ -47,7 +47,7 @@ export function Hero() {
         <div className="flex items-center gap-4 mb-8 opacity-0 translate-y-5 animate-fade-up delay-300">
           <div className="w-10 h-[1px] bg-[#C9A227]" />
 
-          <div><span><br /></span></div>
+          <div><span><br /> <br /> <br /></span></div>
           
           <span className="text-[10px] font-semibold tracking-[4px] uppercase text-[#C9A227]">
             Diplôme Reconnu par l&apos;État
