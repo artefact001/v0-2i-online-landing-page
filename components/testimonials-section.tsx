@@ -129,7 +129,7 @@ export function TestimonialsSection() {
         </div>
 
         {/* Trust indicators */}
-       {/* <div className="reveal mt-16 flex flex-col sm:flex-row items-center justify-center gap-8 text-center">
+       {/*  <div className="reveal mt-16 flex flex-col sm:flex-row items-center justify-center gap-8 text-center">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-[rgba(201,162,39,0.1)] border border-[rgba(201,162,39,0.2)] flex items-center justify-center">
               <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -169,7 +169,7 @@ export function TestimonialsSection() {
               <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider">Pays</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   )
