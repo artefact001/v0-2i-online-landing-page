@@ -110,7 +110,7 @@ export const formations: FormationDetail[] = [
       "Validation des Acquis de l'Experience. Faites reconnaitre vos competences par un diplome officiel.",
     duration: "4 à 6 mois",
     price: "150 000 F",
-    image: "/images/course-management.jpg",
+    image: "/images/VAE.jpg",
     longDesc:
       "La VAE (Validation des Acquis de l'Experience) permet de transformer votre experience professionnelle en diplome reconnu. En 4 a 6 mois, nos experts vous accompagnent dans la constitution de votre dossier et la preparation a l'entretien avec le jury.",
     objectives: [
@@ -138,7 +138,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Specialisation avancee en cuisine pour perfectionner vos techniques et votre expertise.",
     duration: "6 mois",
-    image: "/images/course-cuisine.jpg",
+    image: "/images/course-cuisine1.jpg",
     longDesc:
       "Le Certificat de Spécialité Cuisinier est une formation courte et intensive de 6 mois destinee a approfondir une specialite culinaire. Ideale pour les professionnels souhaitant monter en competence rapidement.",
     objectives: [
@@ -165,7 +165,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Specialisation avancee en patisserie pour maitriser les techniques de haut niveau.",
     duration: "6 mois",
-    image: "/images/course-patisserie.jpg",
+    image: "/images/course-patisserie1.jpg",
     longDesc:
       "Le Certificat de Spécialité Patissier est une formation de 6 mois pour approfondir votre maitrise de la patisserie. Parfaite pour se specialiser dans la chocolaterie, les entremets ou la patisserie de boutique.",
     objectives: [
@@ -192,7 +192,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Specialisation avancee en service pour exceller dans la restauration haut de gamme.",
     duration: "6 mois",
-    image: "/images/course-service.jpg",
+    image: "/images/course-service1.jpg",
     longDesc:
       "Le Certificat de Spécialité Serveur est une formation de 6 mois axee sur l'excellence du service en restauration gastronomique. Maitrisez les codes du service haut de gamme et la sommellerie.",
     objectives: [
@@ -276,7 +276,7 @@ export const formations: FormationDetail[] = [
       "Lancez votre projet dans la restauration : business plan, financement, marketing.",
     duration: "3 mois",
     price: "100 000 F",
-    image: "/images/testimonial-2.jpg",
+    image: "/images/incubation-food.jpg",
     longDesc:
       "Incubation Food est un programme de 3 mois pour les entrepreneurs de la restauration. De l'idee au lancement, nous vous accompagnons dans la construction de votre business plan, la recherche de financement et votre strategie marketing.",
     objectives: [

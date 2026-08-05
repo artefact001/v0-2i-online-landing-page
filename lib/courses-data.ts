@@ -252,7 +252,7 @@ export const recordedCourses: RecordedCourse[] = [
     category: "CAP Service",
     level: "Débutant",
     description: "Les standards internationaux de mise en place pour service à la française.",
-    thumbnail: "/images/course-service.jpg",
+    thumbnail: "/images/course-service1.jpg",
     views: 1567,
     classId: "cap-service",
     className: "CAP Service en Salle"
