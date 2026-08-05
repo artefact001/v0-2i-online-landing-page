@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import Image from "next/image"
+import Image from 'next/image'
 
 const partners = [
   {
