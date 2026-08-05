@@ -41,6 +41,7 @@ import {
   setUserActive,
   resetUserPassword,
 } from "./actions"
+import { TablePagination } from "@/components/admin/table-pagination"
 
 const ROLE_LABELS: Record<ManagedUser["role"], string> = {
   admin: "Administrateur",
@@ -195,12 +196,21 @@ export function UsersManager({
     })
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 10
+
   const filtered = users.filter((u) => {
     const matchesSearch =
       `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(search.toLowerCase())
     const matchesRole = roleFilter === "all" || u.role === roleFilter
     return matchesSearch && matchesRole
   })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const pagedUsers = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  // Reset page on filter/search change
+  useEffect(() => { setCurrentPage(1) }, [search, roleFilter])
 
   const counts = {
     total: users.length,
@@ -298,7 +308,7 @@ export function UsersManager({
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((u) => (
+                    {pagedUsers.map((u) => (
                       <tr key={u.id} className="border-b border-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
                         <td className="p-4">
                           <p className="text-white font-medium">
@@ -376,6 +386,17 @@ export function UsersManager({
                   </tbody>
                 </table>
               </div>
+              {filtered.length > PAGE_SIZE && (
+                <div className="p-4 border-t border-[rgba(255,255,255,0.05)]">
+                  <TablePagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filtered.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
