@@ -10,8 +10,8 @@ const partners = [
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
-    name: "Radisson Blu Dakar",
-    domain: "Hotellerie internationale",
+    name: "Force N",
+    domain: "Formation professionelle ",
     image: "public/images/1000769413.jpg",
   },
   {
@@ -26,7 +26,7 @@ const partners = [
   },
   {
     name: "MEFPT",
-    domain: "Minitére de l'emploie et de la formation professionnelle technique ",
+    domain: "Minitére de l'emploie et de la formation professionnelle technique",
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
@@ -41,7 +41,7 @@ const partners = [
   },
   {
     name: "Adepme",
-    domain: "Agence de developpement et d'encadrement des petites et moyennes entreprises ",
+    domain: "Agence de developpement et d'encadrement des petites et moyennes entreprises",
     image: "/images/1000917129.jpg",
   },
 ]
