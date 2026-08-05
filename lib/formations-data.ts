@@ -220,7 +220,7 @@ export const formations: FormationDetail[] = [
       "Formation flexible et autonome, entierement en ligne, accessible a tous.",
     duration: "1 mois",
     price: "60 000 F",
-    image: "/images/course-management.jpg",
+    image: "/images/travail-domicile.jpg",
     longDesc:
       "La formation Travail à domicile est un programme d'un mois, concu pour accompagner les travailleurs domestiques dans le developpement de leurs compétences.",
     objectives: [
@@ -277,7 +277,7 @@ export const formations: FormationDetail[] = [
       "Lancez votre projet d'alimentation de rue :  ideation, etude de mmarché, business plan, methode de financement, marketing digitale .... ",
     duration: "3 mois",
     price: "100 000 F",
-    image: "/images/course-sommelier.jpg",
+    image: "/images/testimonial-2.jpg",
     longDesc:
       "C'est un programme de 3 mois destiné aux jeunes et aux femmes porteurs de projet de le secteur de l'alimentation de rue. De l'idee au lancement, nous vous accompagnons dans la construction de votre pprojet.",
     objectives: [
