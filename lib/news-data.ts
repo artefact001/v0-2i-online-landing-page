@@ -45,7 +45,7 @@ export const actualites: Actualite[] = [
     excerpt:
       "2I Online signe un accord avec plusieurs établissements hôteliers de la capitale pour faciliter l'insertion professionnelle de nos diplômés.",
     category: "Partenariat",
-    image: "/images/course-management.jpg",
+    image: "/images/hotel.jpg",
     date: "2026-05-20",
     readingTime: "4 min",
   },
@@ -63,11 +63,11 @@ export const actualites: Actualite[] = [
   {
     id: "4",
     slug: "temoignage-reussite-aminata",
-    title: "Aminata ouvre son restaurant après sa formation",
+    title: "Dieynaba Thioube et Diass Awa Samb, ouvrent leur restaurant après leur formation",
     excerpt:
-      "Diplômée du CAP Cuisine en 2025, Aminata Diop a ouvert son propre restaurant à Thiès. Retour sur un parcours inspirant rendu possible par 2I Online.",
+      "Étudiantes en CAP2 à Incub Institut, nous avons créé notre petite entreprise, Teranga Délice, en parallèle de notre formation. Merci à toute l'équipe et nos formateurs pour leur accompagnement sur mesure et la qualité de leur enseignement. Cette formation nous a donné les compétences et la confiance pour entreprendre avec sérénité.",
     category: "Réussite",
-    image: "/images/about-learning.jpg",
+    image: "/images/testimonial-2.jpg",
     date: "2026-05-08",
     readingTime: "5 min",
   },

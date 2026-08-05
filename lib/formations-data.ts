@@ -109,7 +109,7 @@ export const formations: FormationDetail[] = [
       "Validation des Acquis de l'Experience. Faites reconnaitre vos competences par un diplome reconnu par l'Etat.",
     duration: "4 à 6 mois",
     price: "150 000 F",
-    image: "/images/course-management.jpg",
+    image: "/images/VAE.jpg",
     longDesc:
       "La VAE (Validation des Acquis de l'Experience) permet de transformer votre experience professionnelle en diplome reconnu. En 4 a 6 mois, nos formateurs vous accompagnent dans la constitution de votre dossier et la preparation a l'entretien avec le jury.",
     objectives: [
@@ -136,9 +136,15 @@ export const formations: FormationDetail[] = [
     name: "Certificat  Professionnel de Spécialité-Cuisinier",
     mode: "Formation hybride / ligne",
     shortDesc:
+<<<<<<< HEAD
       "Specialisation avancée en cuisine pour perfectionner vos techniques et votre expertise.",
     duration: " 6 mois",
     image: "/images/course-cuisine.jpg",
+=======
+      "Specialisation avancee en cuisine pour perfectionner vos techniques et votre expertise.",
+    duration: "6 mois",
+    image: "/images/course-cuisine1.jpg",
+>>>>>>> a361c66739a58f017540d840596d37ae358d7e52
     longDesc:
       "Le Certificat Professionnel de Spécialité Cuisinier est une formation courte et intensive de 6 mois destinee a approfondir une specialite culinaire. Ideale pour les débutants  et professionnels souhaitant monter en compétence.",
     objectives: [
@@ -165,7 +171,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Specialisation avancee en patisserie pour maitriser les techniques de haut niveau.",
     duration: "6 mois",
-    image: "/images/course-patisserie.jpg",
+    image: "/images/course-patisserie1.jpg",
     longDesc:
       "Le Certificat Professionnel de Spécialité Patissier est une formation de 6 mois pour approfondir votre maitrise de la patisserie. Un choix parfait pour se specialiser.",
     objectives: [
@@ -192,7 +198,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Specialisation avancee en service pour exceller dans la restauration haut de gamme.",
     duration: "6 mois",
-    image: "/images/course-service.jpg",
+    image: "/images/course-service1.jpg",
     longDesc:
       "Le Certificat Professionnel de Spécialité Serveur est une formation de 6 mois axée sur l'excellence du service en restauration gastronomique. Maitrisez les codes du service haut de gamme.",
     objectives: [
@@ -277,7 +283,7 @@ export const formations: FormationDetail[] = [
       "Lancez votre projet d'alimentation de rue :  ideation, etude de mmarché, business plan, methode de financement, marketing digitale .... ",
     duration: "3 mois",
     price: "100 000 F",
-    image: "/images/testimonial-2.jpg",
+    image: "/images/incubation-food.jpg",
     longDesc:
       "C'est un programme de 3 mois destiné aux jeunes et aux femmes porteurs de projet de le secteur de l'alimentation de rue. De l'idee au lancement, nous vous accompagnons dans la construction de votre pprojet.",
     objectives: [
