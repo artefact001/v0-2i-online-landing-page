@@ -75,7 +75,7 @@ export function Navbar() {
           >
             Connexion
           </Link>
-          <Link
+              {/*  <Link
             href="#inscription"
             className="relative bg-[#C9A227] text-[#0D2545] text-[10px] font-bold tracking-[2px] uppercase px-6 py-3 rounded-lg no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105 hover:shadow-[0_0_20px_rgba(201,162,39,0.3)] flex items-center gap-2"
           >
@@ -83,7 +83,7 @@ export function Navbar() {
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </Link>
+          </Link>   /}
         </div>
 
         {/* Mobile Menu Button */}
