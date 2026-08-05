@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import Image from "next/image"
+import Image from 'next/image'
 
 const partners = [
   {
@@ -12,36 +12,36 @@ const partners = [
   {
     name: "Radisson Blu Dakar",
     domain: "Hotellerie internationale",
-    image: "/images/1000769413.jpg",
+    image: "public/images/1000769413.jpg",
   },
   {
-    name: "Chez Loutcha",
-    domain: "Restauration traditionnelle",
+    name: "Ambarssade de Françe",
+    domain: "Ambarssade",
     image: "/images/1000797646.jpg",
   },
   {
-    name: "Pullman Dakar",
-    domain: "Hotellerie d'affaires",
+    name: "DER FJ",
+    domain: "Deélégation générale a l'entreprenariat rapide des femmes et des jeunes",
     image: "/images/1000797760.jpg",
   },
   {
-    name: "Le Lagon 1",
-    domain: "Restauration gastronomique",
+    name: "MEFPT",
+    domain: "Minitére de l'emploie et de la formation professionnelle technique ",
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
-    name: "King Fahd Palace",
-    domain: "Hotellerie & evenementiel",
+    name: "KaNora Service",
+    domain: "Inclusion Sociale",
     image: "/images/IMG-20250425-WA0017.jpg",
   },
   {
-    name: "Farid Restaurant",
-    domain: "Arts culinaires",
+    name: "Mairie Bargny",
+    domain: "Mairie de la Localité",
     image: "/images/logo mairie bargny.jpg",
   },
   {
-    name: "Azalai Hotel",
-    domain: "Hotellerie regionale",
+    name: "Adepme",
+    domain: "Agence de developpement et d'encadrement des petites et moyennes entreprises ",
     image: "/images/1000917129.jpg",
   },
 ]
