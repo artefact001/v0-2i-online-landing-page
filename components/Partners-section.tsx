@@ -12,7 +12,7 @@ const partners = [
   {
     name: "Radisson Blu Dakar",
     domain: "Hotellerie internationale",
-    image: "/images/1000769413.jpg",
+    image: "/public/images/1000769413.jpg",
   },
   {
     name: "Chez Loutcha",
