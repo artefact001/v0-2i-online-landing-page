@@ -43,12 +43,21 @@ export default function ProfessorsPage() {
     formations: [] as string[],
   })
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 9
+
   const filteredProfessors = professors.filter(
     (professor) =>
       professor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       professor.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       professor.speciality.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const totalPages = Math.max(1, Math.ceil(filteredProfessors.length / PAGE_SIZE))
+  const pagedProfessors = filteredProfessors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  // Reset to page 1 when search changes
+  useEffect(() => { setCurrentPage(1) }, [searchQuery])
 
   const handleAddProfessor = () => {
     const created: Professor = {
@@ -205,7 +214,7 @@ export default function ProfessorsPage() {
 
           {/* Professors Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredProfessors.map((professor) => {
+            {pagedProfessors.map((professor) => {
               const professorFormations = FORMATIONS.filter(f => professor.formations.includes(f.id))
 
               return (
@@ -297,13 +306,21 @@ export default function ProfessorsPage() {
             })}
           </div>
 
-          {filteredProfessors.length === 0 && (
+          {filteredProfessors.length === 0 ? (
             <div className="text-center py-12">
               <svg className="w-16 h-16 mx-auto text-[rgba(255,255,255,0.2)] mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <p className="text-[rgba(255,255,255,0.5)]">Aucun professeur trouvé</p>
             </div>
+          ) : (
+            <TablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredProfessors.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+            />
           )}
         </div>
       </main>

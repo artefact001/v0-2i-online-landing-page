@@ -23,6 +23,7 @@ import {
   Award,
 } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
+import { ContentSidebar } from '@/components/professor/content-sidebar'
 import {
   type EvalQuestion,
   type EvaluationContent,
@@ -333,7 +334,9 @@ export default function ExercisesPage() {
   const examCount = exercises.filter((ex) => (ex.content?.is_exam ?? ex.exercise_type === 'exam')).length
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6 items-start">
+      <ContentSidebar role="professor" />
+      <div className="min-w-0 flex-1 space-y-6">
       <SectionHeader
         icon={<ListChecks className="h-7 w-7" />}
         title="Évaluations interactives"
@@ -832,6 +835,7 @@ export default function ExercisesPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

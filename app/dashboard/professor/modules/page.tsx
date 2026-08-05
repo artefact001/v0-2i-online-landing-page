@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Edit, Trash2, Plus, Book, Layers, CheckCircle2, FileText } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
+import { ContentSidebar } from '@/components/professor/content-sidebar'
 
 interface Module {
   id: string
@@ -183,7 +184,9 @@ export default function ModulesPage() {
   const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6 items-start">
+      <ContentSidebar role="professor" />
+      <div className="min-w-0 flex-1 space-y-6">
       <SectionHeader
         icon={<Layers className="h-7 w-7" />}
         title="Gestion des modules"
@@ -360,6 +363,7 @@ export default function ModulesPage() {
           </Button>
         </div>
       )}
+      </div>
     </div>
   )
 }

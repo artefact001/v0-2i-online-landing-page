@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
+import { TablePagination } from '@/components/admin/table-pagination'
 import { STUDENTS, FORMATIONS } from '@/lib/platform-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -74,6 +75,9 @@ export default function StudentsPage() {
     setEditStudent(null)
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 9
+
   const filteredStudents = STUDENTS.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -82,6 +86,11 @@ export default function StudentsPage() {
     const matchesStatus = selectedStatus === 'all' || student.status === selectedStatus
     return matchesSearch && matchesFormation && matchesStatus
   })
+
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / PAGE_SIZE))
+  const pagedStudents = filteredStudents.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  useEffect(() => { setCurrentPage(1) }, [searchQuery, selectedFormation, selectedStatus])
 
   const handleAddStudent = () => {
     console.log('Adding student:', newStudent)
@@ -335,7 +344,7 @@ export default function StudentsPage() {
 
               {viewMode === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredStudents.map((student) => {
+                  {pagedStudents.map((student) => {
                     const formation = FORMATIONS.find(f => f.id === student.formation)
                     return (
                       <Card key={student.id} className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)] hover:border-[#C9A227]/30 transition-colors">
@@ -410,7 +419,7 @@ export default function StudentsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredStudents.map((student) => {
+                      {pagedStudents.map((student) => {
                         const formation = FORMATIONS.find(f => f.id === student.formation)
                         return (
                           <TableRow key={student.id} className="border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)]">
@@ -459,6 +468,15 @@ export default function StudentsPage() {
                     </TableBody>
                   </Table>
                 </Card>
+              )}
+              {filteredStudents.length > PAGE_SIZE && (
+                <TablePagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredStudents.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setCurrentPage}
+                />
               )}
             </TabsContent>
 

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, Play, Eye, Upload, FileText, BookOpen } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
+import { ContentSidebar } from '@/components/professor/content-sidebar'
 
 interface Lesson {
   id: string
@@ -272,7 +273,9 @@ export default function LessonsPage() {
   const pdfLessons = lessons.filter((l) => l.content_type === 'pdf' && l.content).length
 
   return (
-    <div className="space-y-6">
+    <div className="flex gap-6 items-start">
+      <ContentSidebar role="professor" />
+      <div className="min-w-0 flex-1 space-y-6">
       <SectionHeader
         icon={<BookOpen className="h-7 w-7" />}
         title="Gestion des leçons"
@@ -551,6 +554,7 @@ export default function LessonsPage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   )
 }
