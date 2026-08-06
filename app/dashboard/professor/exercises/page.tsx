@@ -436,7 +436,7 @@ export default function ExercisesPage() {
             <div className="flex items-start gap-3 rounded-lg border border-[rgba(201,162,39,0.3)] bg-[#C9A227]/5 p-3 text-sm text-[rgba(255,255,255,0.8)]">
               <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A227]" />
               <p>
-                En mode examen, l&apos;élève qui atteint le score de réussite recevra automatiquement un
+                En mode examen, l&apos;étudiant qui atteint le score de réussite recevra automatiquement un
                 <span className="text-[#C9A227]"> certificat PDF</span> aux couleurs de 2I Online.
               </p>
             </div>

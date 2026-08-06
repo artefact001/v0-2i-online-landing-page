@@ -73,7 +73,7 @@ function CourseCard({ course, index }: { course: (typeof formations)[number]; in
               <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider"> 
                  
               </span>
-              <div className="text-sm font-medium text-white">Diplome d'Etat</div>
+              <div className="text-sm font-medium text-white">Diplôme d'Etat</div>
             </div>
           )}
 
@@ -81,7 +81,7 @@ function CourseCard({ course, index }: { course: (typeof formations)[number]; in
             href={`/formations/${course.slug}`}
             className="inline-flex items-center gap-2 px-5 py-3 bg-[rgba(201,162,39,0.15)] border border-[rgba(201,162,39,0.3)] text-[#E8C050] text-[10px] font-bold tracking-[1.5px] uppercase rounded-lg transition-all duration-300 hover:bg-[#C9A227] hover:text-[#0D2545] hover:border-[#C9A227]"
           >
-            Details
+            Détails
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
@@ -136,8 +136,8 @@ export function CoursesSection() {
             Nos <em className="italic text-[#C9A227] font-light">formations</em> <span></span> d&apos;excellence
           </h2>
           <p className="reveal text-base text-[#d0daf0] max-w-[600px] mx-auto leading-relaxed">
-            Des parcours complets concus par des experts du metier. Apprenez a votre rythme, validez vos acquis et
-            obtenez un diplome reconnu.
+            Des parcours complets conçus par des experts du métier. Apprenez à votre rythme, validez vos acquis et
+            obtenez un diplôme reconnu.
           </p>
         </div>
 

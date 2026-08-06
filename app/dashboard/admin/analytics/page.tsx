@@ -60,7 +60,7 @@ export default function AnalyticsDashboard() {
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm text-gray-600 mb-2">Étudiants Total</p>
+              <p className="text-sm text-gray-600 mb-2">Total Etudiants</p>
               <p className="text-3xl font-bold text-[#0D2545]">{analytics.totalStudents}</p>
             </div>
             <TrendingUp className="w-8 h-8 text-[#C9A227]" />
@@ -69,7 +69,7 @@ export default function AnalyticsDashboard() {
 
         <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100">
           <div>
-            <p className="text-sm text-gray-600 mb-2">Revenus Total</p>
+            <p className="text-sm text-gray-600 mb-2">Total Revenus</p>
             <p className="text-3xl font-bold text-[#0D2545]">{analytics.totalRevenue.toLocaleString()} XOF</p>
           </div>
         </Card>

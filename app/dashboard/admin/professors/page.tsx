@@ -371,7 +371,7 @@ export default function ProfessorsPage() {
                 <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
                   <div className="text-center">
                     <p className="text-white font-bold text-lg">{viewingProfessor.studentsCount}</p>
-                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Élèves</p>
+                    <p className="text-[rgba(255,255,255,0.4)] text-xs">Étudiants</p>
                   </div>
                   <div className="text-center">
                     <p className="text-white font-bold text-lg">{viewingProfessor.coursesCount}</p>
@@ -405,7 +405,7 @@ export default function ProfessorsPage() {
           <DialogHeader>
             <DialogTitle className="text-xl font-serif">Modifier le professeur</DialogTitle>
             <DialogDescription className="text-[rgba(255,255,255,0.5)]">
-              Mettez à jour les informations du professeur
+              Mis à jour des informations du professeur
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

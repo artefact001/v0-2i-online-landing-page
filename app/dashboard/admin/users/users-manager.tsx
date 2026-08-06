@@ -261,7 +261,7 @@ export function UsersManager({
             </Card>
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="p-5">
-                <p className="text-[rgba(255,255,255,0.5)] text-sm">Élèves</p>
+                <p className="text-[rgba(255,255,255,0.5)] text-sm">Étudiants</p>
                 <p className="text-2xl font-bold text-green-400 mt-1">{counts.student}</p>
               </CardContent>
             </Card>
@@ -284,7 +284,7 @@ export function UsersManager({
                   <SelectItem value="all">Tous les rôles</SelectItem>
                   <SelectItem value="admin">Administrateurs</SelectItem>
                   <SelectItem value="professor">Professeurs</SelectItem>
-                  <SelectItem value="student">Élèves</SelectItem>
+                  <SelectItem value="student">Étudiants</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -471,7 +471,7 @@ export function UsersManager({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="student">Élève</SelectItem>
+                    <SelectItem value="student">Étudiant</SelectItem>
                     <SelectItem value="professor">Professeur</SelectItem>
                     <SelectItem value="admin">Administrateur</SelectItem>
                   </SelectContent>

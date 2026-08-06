@@ -81,7 +81,7 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-sm text-[#d0daf0] leading-relaxed max-w-[300px] mb-6">
-              Plateforme de formation professionnelle en hotellerie, restauration et arts culinaires pour l&apos;Afrique.
+              Plateforme de formation professionnelle en hôtellerie, restauration et arts culinaires pour l&apos;Afrique.
             </p>
             
             {/* Social Links */}
@@ -176,7 +176,7 @@ export function Footer() {
             {/* Newsletter mini */}
             <div className="mt-6 pt-6 border-t border-[rgba(255,255,255,0.06)]">
               <p className="text-[10px] uppercase tracking-[2px] text-[rgba(255,255,255,0.3)] mb-3">
-                Restez informe
+                Restez informés
               </p>
               <Link
                 href="info@2i-online.com"
@@ -198,10 +198,10 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-6 text-xs text-[rgba(255,255,255,0.3)]">
             <Link href="#" className="hover:text-[#C9A227] transition-colors">
-              Mentions legales
+              Mentions légales
             </Link>
             <Link href="#" className="hover:text-[#C9A227] transition-colors">
-              Politique de confidentialite
+              Politique de confidentialité
             </Link>
             <Link href="#" className="hover:text-[#C9A227] transition-colors">
               CGV

@@ -149,7 +149,7 @@ export default function FormationsPage() {
                         <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
                           <div>
                             <p className="text-white font-bold text-lg">{formation.studentsCount}</p>
-                            <p className="text-[rgba(255,255,255,0.4)] text-xs">Élèves</p>
+                            <p className="text-[rgba(255,255,255,0.4)] text-xs">Étudiants</p>
                           </div>
                           <div>
                             <p className="text-white font-bold text-lg">{formationProfessors.length}</p>
@@ -168,7 +168,7 @@ export default function FormationsPage() {
                       <div className="p-6 border-t border-[rgba(255,255,255,0.05)] space-y-4">
                         {/* Professors */}
                         <div>
-                          <h4 className="text-white font-semibold mb-3">Équipe pédagogique</h4>
+                          <h4 className="text-white font-semibold mb-3">Équipes pédagogiques</h4>
                           <div className="flex flex-wrap gap-3">
                             {formationProfessors.map((prof) => (
                               <div key={prof.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.02)]">
@@ -186,7 +186,7 @@ export default function FormationsPage() {
 
                         {/* Recent Students */}
                         <div>
-                          <h4 className="text-white font-semibold mb-3">Élèves récents</h4>
+                          <h4 className="text-white font-semibold mb-3">Étudiants récents</h4>
                           <div className="space-y-2">
                             {formationStudents.slice(0, 3).map((student) => (
                               <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-[rgba(255,255,255,0.02)]">
@@ -223,7 +223,7 @@ export default function FormationsPage() {
                             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
-                            Voir élèves
+                            Voir Étudiants
                           </Button>
                         </div>
                       </div>

@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react"
 const testimonials = [
   {
     stars: 5,
-    text: "Un grand merci à Incub Institut pour cette excellente formation en restauration. Les formateurs sont professionnels, accueillants et toujours prêts à accompagner. Je recommande vivement cette école à toute personne souhaitant apprendre un métier et developper ses competences.",
+    text: "Un grand merci à Incub Institut pour cette excellente formation en restauration. Les formateurs sont professionnels, accueillants et toujours prêts à accompagner. Je recommande vivement cette école à toute personne souhaitant apprendre un métier et développer ses compétences.",
     image: "/images/testimonial-1.jpg",
     name: "Ndeye Aida Niang",
     role: "Restauratrice",
@@ -70,7 +70,7 @@ export function TestimonialsSection() {
             Ce qu&apos;ils <em className="italic text-[#C9A227] font-light">disent</em> de nous
           </h2>
           <p className="reveal text-base text-[#d0daf0] max-w-[500px] mx-auto">
-            Des centaines de professionnels africains ont deja transforme leur carriere grace a 2I Online.
+            Des centaines de professionnels africains ont déjà transformé leur carrière grâce à 2I Online.
           </p>
         </div>
 

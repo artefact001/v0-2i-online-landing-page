@@ -84,7 +84,7 @@ function ClassCard({ courseClass, onClick, isSelected }: { courseClass: CourseCl
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
-        {courseClass.coursesCount} cours enregistrés
+        {courseClass.coursesCount} Cours enregistrés
       </div>
     </button>
   )
@@ -309,7 +309,7 @@ export default function CoursArchivePage() {
                 {selectedClassName}
               </h2>
               <p className="text-sm text-[rgba(255,255,255,0.5)] mt-1">
-                {filteredCourses.length} cours trouvés
+                {filteredCourses.length} Cours trouvés
               </p>
             </div>
             
@@ -357,8 +357,8 @@ export default function CoursArchivePage() {
                   Suivez votre progression
                 </h3>
                 <p className="text-[rgba(255,255,255,0.7)] mb-6">
-                  Créez un compte pour sauvegarder vos cours favoris, suivre votre progression 
-                  et obtenir des recommandations personnalisées.
+                  Créez un compte pour sauvegarder vos cours favoris, suivez votre progression 
+                  et obtenez des recommandations personnalisées.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                   <Button className="bg-[#C9A227] hover:bg-[#E8C050] text-[#0D2545] font-semibold px-8">
@@ -392,7 +392,7 @@ export default function CoursArchivePage() {
       <footer className="py-8 border-t border-[rgba(201,162,39,0.1)]">
         <div className="max-w-7xl mx-auto px-6 md:px-10 text-center">
           <p className="text-sm text-[rgba(255,255,255,0.5)]">
-            © 2024 2I Online by Incub&apos;Institut. Tous droits réservés.
+            © 2026 2I Online by Incub&apos;Institut. Tous droits réservés.
           </p>
         </div>
       </footer>

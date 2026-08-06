@@ -79,7 +79,7 @@ export function WhatsAppWidget() {
           </button>
           <div className="text-[13px] font-semibold text-white mb-1">Besoin d&apos;aide ?</div>
           <div className="text-[11px] text-[#d0daf0] leading-normal">
-            Contactez-nous sur WhatsApp — reponse sous 1h !
+            Contactez-nous sur WhatsApp — réponse sous 1h !
           </div>
           {/* Arrow */}
           <div className="absolute right-[-8px] top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[rgba(201,162,39,0.3)]" />
@@ -118,7 +118,7 @@ export function WhatsAppWidget() {
         ))}
         
         <div className="mt-3.5 pt-3 border-t border-[rgba(255,255,255,0.06)] text-[10px] text-[rgba(255,255,255,0.2)] text-center tracking-[1px]">
-          Reponse garantie sous 1h
+          Réponse garantie sous 1h
         </div>
       </div>
 

@@ -71,7 +71,7 @@ export default function AdminPaymentsPage() {
                   <thead>
                     <tr className="border-b border-[rgba(255,255,255,0.05)]">
                       <th className="pb-3 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Référence</th>
-                      <th className="pb-3 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Élève</th>
+                      <th className="pb-3 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Étudiants</th>
                       <th className="pb-3 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Formation</th>
                       <th className="pb-3 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Montant</th>
                       <th className="pb-3 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Méthode</th>

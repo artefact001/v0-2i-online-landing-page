@@ -5,8 +5,8 @@ import Image from 'next/image'
 
 const partners = [
   {
-    name: "Minitaire de la Formation Professionnel",
-    domain: "Formation Professionnel",
+    name: "Ministére de la Formation Professionnelle",
+    domain: "Formation Professionnelle",
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
@@ -15,18 +15,18 @@ const partners = [
     image: "public/images/1000769413.jpg",
   },
   {
-    name: "Ambarssade de Françe",
-    domain: "Ambarssade",
+    name: "Ambassade de France",
+    domain: "Ambassade",
     image: "/images/1000797646.jpg",
   },
   {
     name: "DER FJ",
-    domain: "Deélégation générale a l'entreprenariat rapide des femmes et des jeunes",
+    domain: "Délégation générale a l'entreprenariat rapide des femmes et des jeunes",
     image: "/images/1000797760.jpg",
   },
   {
     name: "MEFPT",
-    domain: "Minitére de l'emploie et de la formation professionnelle technique",
+    domain: "Ministére de l'emploie et de la formation professionnelle et technique",
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
@@ -41,7 +41,7 @@ const partners = [
   },
   {
     name: "Adepme",
-    domain: "Agence de developpement et d'encadrement des petites et moyennes entreprises",
+    domain: "Agence de développement et d'encadrement des petites et moyennes entreprises",
     image: "/images/1000917129.jpg",
   },
 ]
@@ -88,7 +88,7 @@ export function PartnersSection() {
             Nos <em className="italic text-[#C9A227] font-light">partenaires</em>
           </h2>
           <p className="reveal text-base text-[#d0daf0] max-w-[500px] mx-auto">
-            Un reseau d&apos;etablissements et de professionnels engages a nos cotes pour former les talents de demain.
+            Un réseau d&apos;établissements et de professionnels engagés a nos côtés pour former les talents de demain.
           </p>
         </div>
 

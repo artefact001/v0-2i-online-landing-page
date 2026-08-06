@@ -45,7 +45,7 @@ export function AboutSection() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
         </svg>
       ),
-      title: "Francais", 
+      title: "Français", 
       desc: "Cours disponibles adaptable en Wolof" 
     },
     { 
@@ -64,7 +64,7 @@ export function AboutSection() {
         </svg>
       ),
       title: "Diplome Reconnu", 
-      desc: "Certification validee par l'Etat" 
+      desc: "Certification validée par l'Etat" 
     },
   ]
 
@@ -78,12 +78,12 @@ export function AboutSection() {
               Notre mission
             </p>
             <h2 className="reveal font-serif text-[clamp(32px,4vw,52px)] font-semibold leading-[1.1] text-white mb-6">
-              Democratiser la formation{" "}
+              Démocratiser la formation{" "}
               <em className="italic text-[#C9A227] font-light">professionnelle</em>{" "}
               en Afrique
             </h2>
             <p className="reveal text-base font-light text-[#d0daf0] leading-relaxed mb-8">
-              <strong className="text-white font-medium">Incub Institut</strong> forme depuis des annees des professionnels de l&apos;hotellerie et de la restauration au Senegal. <strong className="text-[#C9A227]">2I Online</strong> porte cette expertise sur le digital pour rendre la formation professionnelle HORETO accessible partout en Afrique.
+              <strong className="text-white font-medium">Incub Institut</strong> forme depuis des années des professionnels de l&apos;hôtellerie et de la restauration au Sénégal. <strong className="text-[#C9A227]">2I Online</strong> porte cette expertise sur le digital pour rendre la formation professionnelle HORETO accessible partout en Afrique.
             </p>
            
 
@@ -134,7 +134,7 @@ export function AboutSection() {
                 </div>
               </div>
               <p className="text-sm text-[#d0daf0] leading-relaxed mb-4">
-                 <strong className="text-white">INCUB INSTITUT</strong>, est un centre d'incubation et de formation professionellle agréé par l'Etat, spécialisé dans l'Hôtellerie et la Réstauration  .
+                 <strong className="text-white">INCUB INSTITUT</strong>, est un centre d'incubation et de formation professionellle agréé par l'Etat, spécialisé dans l'Hôtellerie et la Restauration  .
               </p>
               <div className="flex flex-wrap gap-2">
                 {["Senegal", "Afrique", "CAP HCR"].map((tag) => (
@@ -151,7 +151,7 @@ export function AboutSection() {
             {/* Stats Card */}
             <div className="absolute -top-4 -right-4 bg-[#C9A227] rounded-xl p-5 text-center">
               <div className="font-serif text-3xl font-bold text-[#0D2545]">4+</div>
-              <div className="text-[10px] font-semibold text-[#0D2545] uppercase tracking-wider">Années d&apos;experience</div>
+              <div className="text-[10px] font-semibold text-[#0D2545] uppercase tracking-wider">Années d&apos;expérience</div>
             </div>
           </div>
         </div>

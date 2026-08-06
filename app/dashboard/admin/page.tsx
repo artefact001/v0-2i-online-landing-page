@@ -132,7 +132,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-white font-semibold truncate">{formation.name}</h3>
-                        <p className="text-[rgba(255,255,255,0.5)] text-sm">{formation.studentsCount} élèves inscrits</p>
+                        <p className="text-[rgba(255,255,255,0.5)] text-sm">{formation.studentsCount} étudiants inscrits</p>
                       </div>
                       <div className="text-right">
                         <p className="text-[#C9A227] font-bold">{formation.price.toLocaleString()} FCFA</p>
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
                           </svg>
                           <span className="text-sm font-semibold">{professor.rating}</span>
                         </div>
-                        <p className="text-[rgba(255,255,255,0.4)] text-xs">{professor.studentsCount} élèves</p>
+                        <p className="text-[rgba(255,255,255,0.4)] text-xs">{professor.studentsCount} étudiants</p>
                       </div>
                     </div>
                   ))}
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
                     <svg className="w-6 h-6 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
-                    Ajouter un élève
+                    Ajouter un étudiant
                   </Link>
                 </Button>
                 <Button

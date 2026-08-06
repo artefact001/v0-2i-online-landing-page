@@ -122,8 +122,8 @@ export default function StudentsPage() {
       
       <main className="ml-64">
         <DashboardHeader 
-          title="Gestion des Élèves" 
-          subtitle={`${STUDENTS.length} élèves inscrits`}
+          title="Gestion des Étudiants" 
+          subtitle={`${STUDENTS.length} étudiants inscrits`}
         />
 
         <div className="p-8 space-y-6">
@@ -195,7 +195,7 @@ export default function StudentsPage() {
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <TabsList className="bg-[rgba(255,255,255,0.05)]">
                 <TabsTrigger value="all" className="data-[state=active]:bg-[#C9A227] data-[state=active]:text-white">
-                  Tous les élèves
+                  Listes des étudiants
                 </TabsTrigger>
                 <TabsTrigger value="by-formation" className="data-[state=active]:bg-[#C9A227] data-[state=active]:text-white">
                   Par formation
@@ -229,14 +229,14 @@ export default function StudentsPage() {
                       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                       </svg>
-                      Ajouter un élève
+                      Ajouter un étudiants
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white max-w-lg">
                     <DialogHeader>
                       <DialogTitle className="text-xl font-serif">Nouvel Élève</DialogTitle>
                       <DialogDescription className="text-[rgba(255,255,255,0.5)]">
-                        Inscrivez un nouvel élève à une formation
+                        Inscrire un nouvel étudiants à une formation
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -292,7 +292,7 @@ export default function StudentsPage() {
                         Annuler
                       </Button>
                       <Button onClick={handleAddStudent} className="bg-[#C9A227] hover:bg-[#B8860B]">
-                        Inscrire l&apos;élève
+                        Inscrire l&apos;étudiant
                       </Button>
                     </div>
                   </DialogContent>
@@ -410,7 +410,7 @@ export default function StudentsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-[rgba(255,255,255,0.05)] hover:bg-transparent">
-                        <TableHead className="text-[rgba(255,255,255,0.5)]">Élève</TableHead>
+                        <TableHead className="text-[rgba(255,255,255,0.5)]">Étudiants</TableHead>
                         <TableHead className="text-[rgba(255,255,255,0.5)]">Formation</TableHead>
                         <TableHead className="text-[rgba(255,255,255,0.5)]">Progression</TableHead>
                         <TableHead className="text-[rgba(255,255,255,0.5)]">Statut</TableHead>
@@ -491,7 +491,7 @@ export default function StudentsPage() {
                         </div>
                         <div>
                           <h3 className="text-white font-semibold text-lg">{formation.name}</h3>
-                          <p className="text-[rgba(255,255,255,0.5)] text-sm">{formation.students.length} élèves inscrits</p>
+                          <p className="text-[rgba(255,255,255,0.5)] text-sm">{formation.students.length} étudiants inscrits</p>
                         </div>
                       </div>
                       <Button variant="outline" size="sm" className="border-[rgba(255,255,255,0.1)] text-white">
@@ -517,7 +517,7 @@ export default function StudentsPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[rgba(255,255,255,0.4)] text-center py-4">Aucun élève inscrit</p>
+                      <p className="text-[rgba(255,255,255,0.4)] text-center py-4">Aucun étudiant inscrit</p>
                     )}
                   </CardContent>
                 </Card>
@@ -533,7 +533,7 @@ export default function StudentsPage() {
           {viewStudent && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl font-serif">Profil de l&apos;élève</DialogTitle>
+                <DialogTitle className="text-xl font-serif">Profil de l&apos;étudiant</DialogTitle>
                 <DialogDescription className="text-[rgba(255,255,255,0.5)]">
                   Informations détaillées et progression
                 </DialogDescription>
@@ -598,9 +598,9 @@ export default function StudentsPage() {
       <Dialog open={!!editStudent} onOpenChange={(open) => !open && setEditStudent(null)}>
         <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-xl font-serif">Modifier l&apos;élève</DialogTitle>
+            <DialogTitle className="text-xl font-serif">Modifier l&apos;étudiant</DialogTitle>
             <DialogDescription className="text-[rgba(255,255,255,0.5)]">
-              Mettez à jour les informations de l&apos;élève
+              Mettez à jour les informations de l&apos;étudiant
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

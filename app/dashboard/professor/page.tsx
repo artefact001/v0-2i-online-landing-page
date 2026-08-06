@@ -52,7 +52,7 @@ export default function ProfessorDashboard() {
                   </div>
                   <div>
                     <p className="text-3xl font-bold text-white">{myStudents.length}</p>
-                    <p className="text-[rgba(255,255,255,0.5)] text-sm">Mes élèves</p>
+                    <p className="text-[rgba(255,255,255,0.5)] text-sm">Mes étudiants</p>
                   </div>
                 </div>
               </CardContent>
@@ -68,7 +68,7 @@ export default function ProfessorDashboard() {
                   </div>
                   <div>
                     <p className="text-3xl font-bold text-white">{activeStudents}</p>
-                    <p className="text-[rgba(255,255,255,0.5)] text-sm">Élèves actifs</p>
+                    <p className="text-[rgba(255,255,255,0.5)] text-sm">Étudiants actifs</p>
                   </div>
                 </div>
               </CardContent>
@@ -132,7 +132,7 @@ export default function ProfessorDashboard() {
                         <p className="text-[rgba(255,255,255,0.5)] text-sm mb-2">{formation.coursesCount} cours disponibles</p>
                         <div className="flex items-center gap-4 text-sm">
                           <span className="text-[rgba(255,255,255,0.6)]">
-                            <span className="text-white font-medium">{formationStudents.length}</span> élèves
+                            <span className="text-white font-medium">{formationStudents.length}</span> étudiants
                           </span>
                           <span className="text-[#C9A227]">{formation.duration}</span>
                         </div>
@@ -157,7 +157,7 @@ export default function ProfessorDashboard() {
                   </div>
                   <h3 className="text-white font-serif text-xl font-bold mb-2">Lancer un cours en direct</h3>
                   <p className="text-[rgba(255,255,255,0.6)] text-sm mb-4">
-                    Démarrez une session live pour vos élèves
+                    Démarrez une session live pour vos étudiants
                   </p>
                   <Button className="w-full bg-[#C9A227] hover:bg-[#B8860B]">
                     <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -199,7 +199,7 @@ export default function ProfessorDashboard() {
           {/* Students List */}
           <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white font-serif">Mes Élèves</CardTitle>
+              <CardTitle className="text-white font-serif">Mes Étudiants</CardTitle>
               <Button variant="ghost" size="sm" className="text-[#C9A227]">
                 Voir tous
               </Button>
