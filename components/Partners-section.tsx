@@ -15,7 +15,7 @@ const partners = [
     image: "public/images/1000769413.jpg",
   },
   {
-    name: "Ambarssade de Françe",
+    name: "Ambarssade de France",
     domain: "Ambarssade",
     image: "/images/1000797646.jpg",
   },
@@ -32,7 +32,7 @@ const partners = [
   {
     name: "KaNora Service",
     domain: "Inclusion Sociale",
-    image: "/images/IMG-20250425-WA0017.jpg",
+    image: "images/IMG-20250425-WA0017.jpg",
   },
   {
     name: "Mairie Bargny",
@@ -42,7 +42,7 @@ const partners = [
   {
     name: "Adepme",
     domain: "Agence de developpement et d'encadrement des petites et moyennes entreprises",
-    image: "/images/1000917129.jpg",
+    image: "images/1000917129.jpg",
   },
 ]
 
