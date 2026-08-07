@@ -136,15 +136,9 @@ export const formations: FormationDetail[] = [
     name: "Certificat  Professionnel de Spécialité-Cuisinier",
     mode: "Formation hybride / ligne",
     shortDesc:
-<<<<<<< HEAD
-      "Specialisation avancée en cuisine pour perfectionner vos techniques et votre expertise.",
-    duration: " 6 mois",
-    image: "/images/course-cuisine.jpg",
-=======
       "Specialisation avancee en cuisine pour perfectionner vos techniques et votre expertise.",
     duration: "6 mois",
     image: "/images/course-cuisine1.jpg",
->>>>>>> a361c66739a58f017540d840596d37ae358d7e52
     longDesc:
       "Le Certificat Professionnel de Spécialité Cuisinier est une formation courte et intensive de 6 mois destinee a approfondir une specialite culinaire. Ideale pour les débutants  et professionnels souhaitant monter en compétence.",
     objectives: [
