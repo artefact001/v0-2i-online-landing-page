@@ -11,7 +11,6 @@ export const translations = {
     tarifs: 'Tarifs',
     faq: 'FAQ',
     connexion: 'Connexion',
-    sinscrire: 'S\'inscrire',
 
     // Dashboard
     dashboard: 'Tableau de bord',
