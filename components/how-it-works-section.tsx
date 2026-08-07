@@ -5,44 +5,44 @@ import Image from "next/image"
 
 const partners = [
   {
-    name: "Minitaire de la Formation Professionnel",
-    domain: "Formation Professionnel",
-    image: "public/images/FB_IMG_1776855096946.jpg",
+    name: "Ministère de la Formation Professionnelle",
+    domain: "Formation Professionnelle",
+    image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
-    name: "Radisson Blu Dakar",
-    domain: "Hotellerie internationale",
-    image: "public/images/1000769413.jpg",
+    name: "Force N",
+    domain: "Formation Professionnelle",
+    image: "/images/1000769413.jpg",
   },
   {
-    name: "Chez Loutcha",
-    domain: "Restauration traditionnelle",
-    image: "public/images/1000797646.jpg",
+    name: "Ambassade de France",
+    domain: "Coopération Internationale",
+    image: "/images/1000797646.jpg",
   },
   {
-    name: "Pullman Dakar",
-    domain: "Hotellerie d'affaires",
-    image: "public/images/1000797760.jpg",
+    name: "DER/FJ",
+    domain: "Entrepreneuriat des Femmes et des Jeunes",
+    image: "/images/1000797760.jpg",
   },
   {
-    name: "Le Lagon 1",
-    domain: "Restauration gastronomique",
-    image: "public/images/FB_IMG_1776855096946.jpg",
+    name: "MEFPT",
+    domain: "Emploi et Formation Professionnelle",
+    image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
-    name: "King Fahd Palace",
-    domain: "Hotellerie & evenementiel",
-    image: "public/images/IMG-20250425-WA0017.jpg",
+    name: "KaNora Services",
+    domain: "Inclusion Sociale",
+    image: "/images/IMG-20250425-WA0017.jpg",
   },
   {
-    name: "Farid Restaurant",
-    domain: "Arts culinaires",
-    image: "public/images/logo mairie bargny.jpg",
+    name: "Mairie de Bargny",
+    domain: "Collectivité Territoriale",
+    image: "/images/logo-mairie-bargny.jpg",
   },
   {
-    name: "Azalai Hotel",
-    domain: "Hotellerie regionale",
-    image: "public/images/1000917129.jpg",
+    name: "ADEPME",
+    domain: "Développement des PME",
+    image: "/images/1000917129.jpg",
   },
 ]
 
@@ -54,10 +54,10 @@ export function PartnersSection() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.querySelectorAll('.reveal').forEach((el, i) => {
+            entry.target.querySelectorAll(".reveal").forEach((el, index) => {
               setTimeout(() => {
-                el.classList.add('visible')
-              }, i * 100)
+                el.classList.add("opacity-100", "translate-y-0")
+              }, index * 120)
             })
           }
         })
@@ -73,53 +73,77 @@ export function PartnersSection() {
   }, [])
 
   return (
-    <section id="partenaires" ref={sectionRef} className="py-[120px] px-6 md:px-[60px] relative">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(27,58,107,0.3)_0%,transparent_70%)]" />
-      </div>
+    <section
+      id="partenaires"
+      ref={sectionRef}
+      className="relative py-24 px-6 md:px-10 overflow-hidden bg-[#080F1E]"
+    >
+      {/* Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(201,162,39,0.12),transparent_60%)]" />
 
-      <div className="max-w-7xl mx-auto relative">
-        <div className="text-center mb-16">
-          <p className="reveal text-[10px] font-semibold tracking-[5px] uppercase text-[#C9A227] mb-4">
+      <div className="relative max-w-7xl mx-auto">
+        {/* Heading */}
+        <div className="text-center mb-20">
+          <p className="reveal opacity-0 translate-y-6 transition-all duration-700 text-xs tracking-[5px] uppercase text-[#C9A227] font-semibold">
             Ils nous font confiance
           </p>
-          <h2 className="reveal font-serif text-[clamp(36px,4vw,56px)] font-semibold text-white mb-4">
-            Nos <em className="italic text-[#C9A227] font-light">partenaires</em>
+
+          <h2 className="reveal opacity-0 translate-y-6 transition-all duration-700 mt-4 font-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-white">
+            Nos{" "}
+            <span className="text-[#C9A227] italic font-light">
+              Partenaires
+            </span>
           </h2>
-          <p className="reveal text-base text-[#d0daf0] max-w-[500px] mx-auto">
-            Un reseau d&apos;etablissements et de professionnels engages a nos cotes pour former les talents de demain.
+
+          <p className="reveal opacity-0 translate-y-6 transition-all duration-700 mt-6 text-[#D5DCEC] max-w-2xl mx-auto leading-8">
+            Nous collaborons avec des institutions publiques, entreprises,
+            organisations et partenaires engagés pour offrir une formation
+            professionnelle de qualité et favoriser l'insertion des jeunes.
           </p>
         </div>
 
-        {/* Partners Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {partners.map((partner, index) => (
             <div
               key={partner.name}
-              className="reveal group"
-              style={{ transitionDelay: `${index * 100}ms` }}
+              className="reveal opacity-0 translate-y-6 transition-all duration-700"
+              style={{ transitionDelay: `${index * 80}ms` }}
             >
-              <div className="relative aspect-square rounded-xl overflow-hidden border border-[rgba(201,162,39,0.15)] transition-all duration-300 group-hover:border-[#C9A227] group-hover:scale-[1.03]">
-                <Image
-                  src={partner.image}
-                  alt={partner.name}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#080F1E]/60 via-transparent to-transparent" />
-              </div>
+              <div className="group h-full rounded-3xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#C9A227] hover:bg-white/10 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_15px_45px_rgba(201,162,39,.25)] p-8">
 
-              <div className="text-center mt-4">
-                <h3 className="font-serif text-base font-semibold text-white">
+                {/* Logo */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative w-28 h-28 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden p-4">
+                    <Image
+                      src={partner.image}
+                      alt={partner.name}
+                      fill
+                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                </div>
+
+                {/* Name */}
+                <h3 className="text-center text-white font-semibold text-lg leading-7">
                   {partner.name}
                 </h3>
-                <p className="text-[10px] font-medium tracking-[1.5px] uppercase text-[#C9A227] mt-1">
+
+                {/* Domain */}
+                <p className="mt-3 text-center text-[#C9A227] text-sm leading-6">
                   {partner.domain}
                 </p>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Bottom Text */}
+        <div className="reveal opacity-0 translate-y-6 transition-all duration-700 mt-20 text-center">
+          <p className="text-[#9AA5BF] text-lg">
+            Ensemble, nous développons des compétences et créons des
+            opportunités pour la jeunesse africaine.
+          </p>
         </div>
       </div>
     </section>
