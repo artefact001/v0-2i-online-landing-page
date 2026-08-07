@@ -10,6 +10,11 @@ const partners = [
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
+    name: "Ministère de la Formation Professionnelle",
+    domain: "Formation Professionnelle",
+    image: "/images/FB_IMG_1776855096946.jpg",
+  },
+  {
     name: "Force N",
     domain: "Formation Professionnelle",
     image: "/images/1000769413.jpg",
