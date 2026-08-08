@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/lib/auth-context'
 import { paymentService } from '@/lib/payment-service'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,7 +33,7 @@ function PaymentContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const supabase = createClient()
+  const { user } = useAuth()
 
   useEffect(() => {
     async function loadEnrollment() {
@@ -41,25 +42,24 @@ function PaymentContent() {
         return
       }
 
-      const { data, error: fetchError } = await supabase
-        .from('enrollments')
-        .select('id, formation_id, formations(name, price)')
-        .eq('id', enrollmentId)
-        .single()
-
-      if (fetchError || !data) {
+      try {
+        // Route Laravel réelle: /v1/inscriptions/{id}
+        const res = await apiClient<Enrollment>(`/inscriptions/${enrollmentId}`)
+        if (!res.data) {
+          setError('Inscription non trouvée')
+          return
+        }
+        setEnrollment(res.data)
+      } catch (err) {
         setError('Inscription non trouvée')
-        return
       }
-
-      setEnrollment(data)
     }
 
     loadEnrollment()
-  }, [enrollmentId, supabase])
+  }, [enrollmentId])
 
   const handlePayment = async (method: 'wave' | 'orange_money' | 'free_money') => {
-    if (!phone || !enrollment) {
+    if (!phone || !enrollment || !enrollmentId) {
       setError('Veuillez entrer votre numéro de téléphone')
       return
     }
@@ -68,8 +68,7 @@ function PaymentContent() {
     setError('')
 
     try {
-      const user = await supabase.auth.getUser()
-      if (!user.data.user) {
+      if (!user) {
         setError('Vous devez être connecté')
         return
       }
@@ -77,7 +76,7 @@ function PaymentContent() {
       let response
       if (method === 'wave') {
         response = await paymentService.initiateWavePayment({
-          studentId: user.data.user.id,
+          studentId: user.id,
           enrollmentId,
           amount: enrollment.formations.price,
           paymentMethod: 'wave',
@@ -85,7 +84,7 @@ function PaymentContent() {
         })
       } else if (method === 'orange_money') {
         response = await paymentService.initiateOrangeMoneyPayment({
-          studentId: user.data.user.id,
+          studentId: user.id,
           enrollmentId,
           amount: enrollment.formations.price,
           paymentMethod: 'orange_money',
@@ -93,7 +92,7 @@ function PaymentContent() {
         })
       } else {
         response = await paymentService.initiateFreeMoneyPayment({
-          studentId: user.data.user.id,
+          studentId: user.id,
           enrollmentId,
           amount: enrollment.formations.price,
           paymentMethod: 'free_money',

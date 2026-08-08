@@ -24,7 +24,7 @@ async function proxy(request: NextRequest, path: string[], method: string) {
     }
   }
 
-  const res = await fetch(`${API_URL}/api/${path.join('/')}${request.nextUrl.search}`, {
+  const res = await fetch(`${API_URL}/v1/${path.join('/')}${request.nextUrl.search}`, {
     method,
     headers,
     body,

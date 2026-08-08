@@ -472,7 +472,6 @@ export default function StudentsPage() {
               {filteredStudents.length > PAGE_SIZE && (
                 <TablePagination
                   currentPage={currentPage}
-                  totalPages={totalPages}
                   totalItems={filteredStudents.length}
                   pageSize={PAGE_SIZE}
                   onPageChange={setCurrentPage}

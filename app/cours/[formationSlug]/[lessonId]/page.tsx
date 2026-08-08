@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { apiClient } from "@/lib/api/client"
+import { useAuth } from "@/lib/auth-context"
+import { progressService } from "@/lib/progress-service"
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -66,7 +68,7 @@ interface Exercise {
 export default function CoursePage() {
   const params = useParams()
   const router = useRouter()
-  const supabase = createClient()
+  const { user } = useAuth()
 
   const [formation, setFormation] = useState<Formation | null>(null)
   const [modules, setModules] = useState<Module[]>([])
@@ -79,152 +81,118 @@ export default function CoursePage() {
   const [activeTab, setActiveTab] = useState<"content" | "exercises">("content")
   const [loading, setLoading] = useState(true)
   const [totalProgress, setTotalProgress] = useState(0)
-  const [user, setUser] = useState<any>(null)
-
-  // Fetch user
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [supabase.auth])
 
   // Fetch formation and modules
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      
-      // Fetch formation
-      const { data: formationData } = await supabase
-        .from("formations")
-        .select("*")
-        .eq("slug", params.formationSlug)
-        .single()
-      
-      if (formationData) {
-        setFormation(formationData)
-        
-        // Fetch modules with lessons
-        const { data: modulesData } = await supabase
-          .from("modules")
-          .select(`
-            *,
-            lessons (*)
-          `)
-          .eq("formation_id", formationData.id)
-          .eq("is_published", true)
-          .order("order_index")
-        
-        if (modulesData) {
-          const sortedModules = modulesData.map(m => ({
-            ...m,
-            lessons: m.lessons?.sort((a: Lesson, b: Lesson) => a.order_index - b.order_index) || []
-          }))
-          setModules(sortedModules)
-          
-          // Expand all modules by default
-          setExpandedModules(sortedModules.map(m => m.id))
-          
-          // Find current lesson
+
+      try {
+        const formationRes = await apiClient<Formation[]>(`/formations?slug=${params.formationSlug}`)
+        const formationData = Array.isArray(formationRes.data) ? formationRes.data[0] : null
+
+        if (formationData) {
+          setFormation(formationData)
+
+          const modulesRes = await apiClient<Module[]>(
+            `/modules?formation_id=${formationData.id}&is_published=1`,
+          )
+          const modulesData = modulesRes.data || []
+
+          // Route Laravel réelle: /v1/lecons
+          const modulesWithLessons = await Promise.all(
+            modulesData.map(async (m: any) => {
+              const leconsRes = await apiClient<Lesson[]>(`/lecons?module_id=${m.id}`)
+              const lessons = (leconsRes.data || []).sort(
+                (a: Lesson, b: Lesson) => a.order_index - b.order_index,
+              )
+              return { ...m, lessons }
+            }),
+          )
+          setModules(modulesWithLessons)
+          setExpandedModules(modulesWithLessons.map((m) => m.id))
+
           if (params.lessonId) {
-            for (const mod of sortedModules) {
+            for (const mod of modulesWithLessons) {
               const lesson = mod.lessons.find((l: Lesson) => l.id === params.lessonId)
               if (lesson) {
                 setCurrentLesson(lesson)
                 break
               }
             }
-          } else if (sortedModules.length > 0 && sortedModules[0].lessons.length > 0) {
-            // Redirect to first lesson
-            router.push(`/cours/${params.formationSlug}/${sortedModules[0].lessons[0].id}`)
+          } else if (modulesWithLessons.length > 0 && modulesWithLessons[0].lessons.length > 0) {
+            router.push(`/cours/${params.formationSlug}/${modulesWithLessons[0].lessons[0].id}`)
           }
         }
+      } catch (error) {
+        console.error('Error loading course data:', error)
       }
-      
+
       setLoading(false)
     }
-    
-    fetchData()
-  }, [params.formationSlug, params.lessonId, supabase, router])
 
-  // Fetch exercises for current lesson
+    fetchData()
+  }, [params.formationSlug, params.lessonId, router])
+
+  // Fetch exercises for current lesson — route réelle: /v1/exercices
   useEffect(() => {
     const fetchExercises = async () => {
       if (!currentLesson) return
-      
-      const { data } = await supabase
-        .from("exercises")
-        .select("*")
-        .eq("lesson_id", currentLesson.id)
-        .order("order_index")
-      
-      if (data) setExercises(data)
-    }
-    
-    fetchExercises()
-  }, [currentLesson, supabase])
 
-  // Fetch lesson progress
+      try {
+        const res = await apiClient<Exercise[]>(`/exercices?lesson_id=${currentLesson.id}`)
+        if (res.data) setExercises(res.data)
+      } catch (error) {
+        console.error('Error loading exercises:', error)
+      }
+    }
+
+    fetchExercises()
+  }, [currentLesson])
+
+  // Fetch lesson progress via progressService (déjà connecté à /v1/progressions)
   useEffect(() => {
     const fetchProgress = async () => {
       if (!currentLesson || !user) return
-      
-      const { data } = await supabase
-        .from("lesson_progress")
-        .select("*")
-        .eq("lesson_id", currentLesson.id)
-        .eq("student_id", user.id)
-        .single()
-      
-      if (data) setProgress(data)
+
+      const data = await progressService.getLessonProgress(user.id, currentLesson.id)
+      if (data) setProgress(data as any)
     }
-    
+
     fetchProgress()
-  }, [currentLesson, user, supabase])
+  }, [currentLesson, user])
 
   // Calculate total progress
   useEffect(() => {
     const calculateProgress = async () => {
       if (!user || modules.length === 0) return
-      
+
       const allLessons = modules.flatMap(m => m.lessons)
       if (allLessons.length === 0) return
-      
-      const { data } = await supabase
-        .from("lesson_progress")
-        .select("lesson_id")
-        .eq("student_id", user.id)
-        .eq("is_completed", true)
-        .in("lesson_id", allLessons.map(l => l.id))
-      
-      if (data) {
+
+      try {
+        const res = await apiClient(
+          `/progressions?student_id=${user.id}&is_completed=1&lesson_id=${allLessons.map(l => l.id).join(',')}`,
+        )
+        const data = Array.isArray(res.data) ? res.data : []
         setTotalProgress(Math.round((data.length / allLessons.length) * 100))
+      } catch (error) {
+        console.error('Error calculating progress:', error)
       }
     }
-    
-    calculateProgress()
-  }, [modules, user, supabase])
 
-  // Mark lesson as complete
+    calculateProgress()
+  }, [modules, user])
+
+  // Mark lesson as complete via progressService
   const markAsComplete = useCallback(async () => {
     if (!currentLesson || !user) return
-    
-    const { error } = await supabase
-      .from("lesson_progress")
-      .upsert({
-        student_id: user.id,
-        lesson_id: currentLesson.id,
-        is_completed: true,
-        completed_at: new Date().toISOString()
-      }, {
-        onConflict: "student_id,lesson_id"
-      })
-    
-    if (!error) {
-      setProgress(prev => prev ? { ...prev, is_completed: true } : { is_completed: true, watch_time_seconds: 0 })
+
+    const ok = await progressService.markLessonAsCompleted(user.id, currentLesson.id)
+    if (ok) {
+      setProgress(prev => prev ? { ...prev, is_completed: true } : { is_completed: true, watch_time_seconds: 0 } as any)
     }
-  }, [currentLesson, user, supabase])
+  }, [currentLesson, user])
 
   // Navigation
   const getAllLessons = useCallback(() => {

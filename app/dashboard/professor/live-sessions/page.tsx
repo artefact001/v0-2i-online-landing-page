@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -52,7 +53,7 @@ export default function LiveSessionsPage() {
     max_participants: 100,
   })
 
-  const supabase = createClient()
+  const { user } = useAuth()
 
   useEffect(() => {
     loadFormations()
@@ -66,18 +67,12 @@ export default function LiveSessionsPage() {
 
   const loadFormations = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
-
-      const { data, error } = await supabase
-        .from('professor_formations')
-        .select('formations(id, name)')
-        .eq('professor_id', user.user.id)
-
-      if (error) throw error
-      
-      const uniqueFormations = data?.map(pf => pf.formations).filter(Boolean) || []
-      setFormations(uniqueFormations as Formation[])
+      if (!user) return
+      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
+      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
+      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const uniqueFormations = res.data || []
+      setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {
         setSelectedFormation(uniqueFormations[0].id)
       }
@@ -86,101 +81,29 @@ export default function LiveSessionsPage() {
     }
   }
 
+  // STAND BY — aucune route Laravel pour les sessions live (pas de LiveSessionController
+  // dans routes/api.php). Retourne une liste vide en attendant le backend.
   const loadSessions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('live_sessions')
-        .select('*, formations(name), session_attendance(id)')
-        .eq('formation_id', selectedFormation)
-        .order('scheduled_at', { ascending: false })
-
-      if (error) throw error
-      setSessions(data || [])
-    } catch (error) {
-      console.error('Error loading sessions:', error)
-    }
+    console.warn('[live-sessions] en attente d\'un endpoint Laravel — fonctionnalité en pause')
+    setSessions([])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedFormation) return
-
-    setIsLoading(true)
-    try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
-
-      if (editingId) {
-        const { error } = await supabase
-          .from('live_sessions')
-          .update(formData)
-          .eq('id', editingId)
-
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('live_sessions')
-          .insert({
-            ...formData,
-            formation_id: selectedFormation,
-            professor_id: user.user.id,
-            status: 'scheduled',
-          })
-
-        if (error) throw error
-      }
-
-      await loadSessions()
-      resetForm()
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    // STAND BY — aucune route Laravel pour créer/modifier une session live.
+    alert("Fonctionnalité indisponible pour l'instant : aucun endpoint Laravel pour les sessions live.")
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr?')) return
-
-    try {
-      const { error } = await supabase
-        .from('live_sessions')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      loadSessions()
-    } catch (error) {
-      console.error('Error deleting session:', error)
-    }
+  const handleDelete = async (_id: string) => {
+    alert("Fonctionnalité indisponible pour l'instant : aucun endpoint Laravel pour les sessions live.")
   }
 
-  const handleStartSession = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('live_sessions')
-        .update({ status: 'live' })
-        .eq('id', id)
-
-      if (error) throw error
-      loadSessions()
-    } catch (error) {
-      console.error('Error starting session:', error)
-    }
+  const handleStartSession = async (_id: string) => {
+    alert("Fonctionnalité indisponible pour l'instant : aucun endpoint Laravel pour les sessions live.")
   }
 
-  const handleEndSession = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('live_sessions')
-        .update({ status: 'completed' })
-        .eq('id', id)
-
-      if (error) throw error
-      loadSessions()
-    } catch (error) {
-      console.error('Error ending session:', error)
-    }
+  const handleEndSession = async (_id: string) => {
+    alert("Fonctionnalité indisponible pour l'instant : aucun endpoint Laravel pour les sessions live.")
   }
 
   const resetForm = () => {

@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { createClient } from "@/lib/supabase/client"
+import { apiClient } from "@/lib/api/client"
+import { useAuth } from "@/lib/auth-context"
 import { 
   ChevronLeft,
   Clock,
@@ -45,74 +46,62 @@ interface Formation {
 
 export default function FormationOverviewPage() {
   const params = useParams()
-  const supabase = createClient()
+  const { user } = useAuth()
 
   const [formation, setFormation] = useState<Formation | null>(null)
   const [modules, setModules] = useState<Module[]>([])
   const [enrolled, setEnrolled] = useState(false)
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [supabase.auth])
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
 
-      // Fetch formation
-      const { data: formationData } = await supabase
-        .from("formations")
-        .select("*")
-        .eq("slug", params.formationSlug)
-        .single()
+      try {
+        // GET /v1/formations?slug=... — À VÉRIFIER: FormationController::index
+        // accepte-t-il ce filtre, ou faut-il itérer sur toute la liste ?
+        const formationRes = await apiClient<Formation[]>(`/formations?slug=${params.formationSlug}`)
+        const formationData = Array.isArray(formationRes.data) ? formationRes.data[0] : null
 
-      if (formationData) {
-        setFormation(formationData)
+        if (formationData) {
+          setFormation(formationData)
 
-        // Fetch modules with lessons
-        const { data: modulesData } = await supabase
-          .from("modules")
-          .select(`
-            *,
-            lessons (id, title, duration_minutes, is_published)
-          `)
-          .eq("formation_id", formationData.id)
-          .eq("is_published", true)
-          .order("order_index")
+          const modulesRes = await apiClient<Module[]>(
+            `/modules?formation_id=${formationData.id}&is_published=1`,
+          )
+          const modulesData = modulesRes.data || []
 
-        if (modulesData) {
-          setModules(modulesData)
-        }
+          // Récupère les leçons de chaque module — route réelle: /v1/lecons
+          const modulesWithLessons = await Promise.all(
+            modulesData.map(async (m: any) => {
+              const leconsRes = await apiClient(`/lecons?module_id=${m.id}`)
+              return { ...m, lessons: leconsRes.data || [] }
+            }),
+          )
+          setModules(modulesWithLessons)
 
-        // Check enrollment
-        if (user) {
-          const { data: enrollment } = await supabase
-            .from("enrollments")
-            .select("*")
-            .eq("formation_id", formationData.id)
-            .eq("student_id", user.id)
-            .eq("status", "active")
-            .single()
-
-          setEnrolled(!!enrollment)
-          if (enrollment) {
-            setProgress(enrollment.progress || 0)
+          if (user) {
+            const enrollRes = await apiClient(
+              `/inscriptions?formation_id=${formationData.id}&student_id=${user.id}&status=active`,
+            )
+            const enrollments = Array.isArray(enrollRes.data) ? enrollRes.data : []
+            const enrollment = enrollments[0]
+            setEnrolled(!!enrollment)
+            if (enrollment) {
+              setProgress((enrollment as any).progress || 0)
+            }
           }
         }
+      } catch (error) {
+        console.error('Error loading formation data:', error)
       }
 
       setLoading(false)
     }
 
     fetchData()
-  }, [params.formationSlug, user, supabase])
+  }, [params.formationSlug, user])
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0)
   const totalDuration = modules.reduce((acc, m) => 

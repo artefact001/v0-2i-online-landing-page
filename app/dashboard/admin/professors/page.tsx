@@ -316,7 +316,6 @@ export default function ProfessorsPage() {
           ) : (
             <TablePagination
               currentPage={currentPage}
-              totalPages={totalPages}
               totalItems={filteredProfessors.length}
               pageSize={PAGE_SIZE}
               onPageChange={setCurrentPage}

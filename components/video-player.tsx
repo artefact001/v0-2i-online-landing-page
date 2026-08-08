@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { progressService } from '@/lib/progress-service'
 import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from 'lucide-react'
 
 interface VideoPlayerProps {
@@ -27,7 +27,6 @@ export function VideoPlayer({
   const [totalTime, setTotalTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showControls, setShowControls] = useState(true)
-  const supabase = createClient()
   
   let controlsTimeout: NodeJS.Timeout
 
@@ -47,32 +46,13 @@ export function VideoPlayer({
       // Save progress periodically (every 30 seconds)
       if (studentId && Math.floor(video.currentTime) % 30 === 0) {
         try {
-          const { data: existing } = await supabase
-            .from('lesson_progress')
-            .select('id')
-            .eq('student_id', studentId)
-            .eq('lesson_id', lessonId)
-            .single()
-
-          if (existing) {
-            await supabase
-              .from('lesson_progress')
-              .update({
-                watch_time_seconds: Math.floor(video.currentTime),
-                last_position_seconds: Math.floor(video.currentTime),
-              })
-              .eq('student_id', studentId)
-              .eq('lesson_id', lessonId)
-          } else {
-            await supabase
-              .from('lesson_progress')
-              .insert({
-                student_id: studentId,
-                lesson_id: lessonId,
-                watch_time_seconds: Math.floor(video.currentTime),
-                last_position_seconds: Math.floor(video.currentTime),
-              })
-          }
+          await progressService.updateLessonProgress(
+            studentId,
+            lessonId,
+            Math.floor(video.currentTime),
+            Math.floor(video.currentTime),
+            false,
+          )
         } catch (error) {
           console.error('Error saving progress:', error)
         }
@@ -89,24 +69,13 @@ export function VideoPlayer({
       // Mark as completed if student watched 90% or more
       if (studentId && video.currentTime / video.duration >= 0.9) {
         try {
-          const { data: existing } = await supabase
-            .from('lesson_progress')
-            .select('id')
-            .eq('student_id', studentId)
-            .eq('lesson_id', lessonId)
-            .single()
-
-          if (existing) {
-            await supabase
-              .from('lesson_progress')
-              .update({
-                is_completed: true,
-                completed_at: new Date().toISOString(),
-                watch_time_seconds: Math.floor(video.duration),
-              })
-              .eq('student_id', studentId)
-              .eq('lesson_id', lessonId)
-          }
+          await progressService.updateLessonProgress(
+            studentId,
+            lessonId,
+            Math.floor(video.duration),
+            Math.floor(video.duration),
+            true,
+          )
         } catch (error) {
           console.error('Error marking as completed:', error)
         }
@@ -122,7 +91,7 @@ export function VideoPlayer({
       video.removeEventListener('loadedmetadata', handleLoadedMetadata)
       video.removeEventListener('ended', handleEnded)
     }
-  }, [videoRef, lessonId, studentId, supabase])
+  }, [videoRef, lessonId, studentId])
 
   const togglePlayPause = () => {
     if (!videoRef.current) return

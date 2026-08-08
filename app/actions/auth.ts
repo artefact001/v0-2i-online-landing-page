@@ -16,7 +16,7 @@ async function setAuthCookie(token: string) {
 }
 
 export async function login(email: string, password: string) {
-  const res = await fetch(`${API_URL}/api/login`, {
+  const res = await fetch(`${API_URL}/v1/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -29,13 +29,8 @@ export async function login(email: string, password: string) {
   return { success: true, user: json.user }
 }
 
-export async function register(data: {
-  name: string
-  email: string
-  password: string
-  password_confirmation: string
-}) {
-  const res = await fetch(`${API_URL}/api/register`, {
+export async function register(data: Record<string, any>) {
+  const res = await fetch(`${API_URL}/v1/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(data),
@@ -53,7 +48,7 @@ export async function logout() {
   const token = cookieStore.get('auth_token')?.value
 
   if (token) {
-    await fetch(`${API_URL}/api/logout`, {
+    await fetch(`${API_URL}/v1/logout`, {
       method: 'POST',
       headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
     }).catch(() => null)
