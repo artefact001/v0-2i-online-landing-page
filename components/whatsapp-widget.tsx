@@ -9,28 +9,28 @@ const waOptions = [
     bg: "bg-[rgba(201,162,39,0.15)]",
     title: "Conseiller en orientation",
     sub: "Choix de formation",
-    href: "https://wa.me/221774662921?text=Bonjour 2i Online, je souhaiterais être accompagné(e) dans le choix de ma formation. »",
+    href: "https://wa.me/221774662921?text=Bonjour 2i Online, je souhaiterais être accompagné(e) dans le choix de ma formation.",
   },
   {
     icon: "🔧",
     bg: "bg-[rgba(27,58,107,0.5)]",
     title: "Support technique",
-    sub: "Acces plateforme",
+    sub: "Accès plateforme",
     href: "https://wa.me/221774662921?text=Bonjour 2i Online, je souhaiterais être accompagné(e) techniquement.",
   },
   {
     icon: "📚",
     bg: "bg-[rgba(34,197,94,0.15)]",
-    title: "Support pedagogique",
+    title: "Support pédagogique",
     sub: "Questions de cours",
-    href: "https://wa.me/221774662921?text=Bonjour,2i-online j'ai une question sur ma formation.",
+    href: "https://wa.me/221774662921?text=Bonjour, 2i-online j'ai une question sur ma formation.",
   },
   {
     icon: "💳",
     bg: "bg-[rgba(139,92,246,0.15)]",
     title: "Inscriptions & tarifs",
     sub: "Paiement & devis",
-    href: "https://wa.me/221774662921?text=Bonjour,2i-online je souhaite m'inscrire à une formation.",
+    href: "https://wa.me/221774662921?text=Bonjour, 2i-online je souhaite m'inscrire à une formation.",
   },
 ]
 

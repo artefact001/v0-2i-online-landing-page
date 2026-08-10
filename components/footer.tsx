@@ -4,20 +4,20 @@ const footerLinks = {
   formations: [
     { label: "CAP Cuisinier", href: "#formations" },
     { label: "CAP Serveur", href: "#formations" },
-    { label: "CAP Patissier", href: "#formations" },
-    { label: "HACCP & Hygiene", href: "#formations" },
+    { label: "CAP Pâtissier", href: "#formations" },
+    { label: "HACCP & Hygiène", href: "#formations" },
     { label: "Gestion Restaurant", href: "#formations" },
   ],
   ressources: [
-    { label: "Comment ca marche", href: "#comment" },
+    { label: "Comment ça marche", href: "#comment" },
     { label: "Tarifs", href: "#tarifs" },
     { label: "FAQ", href: "#faq" },
-    { label: "Temoignages", href: "#temoignages" },
+    { label: "Témoignages", href: "#temoignages" },
   ],
   contact: [
     { label: "+221338456419", href: "tel:+221338456419", icon: "phone" },
     { label: "info@2i-online.com", href: "mailto:info@2i-online.com", icon: "mail" },
-    { label: "Bargny, Senegal", href: "#", icon: "location" },
+    { label: "Bargny, Sénégal", href: "#", icon: "location" },
   ],
 }
 
@@ -81,7 +81,7 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-sm text-[#d0daf0] leading-relaxed max-w-[300px] mb-6">
-              Plateforme de formation professionnelle en hotellerie, restauration et arts culinaires pour l&apos;Afrique.
+              Plateforme de formation professionnelle en hôtellerie, restauration et arts culinaires pour l&apos;Afrique.
             </p>
             
             {/* Social Links */}
@@ -194,14 +194,14 @@ export function Footer() {
         {/* Bottom */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-[rgba(255,255,255,0.06)] gap-4">
           <p className="text-xs text-[rgba(255,255,255,0.3)] tracking-[1px]">
-            © 2026 2I Online by Incub Institut. Tous droits reserves.
+            © 2026 2I Online by Incub Institut. Tous droits réservés.
           </p>
           <div className="flex items-center gap-6 text-xs text-[rgba(255,255,255,0.3)]">
             <Link href="#" className="hover:text-[#C9A227] transition-colors">
-              Mentions legales
+              Mentions légales
             </Link>
             <Link href="#" className="hover:text-[#C9A227] transition-colors">
-              Politique de confidentialite
+              Politique de confidentialité
             </Link>
             <Link href="#" className="hover:text-[#C9A227] transition-colors">
               CGV

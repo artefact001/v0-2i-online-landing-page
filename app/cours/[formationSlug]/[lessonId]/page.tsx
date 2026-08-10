@@ -458,13 +458,13 @@ export default function CoursePage() {
                 className="border-green-500 text-green-500 hover:bg-green-500/10"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Marquer comme termine
+                Marquer comme terminé
               </Button>
             )}
             {progress?.is_completed && (
               <span className="flex items-center gap-2 text-green-500 text-sm">
                 <CheckCircle className="w-4 h-4" />
-                Termine
+                Terminé
               </span>
             )}
           </div>
