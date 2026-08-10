@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit, Trash2, Plus, Play, Eye, Upload, FileText, BookOpen } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { ContentSidebar } from '@/components/professor/content-sidebar'
+import { TablePagination } from '@/components/admin/table-pagination'
+
+const LESSONS_PAGE_SIZE = 8
 
 interface Lesson {
   id: string
@@ -44,6 +47,7 @@ interface Formation {
 
 export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
   const [formations, setFormations] = useState<Formation[]>([])
   const [modules, setModules] = useState<Module[]>([])
   const [selectedFormation, setSelectedFormation] = useState<string>('')
@@ -120,6 +124,7 @@ export default function LessonsPage() {
       // Route Laravel réelle: /v1/lecons (et non /v1/lessons)
       const res = await apiClient<Lesson[]>(`/lecons?module_id=${selectedModule}`)
       setLessons(res.data || [])
+      setCurrentPage(1)
     } catch (error) {
       console.error('Error loading lessons:', error)
     }
@@ -471,7 +476,7 @@ export default function LessonsPage() {
 
       {/* Lessons List */}
       <div className="space-y-3">
-        {lessons.map((lesson) => (
+        {lessons.slice((currentPage - 1) * LESSONS_PAGE_SIZE, currentPage * LESSONS_PAGE_SIZE).map((lesson) => (
           <Card key={lesson.id} className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
@@ -530,6 +535,16 @@ export default function LessonsPage() {
           </Card>
         ))}
       </div>
+
+      {lessons.length > LESSONS_PAGE_SIZE && (
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={lessons.length}
+          pageSize={LESSONS_PAGE_SIZE}
+          onPageChange={setCurrentPage}
+          itemLabel="leçons"
+        />
+      )}
 
       {lessons.length === 0 && !isCreating && (
         <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">

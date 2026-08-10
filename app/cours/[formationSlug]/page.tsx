@@ -15,10 +15,19 @@ import {
   Award,
   Play,
   CheckCircle,
-  Lock
+  Lock,
+  Radio,
+  Calendar
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+
+interface LiveSession {
+  id: string
+  title: string
+  scheduled_at: string
+  status: 'scheduled' | 'live' | 'completed' | 'cancelled'
+}
 
 interface Module {
   id: string
@@ -53,6 +62,22 @@ export default function FormationOverviewPage() {
   const [enrolled, setEnrolled] = useState(false)
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
+  const [expandedLessonModules, setExpandedLessonModules] = useState<Set<string>>(new Set())
+
+  const LESSONS_PREVIEW_COUNT = 8
+
+  const toggleModuleExpanded = (moduleId: string) => {
+    setExpandedLessonModules((prev) => {
+      const next = new Set(prev)
+      if (next.has(moduleId)) {
+        next.delete(moduleId)
+      } else {
+        next.add(moduleId)
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,7 +100,7 @@ export default function FormationOverviewPage() {
           // Récupère les leçons de chaque module — route réelle: /v1/lecons
           const modulesWithLessons = await Promise.all(
             modulesData.map(async (m: any) => {
-              const leconsRes = await apiClient(`/lecons?module_id=${m.id}`)
+              const leconsRes = await apiClient(`/lecons?module_id=${m.id}&is_published=1`)
               return { ...m, lessons: leconsRes.data || [] }
             }),
           )
@@ -102,6 +127,21 @@ export default function FormationOverviewPage() {
 
     fetchData()
   }, [params.formationSlug, user])
+
+  // Route Laravel réelle: /v1/directs?formation_id=...
+  useEffect(() => {
+    async function loadLiveSessions() {
+      if (!formation) return
+      try {
+        const res = await apiClient<LiveSession[]>(`/directs?formation_id=${formation.id}`)
+        const upcoming = (res.data || []).filter((s) => s.status === 'live' || s.status === 'scheduled')
+        setLiveSessions(upcoming)
+      } catch (error) {
+        console.error('Error loading live sessions:', error)
+      }
+    }
+    loadLiveSessions()
+  }, [formation])
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0)
   const totalDuration = modules.reduce((acc, m) => 
@@ -228,6 +268,45 @@ export default function FormationOverviewPage() {
         </div>
       </section>
 
+      {/* Cours en direct */}
+      {liveSessions.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 pt-12">
+          <h2 className="text-2xl font-bold mb-6">Cours en direct</h2>
+          <div className="space-y-3">
+            {liveSessions.map((session) => (
+              <Link
+                key={session.id}
+                href={`/cours/${params.formationSlug}/direct/${session.id}`}
+                className="flex items-center justify-between bg-[#0D1B2A] rounded-xl border border-[#1a2942] hover:border-[#C9A227] transition-colors p-5"
+              >
+                <div className="flex items-center gap-4">
+                  {session.status === 'live' ? (
+                    <span className="flex items-center gap-1.5 bg-red-500/20 text-red-400 text-xs font-semibold px-3 py-1 rounded-full shrink-0">
+                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      EN DIRECT
+                    </span>
+                  ) : (
+                    <Calendar className="w-5 h-5 text-[#C9A227] shrink-0" />
+                  )}
+                  <div>
+                    <p className="font-semibold">{session.title}</p>
+                    {session.status === 'scheduled' && (
+                      <p className="text-sm text-[rgba(255,255,255,0.5)]">
+                        {new Date(session.scheduled_at).toLocaleString('fr-FR', {
+                          dateStyle: 'long',
+                          timeStyle: 'short',
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Radio className="w-5 h-5 text-[#C9A227] shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Modules */}
       <section className="max-w-6xl mx-auto px-6 py-12">
         <h2 className="text-2xl font-bold mb-8">Programme de la formation</h2>
@@ -251,7 +330,10 @@ export default function FormationOverviewPage() {
               </div>
 
               <div className="divide-y divide-[#1a2942]">
-                {module.lessons.map((lesson, lessonIndex) => (
+                {(expandedLessonModules.has(module.id)
+                  ? module.lessons
+                  : module.lessons.slice(0, LESSONS_PREVIEW_COUNT)
+                ).map((lesson, lessonIndex) => (
                   <div key={lesson.id} className="px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       {enrolled ? (
@@ -277,6 +359,19 @@ export default function FormationOverviewPage() {
                   </div>
                 ))}
               </div>
+
+              {module.lessons.length > LESSONS_PREVIEW_COUNT && (
+                <div className="border-t border-[#1a2942] px-6 py-3">
+                  <button
+                    onClick={() => toggleModuleExpanded(module.id)}
+                    className="text-[#C9A227] text-sm font-medium hover:underline"
+                  >
+                    {expandedLessonModules.has(module.id)
+                      ? 'Voir moins'
+                      : `Voir les ${module.lessons.length - LESSONS_PREVIEW_COUNT} leçons restantes`}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
