@@ -1,38 +1,46 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, Calendar, Users, Radio } from 'lucide-react'
+import { Edit, Trash2, Plus, Calendar, Radio, Youtube } from 'lucide-react'
 
 interface LiveSession {
   id: string
   formation_id: string
-  professor_id: string
+  formateur_id: string
   title: string
   description: string
+  youtube_video_id: string
   scheduled_at: string
   duration_minutes: number
   status: 'scheduled' | 'live' | 'completed' | 'cancelled'
-  meeting_url: string | null
-  recording_url: string | null
-  max_participants: number
-  formations?: {
-    name: string
-  }
-  _count?: {
-    session_attendance: number
-  }
+  formation?: { name: string }
 }
 
 interface Formation {
   id: string
   name: string
+}
+
+// Accepte un lien YouTube complet (regarder, live, youtu.be, embed) ou déjà
+// juste l'ID, et retourne uniquement l'ID (11 caractères typiquement).
+function extractYoutubeId(input: string): string {
+  const trimmed = input.trim()
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtube\.com\/live\/|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{6,})/,
+  ]
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern)
+    if (match) return match[1]
+  }
+  return trimmed
 }
 
 export default function LiveSessionsPage() {
@@ -42,17 +50,16 @@ export default function LiveSessionsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     scheduled_at: '',
     duration_minutes: 60,
-    meeting_url: '',
-    max_participants: 100,
+    youtube_link: '',
   })
 
-  const supabase = createClient()
+  const { user } = useAuth()
 
   useEffect(() => {
     loadFormations()
@@ -66,18 +73,12 @@ export default function LiveSessionsPage() {
 
   const loadFormations = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
-
-      const { data, error } = await supabase
-        .from('professor_formations')
-        .select('formations(id, name)')
-        .eq('professor_id', user.user.id)
-
-      if (error) throw error
-      
-      const uniqueFormations = data?.map(pf => pf.formations).filter(Boolean) || []
-      setFormations(uniqueFormations as Formation[])
+      if (!user) return
+      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
+      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
+      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const uniqueFormations = res.data || []
+      setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {
         setSelectedFormation(uniqueFormations[0].id)
       }
@@ -86,16 +87,11 @@ export default function LiveSessionsPage() {
     }
   }
 
+  // Route Laravel réelle: /v1/directs (à ajouter côté backend, voir DirectController)
   const loadSessions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('live_sessions')
-        .select('*, formations(name), session_attendance(id)')
-        .eq('formation_id', selectedFormation)
-        .order('scheduled_at', { ascending: false })
-
-      if (error) throw error
-      setSessions(data || [])
+      const res = await apiClient<LiveSession[]>(`/directs?formation_id=${selectedFormation}`)
+      setSessions(res.data || [])
     } catch (error) {
       console.error('Error loading sessions:', error)
     }
@@ -104,51 +100,43 @@ export default function LiveSessionsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedFormation) return
-
     setIsLoading(true)
+
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        scheduled_at: formData.scheduled_at,
+        duration_minutes: formData.duration_minutes,
+        youtube_video_id: extractYoutubeId(formData.youtube_link),
+        formation_id: selectedFormation,
+      }
 
       if (editingId) {
-        const { error } = await supabase
-          .from('live_sessions')
-          .update(formData)
-          .eq('id', editingId)
-
-        if (error) throw error
+        await apiClient(`/directs/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        })
       } else {
-        const { error } = await supabase
-          .from('live_sessions')
-          .insert({
-            ...formData,
-            formation_id: selectedFormation,
-            professor_id: user.user.id,
-            status: 'scheduled',
-          })
-
-        if (error) throw error
+        await apiClient('/directs', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
       }
 
       await loadSessions()
       resetForm()
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error saving session:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr?')) return
-
+    if (!confirm('Supprimer ce cours en direct ?')) return
     try {
-      const { error } = await supabase
-        .from('live_sessions')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      await apiClient(`/directs/${id}`, { method: 'DELETE' })
       loadSessions()
     } catch (error) {
       console.error('Error deleting session:', error)
@@ -157,12 +145,10 @@ export default function LiveSessionsPage() {
 
   const handleStartSession = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('live_sessions')
-        .update({ status: 'live' })
-        .eq('id', id)
-
-      if (error) throw error
+      await apiClient(`/directs/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'live' }),
+      })
       loadSessions()
     } catch (error) {
       console.error('Error starting session:', error)
@@ -171,12 +157,10 @@ export default function LiveSessionsPage() {
 
   const handleEndSession = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('live_sessions')
-        .update({ status: 'completed' })
-        .eq('id', id)
-
-      if (error) throw error
+      await apiClient(`/directs/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: 'completed' }),
+      })
       loadSessions()
     } catch (error) {
       console.error('Error ending session:', error)
@@ -189,8 +173,7 @@ export default function LiveSessionsPage() {
       description: '',
       scheduled_at: '',
       duration_minutes: 60,
-      meeting_url: '',
-      max_participants: 100,
+      youtube_link: '',
     })
     setEditingId(null)
     setIsCreating(false)
@@ -202,8 +185,7 @@ export default function LiveSessionsPage() {
       description: session.description,
       scheduled_at: session.scheduled_at,
       duration_minutes: session.duration_minutes,
-      meeting_url: session.meeting_url || '',
-      max_participants: session.max_participants,
+      youtube_link: session.youtube_video_id,
     })
     setEditingId(session.id)
     setIsCreating(true)
@@ -287,36 +269,32 @@ export default function LiveSessionsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Durée (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={formData.duration_minutes}
-                    onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Participants max</Label>
-                  <Input
-                    type="number"
-                    value={formData.max_participants}
-                    onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) })}
-                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label className="text-[rgba(255,255,255,0.8)]">Durée (minutes)</Label>
+                <Input
+                  type="number"
+                  value={formData.duration_minutes}
+                  onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
+                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">URL de la réunion</Label>
+                <Label className="text-[rgba(255,255,255,0.8)] flex items-center gap-2">
+                  <Youtube className="w-4 h-4 text-red-500" />
+                  Lien YouTube Live (non répertorié)
+                </Label>
                 <Input
-                  value={formData.meeting_url}
-                  onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
-                  placeholder="https://zoom.us/... ou https://jitsi.meet/..."
+                  value={formData.youtube_link}
+                  onChange={(e) => setFormData({ ...formData, youtube_link: e.target.value })}
+                  placeholder="https://youtube.com/watch?v=... ou juste l'ID de la vidéo"
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                  required
                 />
+                <p className="text-xs text-[rgba(255,255,255,0.4)]">
+                  Crée d'abord ton live "non répertorié" dans YouTube Studio, puis colle le lien ici.
+                  L'ID est extrait automatiquement.
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -367,8 +345,8 @@ export default function LiveSessionsPage() {
                     </span>
                     <span>Durée: {session.duration_minutes} min</span>
                     <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {session._count?.session_attendance || 0} / {session.max_participants}
+                      <Youtube className="w-3 h-3 text-red-500" />
+                      {session.youtube_video_id}
                     </span>
                   </div>
                 </div>

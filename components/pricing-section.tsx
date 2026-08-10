@@ -3,7 +3,23 @@
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 
-const pricingCategories = [
+interface PricingPlan {
+  name: string
+  inscription?: string
+  monthly: string | null
+  price?: string
+  featured?: boolean
+  features: { text: string; included: boolean }[]
+  icon: string
+}
+
+interface PricingCategory {
+  title: string
+  description: string
+  plans: PricingPlan[]
+}
+
+const pricingCategories: PricingCategory[] = [
   {
     title: "PROGRAMMES CAP",
     description: "Formations diplômantes complètes",

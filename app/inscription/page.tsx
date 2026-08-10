@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { register } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,22 +37,20 @@ export default function InscriptionPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
     async function loadFormations() {
-      const { data } = await supabase
-        .from('formations')
-        .select('id, name, price, slug')
-        .eq('is_active', true)
-        .order('name')
-      
-      if (data) {
-        setFormations(data)
+      try {
+        const res = await apiClient<Formation[]>('/formations?is_active=1')
+        if (res.data) {
+          setFormations(res.data)
+        }
+      } catch (err) {
+        console.error('Error loading formations:', err)
       }
     }
     loadFormations()
-  }, [supabase])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,56 +69,51 @@ export default function InscriptionPage() {
     setIsLoading(true)
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // NOTE: noms de champs (first_name/last_name/phone) supposés d'après
+      // RegisterRequest — à vérifier côté Laravel si l'inscription échoue.
+      const result = await register({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? 
-            `${window.location.origin}/auth/callback`,
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            role: 'student',
-          },
-        },
+        password_confirmation: formData.confirmPassword,
       })
 
-      if (signUpError) {
-        if (signUpError.message.includes('already registered')) {
+      if (!result.success) {
+        if (result.message?.toLowerCase().includes('already') || result.message?.toLowerCase().includes('déjà')) {
           setError('Un compte existe déjà avec cette adresse email')
         } else {
-          setError(signUpError.message)
+          setError(result.message || 'Une erreur est survenue')
         }
         setIsLoading(false)
         return
       }
 
-      if (data.user) {
-        // Update profile with phone number
-        await supabase
-          .from('profiles')
-          .update({ phone: formData.phone })
-          .eq('id', data.user.id)
-
-        // Create enrollment if a formation was selected
-        if (formData.formationId) {
-          await supabase
-            .from('enrollments')
-            .insert({
-              student_id: data.user.id,
+      // Créer l'inscription si une formation a été sélectionnée
+      // À VÉRIFIER: champs attendus par InscriptionController::store
+      if (formData.formationId && result.user) {
+        try {
+          await apiClient('/inscriptions', {
+            method: 'POST',
+            body: JSON.stringify({
+              student_id: result.user.id,
               formation_id: formData.formationId,
               status: 'pending',
               payment_status: 'pending',
-            })
+            }),
+          })
+        } catch (enrollErr) {
+          console.error('Error creating enrollment:', enrollErr)
         }
-
-        setSuccess(true)
       }
+
+      setSuccess(true)
     } catch (err) {
       setError('Une erreur est survenue')
       console.error(err)
     }
-    
+
     setIsLoading(false)
   }
 
@@ -136,12 +130,11 @@ export default function InscriptionPage() {
             Inscription réussie!
           </h1>
           <p className="text-[rgba(255,255,255,0.6)] mb-8">
-            Un email de confirmation a été envoyé à <strong className="text-white">{formData.email}</strong>. 
-            Veuillez vérifier votre boîte de réception et cliquer sur le lien pour activer votre compte.
+            Votre compte a été créé avec succès. Vous pouvez dès maintenant accéder à votre espace.
           </p>
-          <Link href="/login">
+          <Link href="/dashboard">
             <Button className="bg-[#C9A227] hover:bg-[#B8860B] text-white px-8">
-              Aller à la connexion
+              Accéder à mon espace
             </Button>
           </Link>
         </div>

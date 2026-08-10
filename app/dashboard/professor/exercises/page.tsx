@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -63,7 +64,7 @@ interface Lesson {
 }
 
 export default function ExercisesPage() {
-  const supabase = createClient()
+  const { user } = useAuth()
 
   const [formations, setFormations] = useState<Formation[]>([])
   const [modules, setModules] = useState<Module[]>([])
@@ -104,14 +105,11 @@ export default function ExercisesPage() {
 
   const loadFormations = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
-      const { data, error } = await supabase
-        .from('professor_formations')
-        .select('formations(id, name)')
-        .eq('professor_id', user.user.id)
-      if (error) throw error
-      const list = (data?.map((pf) => pf.formations).filter(Boolean) || []) as Formation[]
+      if (!user) return
+      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
+      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
+      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const list = res.data || []
       setFormations(list)
       if (list.length > 0) setSelectedFormation(list[0].id)
     } catch (error) {
@@ -121,14 +119,10 @@ export default function ExercisesPage() {
 
   const loadModules = async () => {
     try {
-      const { data, error } = await supabase
-        .from('modules')
-        .select('*')
-        .eq('formation_id', selectedFormation)
-        .order('order_index')
-      if (error) throw error
-      setModules(data || [])
-      setSelectedModule(data && data.length > 0 ? data[0].id : '')
+      const res = await apiClient<Module[]>(`/modules?formation_id=${selectedFormation}`)
+      const data = res.data || []
+      setModules(data)
+      setSelectedModule(data.length > 0 ? data[0].id : '')
     } catch (error) {
       console.error('Error loading modules:', error)
     }
@@ -136,14 +130,11 @@ export default function ExercisesPage() {
 
   const loadLessons = async () => {
     try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('id, title, module_id')
-        .eq('module_id', selectedModule)
-        .order('order_index')
-      if (error) throw error
-      setLessons(data || [])
-      setSelectedLesson(data && data.length > 0 ? data[0].id : '')
+      // Route Laravel réelle: /v1/lecons (et non /v1/lessons)
+      const res = await apiClient<Lesson[]>(`/lecons?module_id=${selectedModule}`)
+      const data = res.data || []
+      setLessons(data)
+      setSelectedLesson(data.length > 0 ? data[0].id : '')
     } catch (error) {
       console.error('Error loading lessons:', error)
     }
@@ -151,13 +142,9 @@ export default function ExercisesPage() {
 
   const loadExercises = async () => {
     try {
-      const { data, error } = await supabase
-        .from('exercises')
-        .select('*, lessons(title, module_id)')
-        .eq('lesson_id', selectedLesson)
-        .order('order_index')
-      if (error) throw error
-      setExercises((data as Exercise[]) || [])
+      // Route Laravel réelle: /v1/exercices
+      const res = await apiClient<Exercise[]>(`/exercices?lesson_id=${selectedLesson}`)
+      setExercises(res.data || [])
     } catch (error) {
       console.error('Error loading exercises:', error)
     }
@@ -302,13 +289,15 @@ export default function ExercisesPage() {
         lesson_id: selectedLesson,
       }
       if (editingId) {
-        const { error } = await supabase.from('exercises').update(payload).eq('id', editingId)
-        if (error) throw error
+        await apiClient(`/exercices/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        })
       } else {
-        const { error } = await supabase
-          .from('exercises')
-          .insert({ ...payload, order_index: exercises.length })
-        if (error) throw error
+        await apiClient('/exercices', {
+          method: 'POST',
+          body: JSON.stringify({ ...payload, order_index: exercises.length }),
+        })
       }
       await loadExercises()
       resetForm()
@@ -323,8 +312,7 @@ export default function ExercisesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Supprimer cette évaluation ?')) return
     try {
-      const { error } = await supabase.from('exercises').delete().eq('id', id)
-      if (error) throw error
+      await apiClient(`/exercices/${id}`, { method: 'DELETE' })
       loadExercises()
     } catch (error) {
       console.error('Error deleting exercise:', error)

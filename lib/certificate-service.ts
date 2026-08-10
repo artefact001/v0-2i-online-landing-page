@@ -1,140 +1,88 @@
-import { createClient } from '@/lib/supabase/client';
+import { apiClient } from '@/lib/api/client'
+import { generateCertificatePDF } from '@/lib/certificate-pdf'
 
 export interface Certificate {
-  id: string;
-  student_id: string;
-  enrollment_id: string;
-  formation_id: string;
-  issue_date: string;
-  certificate_url?: string;
-  certificate_number: string;
-  is_verified: boolean;
+  id: string
+  student_id: string
+  enrollment_id: string
+  formation_id: string
+  issue_date: string
+  certificate_url?: string
+  certificate_number: string
+  is_verified: boolean
 }
 
 export const certificateService = {
-  // Generate certificate number
   generateCertificateNumber(): string {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 9).toUpperCase();
-    return `2ION-${timestamp}-${random}`;
+    const timestamp = Date.now().toString(36).toUpperCase()
+    const random = Math.random().toString(36).substring(2, 9).toUpperCase()
+    return `2ION-${timestamp}-${random}`
   },
 
-  // Create certificate
+  // Crée un certificat — POST /v1/certificats
+  // À VÉRIFIER: noms de champs attendus par CertificatController::store
   async createCertificate(enrollment_id: string, formation_id: string, student_id: string) {
-    const supabase = createClient();
-    
-    const certificate: Omit<Certificate, 'id'> = {
-      student_id,
-      enrollment_id,
-      formation_id,
-      issue_date: new Date().toISOString(),
-      certificate_number: this.generateCertificateNumber(),
-      is_verified: true,
-    };
-
-    const { data, error } = await supabase
-      .from('certificates')
-      .insert([certificate])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as Certificate;
+    const res = await apiClient<Certificate>('/certificats', {
+      method: 'POST',
+      body: JSON.stringify({
+        student_id,
+        enrollment_id,
+        formation_id,
+        issue_date: new Date().toISOString(),
+        certificate_number: this.generateCertificateNumber(),
+        is_verified: true,
+      }),
+    })
+    return res.data as Certificate
   },
 
-  // Get certificates for student
+  // Liste des certificats de l'étudiant connecté — GET /v1/certificats
+  // À VÉRIFIER: le backend filtre-t-il automatiquement par l'utilisateur connecté,
+  // ou faut-il passer ?student_id=... en query param ?
   async getStudentCertificates(studentId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('certificates')
-      .select(`
-        *,
-        formation:formations(id, name, slug)
-      `)
-      .eq('student_id', studentId)
-      .order('issue_date', { ascending: false });
-
-    if (error) throw error;
-    return data;
+    const res = await apiClient(`/certificats?student_id=${studentId}`)
+    return res.data
   },
 
-  // Get certificate details
+  // Détails d'un certificat — GET /v1/certificats/{id}
   async getCertificateDetails(certificateId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('certificates')
-      .select(`
-        *,
-        profile:profiles(first_name, last_name, email),
-        formation:formations(id, name, description)
-      `)
-      .eq('id', certificateId)
-      .single();
-
-    if (error) throw error;
-    return data;
+    const res = await apiClient(`/certificats/${certificateId}`)
+    return res.data
   },
 
-  // Generate certificate PDF (mock - would use jsPDF in production)
-  async generatePDF(certificateData: any): Promise<Blob> {
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          body { font-family: 'Georgia', serif; margin: 0; padding: 40px; }
-          .certificate { 
-            border: 8px solid #C9A227;
-            padding: 60px;
-            text-align: center;
-            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
-          }
-          .header { color: #0D2545; font-size: 48px; margin-bottom: 20px; }
-          .subheader { color: #666; font-size: 24px; margin: 20px 0; }
-          .name { font-size: 32px; color: #C9A227; margin: 40px 0; }
-          .course { color: #0D2545; font-size: 20px; margin: 20px 0; }
-          .date { color: #666; margin-top: 40px; }
-          .number { color: #C9A227; font-weight: bold; margin-top: 20px; }
-          .logo { width: 100px; margin-bottom: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="certificate">
-          <div class="header">Certificat de Réussite</div>
-          <div class="subheader">2I Online</div>
-          <hr style="border: 1px solid #C9A227; width: 60%;">
-          <p>Ceci certifie que</p>
-          <div class="name">${certificateData.profile.first_name} ${certificateData.profile.last_name}</div>
-          <p>a complété avec succès la formation</p>
-          <div class="course">${certificateData.formation.name}</div>
-          <p>et a démontré une maîtrise exceptionnelle des compétences requises</p>
-          <div class="date">
-            Émis le: ${new Date(certificateData.issue_date).toLocaleDateString('fr-FR')}
-          </div>
-          <div class="number">N° ${certificateData.certificate_number}</div>
-        </div>
-      </body>
-      </html>
-    `;
-
-    return new Blob([html], { type: 'text/html' });
+  // Téléchargement — GET /v1/certificats/{id}/download
+  // Cette route existe côté Laravel et renvoie probablement directement un fichier
+  // (PDF), pas du JSON. À adapter selon le Content-Type réel renvoyé.
+  getDownloadUrl(certificateId: string) {
+    return `/api/backend/certificats/${certificateId}/download`
   },
 
-  // Verify certificate authenticity
+  // Vérification d'authenticité par numéro de certificat.
+  // AUCUNE route publique de vérification par numéro n'existe dans routes/api.php.
+  // Il faudrait soit filtrer côté frontend via GET /v1/certificats?certificate_number=...,
+  // soit demander l'ajout d'un endpoint public dédié côté Laravel (utile pour un QR code
+  // de vérification accessible sans connexion).
   async verifyCertificate(certificateNumber: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('certificates')
-      .select(`
-        *,
-        profile:profiles(first_name, last_name),
-        formation:formations(name)
-      `)
-      .eq('certificate_number', certificateNumber)
-      .eq('is_verified', true)
-      .single();
-
-    if (error) return null;
-    return data;
+    try {
+      const res = await apiClient(`/certificats?certificate_number=${certificateNumber}`)
+      const list = Array.isArray(res.data) ? res.data : []
+      return list[0] ?? null
+    } catch {
+      return null
+    }
   },
-};
+
+  // Génération PDF 100% côté client (lib/certificate-pdf.ts, indépendant du backend)
+  async generatePDF(certificate: any): Promise<Blob> {
+    const doc = generateCertificatePDF({
+      studentName: certificate.student_name ?? certificate.studentName ?? '',
+      title: certificate.formation_name ?? certificate.title ?? '',
+      score: certificate.score ?? 0,
+      maxScore: certificate.max_score ?? certificate.maxScore ?? 100,
+      percentage: certificate.percentage ?? 100,
+      certificateNumber: certificate.certificate_number ?? certificate.certificateNumber ?? '',
+      date: certificate.issue_date ? new Date(certificate.issue_date) : new Date(),
+    })
+    return doc.output('blob')
+  },
+}
