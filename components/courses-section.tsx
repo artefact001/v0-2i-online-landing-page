@@ -73,7 +73,7 @@ function CourseCard({ course, index }: { course: (typeof formations)[number]; in
               <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider"> 
                  
               </span>
-              <div className="text-sm font-medium text-white">Diplome d'Etat</div>
+              <div className="text-sm font-medium text-white">Diplôme d'Etat</div>
             </div>
           )}
 
@@ -137,7 +137,7 @@ export function CoursesSection() {
           </h2>
           <p className="reveal text-base text-[#d0daf0] max-w-[600px] mx-auto leading-relaxed">
             Des parcours complets concus par des experts du metier. Apprenez a votre rythme, validez vos acquis et
-            obtenez un diplome reconnu.
+            obtenez un diplôme reconnu.
           </p>
         </div>
 
