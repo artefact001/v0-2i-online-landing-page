@@ -56,7 +56,7 @@ export function PartnersSection() {
           if (entry.isIntersecting) {
             entry.target.querySelectorAll(".reveal").forEach((el, index) => {
               setTimeout(() => {
-                el.classList.add("opacity-100", "translate-y-0")
+                el.classList.add("visible")
               }, index * 100)
             })
           }
