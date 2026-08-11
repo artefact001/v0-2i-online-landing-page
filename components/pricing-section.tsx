@@ -3,7 +3,23 @@
 import Link from "next/link"
 import { useEffect, useRef } from "react"
 
-const pricingCategories = [
+interface PricingPlan {
+  name: string
+  inscription?: string
+  monthly: string | null
+  price?: string
+  featured?: boolean
+  features: { text: string; included: boolean }[]
+  icon: string
+}
+
+interface PricingCategory {
+  title: string
+  description: string
+  plans: PricingPlan[]
+}
+
+const pricingCategories: PricingCategory[] = [
   {
     title: "PROGRAMMES CAP",
     description: "Formations diplômantes complètes",
@@ -16,9 +32,9 @@ const pricingCategories = [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
           { text: "Hybride", included: true },
-          { text: "Videos HD + fiches PDF", included: true },
-          { text: "Quiz et evaluations", included: true },
-          { text: "Diplôme d'Etat", included: true },
+          { text: "Vidéos HD + fiches PDF", included: true },
+          { text: "Quiz et évaluations", included: true },
+          { text: "Diplôme d'État", included: true },
         ],
         icon: "👨‍🍳",
       },
@@ -30,9 +46,9 @@ const pricingCategories = [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
           { text: "Hybride", included: true },
-          { text: "Videos HD + fiches PDF", included: true },
-          { text: "Quiz et evaluations", included: true },
-          { text: "Diplôme d'Etat", included: true },
+          { text: "Vidéos HD + fiches PDF", included: true },
+          { text: "Quiz et évaluations", included: true },
+          { text: "Diplôme d'État", included: true },
         ],
         icon: "🧁",
       },
@@ -44,9 +60,9 @@ const pricingCategories = [
           { text: "Inscription unique", included: true },
           { text: "Mensualités régulières", included: true },
           { text: "Hybride", included: true },
-          { text: "Videos HD + fiches PDF", included: true },
-          { text: "Quiz et evaluations", included: true },
-          { text: "Diplôme d'Etat", included: true },
+          { text: "Vidéos HD + fiches PDF", included: true },
+          { text: "Quiz et évaluations", included: true },
+          { text: "Diplôme d'État", included: true },
         ],
         icon: "🍽️",
       },
@@ -65,7 +81,7 @@ const pricingCategories = [
           { text: "Certification HACCP", included: true },
           { text: "Normes de sécurité alimentaire", included: true },
           { text: "Quiz pratiques", included: true },
-          { text: "Certificat numerique", included: true },
+          { text: "Certificat numérique", included: true },
         ],
         icon: "🛡️",
         featured: false,
@@ -80,20 +96,20 @@ const pricingCategories = [
           { text: "Gestion financière", included: true },
           { text: "Stratégie commerciale", included: true },
           { text: "Gestion d'équipe", included: true },
-          { text: "Certificat numerique", included: true },
+          { text: "Certificat numérique", included: true },
         ],
         icon: "🏢",
         featured: false,
       },
       {
-        name: "Certificat Professionel de Spécialité",
+        name: "Certificat Professionnel de Spécialité",
         inscription: "60 000",
         monthly: "30 000",
         features: [
           { text: "Spécialisation avancée", included: true },
           { text: "Flexibilité horaire", included: true },
-          { text: "Videos HD + fiches PDF", included: true },
-          { text: "Quiz et evaluations", included: true },
+          { text: "Vidéos HD + fiches PDF", included: true },
+          { text: "Quiz et évaluations", included: true },
           { text: "Certification en présentiel obligatoire", included: true },
         ],
         icon: "📜",
@@ -125,7 +141,7 @@ const pricingCategories = [
         monthly: null,
         features: [
           { text: "Reconnaissance des compétences", included: true },
-          { text: "Portfolio et evaluation", included: true },
+          { text: "Portfolio et évaluation", included: true },
           { text: "Mentoring personnalisé", included: true },
           { text: "Documentation complète (Livret 1 , Livret 2)", included: true },
           { text: "Support administratif", included: true },

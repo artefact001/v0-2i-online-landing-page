@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit, Trash2, Plus, Play, Eye, Upload, FileText, BookOpen } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { ContentSidebar } from '@/components/professor/content-sidebar'
+import { TablePagination } from '@/components/admin/table-pagination'
+
+const LESSONS_PAGE_SIZE = 8
 
 interface Lesson {
   id: string
@@ -43,6 +47,7 @@ interface Formation {
 
 export default function LessonsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
   const [formations, setFormations] = useState<Formation[]>([])
   const [modules, setModules] = useState<Module[]>([])
   const [selectedFormation, setSelectedFormation] = useState<string>('')
@@ -66,7 +71,7 @@ export default function LessonsPage() {
   const [pdfName, setPdfName] = useState('')
   const [pdfUploading, setPdfUploading] = useState(false)
 
-  const supabase = createClient()
+  const { user } = useAuth()
 
   useEffect(() => {
     loadFormations()
@@ -86,18 +91,13 @@ export default function LessonsPage() {
 
   const loadFormations = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
+      if (!user) return
 
-      const { data, error } = await supabase
-        .from('professor_formations')
-        .select('formations(id, name)')
-        .eq('professor_id', user.user.id)
-
-      if (error) throw error
-      
-      const uniqueFormations = data?.map(pf => pf.formations).filter(Boolean) || []
-      setFormations(uniqueFormations as Formation[])
+      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
+      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
+      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const uniqueFormations = res.data || []
+      setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {
         setSelectedFormation(uniqueFormations[0].id)
       }
@@ -108,15 +108,10 @@ export default function LessonsPage() {
 
   const loadModules = async () => {
     try {
-      const { data, error } = await supabase
-        .from('modules')
-        .select('*')
-        .eq('formation_id', selectedFormation)
-        .order('order_index')
-
-      if (error) throw error
-      setModules(data || [])
-      if (data && data.length > 0) {
+      const res = await apiClient<Module[]>(`/modules?formation_id=${selectedFormation}`)
+      const data = res.data || []
+      setModules(data)
+      if (data.length > 0) {
         setSelectedModule(data[0].id)
       }
     } catch (error) {
@@ -126,14 +121,10 @@ export default function LessonsPage() {
 
   const loadLessons = async () => {
     try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*, modules(title, formation_id)')
-        .eq('module_id', selectedModule)
-        .order('order_index')
-
-      if (error) throw error
-      setLessons(data || [])
+      // Route Laravel réelle: /v1/lecons (et non /v1/lessons)
+      const res = await apiClient<Lesson[]>(`/lecons?module_id=${selectedModule}`)
+      setLessons(res.data || [])
+      setCurrentPage(1)
     } catch (error) {
       console.error('Error loading lessons:', error)
     }
@@ -170,14 +161,18 @@ export default function LessonsPage() {
         video_url: formData.video_url.trim() || null,
       }
       if (editingId) {
-        const { error } = await supabase.from('lessons').update(payload).eq('id', editingId)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('lessons').insert({
-          ...payload,
-          module_id: selectedModule,
+        await apiClient(`/lecons/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
         })
-        if (error) throw error
+      } else {
+        await apiClient('/lecons', {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            module_id: selectedModule,
+          }),
+        })
       }
 
       await loadLessons()
@@ -194,12 +189,7 @@ export default function LessonsPage() {
     if (!confirm('Êtes-vous sûr?')) return
 
     try {
-      const { error } = await supabase
-        .from('lessons')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      await apiClient(`/lecons/${id}`, { method: 'DELETE' })
       loadLessons()
     } catch (error) {
       console.error('Error deleting lesson:', error)
@@ -486,7 +476,7 @@ export default function LessonsPage() {
 
       {/* Lessons List */}
       <div className="space-y-3">
-        {lessons.map((lesson) => (
+        {lessons.slice((currentPage - 1) * LESSONS_PAGE_SIZE, currentPage * LESSONS_PAGE_SIZE).map((lesson) => (
           <Card key={lesson.id} className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
@@ -545,6 +535,16 @@ export default function LessonsPage() {
           </Card>
         ))}
       </div>
+
+      {lessons.length > LESSONS_PAGE_SIZE && (
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={lessons.length}
+          pageSize={LESSONS_PAGE_SIZE}
+          onPageChange={setCurrentPage}
+          itemLabel="leçons"
+        />
+      )}
 
       {lessons.length === 0 && !isCreating && (
         <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">

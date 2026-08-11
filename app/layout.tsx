@@ -20,13 +20,13 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: '2I Online — Forme ici, Reconnu partout',
-  description: 'Plateforme de formation professionnelle en ligne en hotellerie, restauration et arts culinaires. Formations certifiantes reconnues par l\'Etat senegalais.',
-  keywords: ['formation professionnelle', 'hotellerie', 'restauration', 'cuisine', 'CAP', 'Senegal', 'Afrique', 'certification'],
+  description: 'Plateforme de formation professionnelle en ligne en hôtellerie, restauration et arts culinaires. Formations certifiantes reconnues par l\'État sénégalais.',
+  keywords: ['formation professionnelle', 'hôtellerie', 'restauration', 'cuisine', 'CAP', 'Sénégal', 'Afrique', 'certification'],
   authors: [{ name: 'Incub Institut' }],
   generator: 'v0.app',
   openGraph: {
     title: '2I Online — Forme ici, Reconnu partout',
-    description: 'Formations certifiantes en hotellerie, restauration et arts culinaires. Concues pour l\'Afrique, reconnues partout sur le continent.',
+    description: 'Formations certifiantes en hôtellerie, restauration et arts culinaires. Conçues pour l\'Afrique, reconnues partout sur le continent.',
     type: 'website',
     locale: 'fr_FR',
   },

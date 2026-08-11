@@ -5,32 +5,32 @@ import Link from "next/link"
 
 const faqItems = [
   {
-    question: "Comment se deroule le parcours de formation ?",
-    answer: "En 4 etapes simples : 1) Choisissez votre formation dans le catalogue depuis votre telephone (programme, duree, certificat et tarif detailles). 2) Payez en Mobile Money via Wave, Orange Money ou Free Money — l'acces est active instantanement. 3) Apprenez a votre rythme avec des videos HD, des fiches PDF telechargeables, des quiz et des exercices pratiques, depuis n'importe ou. 4) Obtenez votre certificat numerique Incub Institut, verifiable en ligne et reconnu par les employeurs.",
+    question: "Comment se déroule le parcours de formation ?",
+    answer: "En 4 étapes simples : 1) Choisissez votre formation dans le catalogue depuis votre téléphone (programme, durée, certificat et tarif détaillés). 2) Payez en Mobile Money via Wave, Orange Money ou Free Money — l'accès est activé instantanément. 3) Apprenez à votre rythme avec des vidéos HD, des fiches PDF téléchargeables, des quiz et des exercices pratiques, depuis n'importe où. 4) Obtenez votre certificat numérique Incub Institut, vérifiable en ligne et reconnu par les employeurs.",
   },
   {
-    question: "Les diplomes 2I Online sont-ils reconnus par l'Etat ?",
-    answer: "Oui. Incub Institut est un centre de formation agree. Les certifications CAP HCR (Cuisinier, Patissier, Serveur) sont des diplomes nationaux reconnus par l'Etat senegalais et par les partenaires employeurs de la filiere hotellerie-restauration en Afrique de l'Ouest.",
+    question: "Les diplômes 2I Online sont-ils reconnus par l'État ?",
+    answer: "Oui. Incub Institut est un centre de formation agréé. Les certifications CAP HCR (Cuisinier, Pâtissier, Serveur) sont des diplômes nationaux reconnus par l'État sénégalais et par les partenaires employeurs de la filière hôtellerie-restauration en Afrique de l'Ouest.",
   },
   {
-    question: "Comment se deroulent les evaluations et examens ?",
-    answer: "Les cours se suivent en ligne a votre rythme (videos, fiches PDF, quiz). Les evaluations pratiques et examens certificatifs se deroulent en presentiel a Bargny ou dans un centre partenaire proche de chez vous. Vous serez informe des dates avec suffisamment d'avance pour vous organiser.",
+    question: "Comment se déroulent les évaluations et examens ?",
+    answer: "Les cours se suivent en ligne à votre rythme (vidéos, fiches PDF, quiz). Les évaluations pratiques et examens certificatifs se déroulent en présentiel à Bargny ou dans un centre partenaire proche de chez vous. Vous serez informé des dates avec suffisamment d'avance pour vous organiser.",
   },
   {
     question: "Puis-je payer en plusieurs fois ?",
-    answer: "Oui, le paiement fractionne est possible. Nous proposons des modalites flexibles adaptees aux realites africaines — en plusieurs tranches mensuelles via Mobile Money (Wave, Orange Money) ou virement bancaire. Contactez-nous sur WhatsApp pour convenir d'un calendrier de paiement personnalise.",
+    answer: "Oui, le paiement fractionné est possible. Nous proposons des modalités flexibles adaptées aux réalités africaines — en plusieurs tranches mensuelles via Mobile Money (Wave, Orange Money) ou virement bancaire. Contactez-nous sur WhatsApp pour convenir d'un calendrier de paiement personnalisé.",
   },
   {
     question: "Est-ce accessible depuis n'importe quel pays d'Afrique ?",
-    answer: "Absolument. La plateforme 2I Online est accessible depuis n'importe quel appareil connecte — smartphone, tablette ou ordinateur — sur tout le continent africain. Certains modules peuvent meme etre telecharges pour etre consultes hors connexion.",
+    answer: "Absolument. La plateforme 2I Online est accessible depuis n'importe quel appareil connecté — smartphone, tablette ou ordinateur — sur tout le continent africain. Certains modules peuvent même être téléchargés pour être consultés hors connexion.",
   },
   {
     question: "Quand demarre la prochaine session de formation ?",
-    answer: "Les inscriptions sont ouvertes en continu pour les formations en ligne. Les prochaines sessions avec evaluation presentielle sont prevues pour juin 2026. Les places etant limitees, nous vous recommandons de vous preinscrire des maintenant.",
+    answer: "Les inscriptions sont ouvertes en continu pour les formations en ligne. Les prochaines sessions avec évaluation présentielle sont prévues pour juin 2026. Les places étant limitées, nous vous recommandons de vous préinscrire dès maintenant.",
   },
   {
     question: "Y a-t-il un accompagnement humain ou apprend-on seul ?",
-    answer: "Vous n'etes jamais seul. Chaque parcours est suivi par un formateur referent joignable via la plateforme et WhatsApp. Des sessions de questions-reponses en direct sont egalement organisees regulierement.",
+    answer: "Vous n'êtes jamais seul. Chaque parcours est suivi par un formateur référent joignable via la plateforme et WhatsApp. Des sessions de questions-réponses en direct sont également organisées régulièrement.",
   },
 ]
 
@@ -68,13 +68,13 @@ export function FAQSection() {
           {/* Left side - Header */}
           <div className="lg:sticky lg:top-32">
             <p className="reveal text-[10px] font-semibold tracking-[5px] uppercase text-[#C9A227] mb-4">
-              Questions frequentes
+              Questions fréquentes
             </p>
             <h2 className="reveal font-serif text-[clamp(32px,4vw,48px)] font-semibold text-white leading-tight mb-6">
               Tout ce que vous <em className="italic text-[#C9A227] font-light">voulez savoir</em>
             </h2>
             <p className="reveal text-base text-[#d0daf0] leading-relaxed mb-8">
-              Vous avez une question ? Elle est probablement deja la. Sinon, contactez-nous sur WhatsApp.
+              Vous avez une question ? Elle est probablement déjà là. Sinon, contactez-nous sur WhatsApp.
             </p>
             
             <div className="reveal bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">
@@ -86,7 +86,7 @@ export function FAQSection() {
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-white">Besoin d&apos;aide ?</div>
-                  <div className="text-xs text-[rgba(255,255,255,0.5)]">Reponse sous 1 heure</div>
+                  <div className="text-xs text-[rgba(255,255,255,0.5)]">Réponse sous 1 heure</div>
                 </div>
               </div>
               <Link

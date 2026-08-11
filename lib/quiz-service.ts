@@ -1,183 +1,130 @@
-import { createClient } from '@/lib/supabase/client';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { apiClient } from '@/lib/api/client'
+
+/**
+ * ATTENTION — mapping le plus incertain de toute la migration.
+ * Le frontend V0 modélisait les quiz comme: quizzes -> quiz_questions -> quiz_attempts.
+ * Le backend Laravel expose: examens -> questions -> resultats (+ reponses pour les
+ * réponses individuelles/correction manuelle des questions ouvertes).
+ * Les noms de champs ci-dessous (lesson_id, pass_score, correct_answer, etc.) sont
+ * repris tels quels du code Supabase d'origine: à confirmer contre les vrais
+ * Resource/Request Laravel (QuestionController, ExamenController, ResultatController).
+ */
 
 export interface QuizQuestion {
-  id: string;
-  quiz_id: string;
-  question_text: string;
-  question_type: 'multiple_choice' | 'true_false' | 'short_answer';
-  options?: string[];
-  correct_answer: string;
-  explanation?: string;
-  order_index: number;
-  points: number;
+  id: string
+  quiz_id: string
+  question_text: string
+  question_type: 'multiple_choice' | 'true_false' | 'short_answer'
+  options?: string[]
+  correct_answer: string
+  explanation?: string
+  order_index: number
+  points: number
 }
 
 export interface Quiz {
-  id: string;
-  lesson_id: string;
-  title: string;
-  description?: string;
-  duration_minutes: number;
-  pass_score: number;
-  is_published: boolean;
-  created_at: string;
-  questions?: QuizQuestion[];
+  id: string
+  lesson_id: string
+  title: string
+  description?: string
+  duration_minutes: number
+  pass_score: number
+  is_published: boolean
+  created_at: string
+  questions?: QuizQuestion[]
 }
 
 export interface QuizAttempt {
-  id: string;
-  student_id: string;
-  quiz_id: string;
-  score: number;
-  passed: boolean;
-  time_spent_minutes: number;
-  answers: Record<string, string>;
-  completed_at: string;
+  id: string
+  student_id: string
+  quiz_id: string
+  score: number
+  passed: boolean
+  time_spent_minutes: number
+  answers: Record<string, string>
+  completed_at: string
 }
 
 export const quizService = {
-  // Get all quizzes for a lesson
+  // GET /v1/examens?lesson_id=...&is_published=1
   async getQuizzesByLesson(lessonId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quizzes')
-      .select('*')
-      .eq('lesson_id', lessonId)
-      .eq('is_published', true);
-
-    if (error) throw error;
-    return data as Quiz[];
+    const res = await apiClient(`/examens?lesson_id=${lessonId}&is_published=1`)
+    return res.data as Quiz[]
   },
 
-  // Get quiz with questions
+  // GET /v1/examens/{id} — suppose que la réponse inclut les questions imbriquées.
+  // Si ce n'est pas le cas côté Laravel, il faut un appel séparé GET /v1/questions?examen_id=...
   async getQuizWithQuestions(quizId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quizzes')
-      .select(`
-        *,
-        quiz_questions (*)
-      `)
-      .eq('id', quizId)
-      .single();
-
-    if (error) throw error;
-    return data as Quiz & { quiz_questions: QuizQuestion[] };
+    const res = await apiClient(`/examens/${quizId}`)
+    return res.data as Quiz & { quiz_questions: QuizQuestion[] }
   },
 
-  // Create quiz (admin/professor)
+  // POST /v1/examens (réservé admin/formateur d'après routes/api.php)
   async createQuiz(quiz: Omit<Quiz, 'id' | 'created_at'>) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quizzes')
-      .insert([quiz])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as Quiz;
+    const res = await apiClient('/examens', {
+      method: 'POST',
+      body: JSON.stringify(quiz),
+    })
+    return res.data as Quiz
   },
 
-  // Add question to quiz
+  // POST /v1/questions (réservé admin/formateur)
   async addQuestion(question: Omit<QuizQuestion, 'id'>) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quiz_questions')
-      .insert([question])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as QuizQuestion;
+    const res = await apiClient('/questions', {
+      method: 'POST',
+      body: JSON.stringify(question),
+    })
+    return res.data as QuizQuestion
   },
 
-  // Submit quiz attempt
+  // POST /v1/resultats
   async submitQuizAttempt(attempt: Omit<QuizAttempt, 'id' | 'completed_at'>) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quiz_attempts')
-      .insert([{
-        ...attempt,
-        completed_at: new Date().toISOString(),
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as QuizAttempt;
+    const res = await apiClient('/resultats', {
+      method: 'POST',
+      body: JSON.stringify({ ...attempt, completed_at: new Date().toISOString() }),
+    })
+    return res.data as QuizAttempt
   },
 
-  // Grade quiz attempt
+  // Correction calculée côté frontend à partir de /v1/examens/{id} (avec questions imbriquées).
   async gradeQuizAttempt(quizId: string, answers: Record<string, string>) {
-    const supabase = createClient();
-    
-    // Get quiz with questions
-    const { data: quizData, error: quizError } = await supabase
-      .from('quizzes')
-      .select(`
-        *,
-        quiz_questions (*)
-      `)
-      .eq('id', quizId)
-      .single();
+    const quiz = await this.getQuizWithQuestions(quizId)
 
-    if (quizError) throw quizError;
+    let score = 0
+    let totalPoints = 0
 
-    const quiz = quizData as any;
-    let score = 0;
-    let totalPoints = 0;
-
-    // Grade each question
-    quiz.quiz_questions.forEach((question: QuizQuestion) => {
-      totalPoints += question.points;
+    quiz.quiz_questions.forEach((question) => {
+      totalPoints += question.points
       if (answers[question.id] === question.correct_answer) {
-        score += question.points;
+        score += question.points
       }
-    });
+    })
 
-    const percentage = (score / totalPoints) * 100;
-    const passed = percentage >= quiz.pass_score;
+    const percentage = totalPoints > 0 ? (score / totalPoints) * 100 : 0
+    const passed = percentage >= quiz.pass_score
 
     return {
       score: Math.round(percentage),
       totalPoints,
       passed,
       percentage,
-    };
-  },
-
-  // Get student quiz attempts
-  async getStudentAttempts(studentId: string, quizId?: string) {
-    const supabase = createClient();
-    let query = supabase
-      .from('quiz_attempts')
-      .select('*')
-      .eq('student_id', studentId);
-
-    if (quizId) {
-      query = query.eq('quiz_id', quizId);
     }
-
-    const { data, error } = await query.order('completed_at', { ascending: false });
-
-    if (error) throw error;
-    return data as QuizAttempt[];
   },
 
-  // Get best attempt for quiz
+  // GET /v1/resultats?student_id=...&quiz_id=...
+  async getStudentAttempts(studentId: string, quizId?: string) {
+    const query = quizId
+      ? `/resultats?student_id=${studentId}&quiz_id=${quizId}`
+      : `/resultats?student_id=${studentId}`
+    const res = await apiClient(query)
+    return res.data as QuizAttempt[]
+  },
+
+  // GET /v1/resultats?student_id=...&quiz_id=...&sort=-score&limit=1
+  // À VÉRIFIER: ResultatController::index supporte-t-il le tri/limit en query params ?
   async getBestAttempt(studentId: string, quizId: string) {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quiz_attempts')
-      .select('*')
-      .eq('student_id', studentId)
-      .eq('quiz_id', quizId)
-      .order('score', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return (data as QuizAttempt) || null;
+    const res = await apiClient(`/resultats?student_id=${studentId}&quiz_id=${quizId}&sort=-score&limit=1`)
+    const list = Array.isArray(res.data) ? (res.data as QuizAttempt[]) : []
+    return list[0] ?? null
   },
-};
+}

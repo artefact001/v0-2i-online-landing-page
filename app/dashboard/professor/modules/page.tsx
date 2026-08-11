@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
+import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -45,7 +46,7 @@ export default function ModulesPage() {
     is_published: false,
   })
 
-  const supabase = createClient()
+  const { user } = useAuth()
 
   useEffect(() => {
     loadFormations()
@@ -59,18 +60,13 @@ export default function ModulesPage() {
 
   const loadFormations = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
+      if (!user) return
 
-      const { data, error } = await supabase
-        .from('professor_formations')
-        .select('formations(id, name)')
-        .eq('professor_id', user.user.id)
-
-      if (error) throw error
-      
-      const uniqueFormations = data?.map(pf => pf.formations).filter(Boolean) || []
-      setFormations(uniqueFormations as Formation[])
+      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
+      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
+      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const uniqueFormations = res.data || []
+      setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {
         setSelectedFormation(uniqueFormations[0].id)
       }
@@ -81,14 +77,8 @@ export default function ModulesPage() {
 
   const loadModules = async () => {
     try {
-      const { data, error } = await supabase
-        .from('modules')
-        .select('*, formations(name), lessons(id)')
-        .eq('formation_id', selectedFormation)
-        .order('order_index')
-
-      if (error) throw error
-      setModules(data || [])
+      const res = await apiClient<Module[]>(`/modules?formation_id=${selectedFormation}`)
+      setModules(res.data || [])
     } catch (error) {
       console.error('Error loading modules:', error)
     }
@@ -121,14 +111,18 @@ export default function ModulesPage() {
         description: formData.description.trim(),
       }
       if (editingId) {
-        const { error } = await supabase.from('modules').update(payload).eq('id', editingId)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('modules').insert({
-          ...payload,
-          formation_id: selectedFormation,
+        await apiClient(`/modules/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
         })
-        if (error) throw error
+      } else {
+        await apiClient('/modules', {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            formation_id: selectedFormation,
+          }),
+        })
       }
 
       await loadModules()
@@ -145,12 +139,7 @@ export default function ModulesPage() {
     if (!confirm('Êtes-vous sûr?')) return
 
     try {
-      const { error } = await supabase
-        .from('modules')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      await apiClient(`/modules/${id}`, { method: 'DELETE' })
       loadModules()
     } catch (error) {
       console.error('Error deleting module:', error)

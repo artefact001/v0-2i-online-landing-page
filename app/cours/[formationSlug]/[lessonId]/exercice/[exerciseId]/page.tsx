@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { apiClient } from "@/lib/api/client"
+import { useAuth } from "@/lib/auth-context"
 import {
   ChevronLeft,
   CheckCircle,
@@ -88,7 +89,7 @@ function QuestionMedia({ question }: { question: EvalQuestion }) {
 
 export default function ExercisePage() {
   const params = useParams()
-  const supabase = createClient()
+  const { user } = useAuth()
   const backHref = `/cours/${params.formationSlug}/${params.lessonId}`
 
   const [exercise, setExercise] = useState<ExerciseRow | null>(null)
@@ -102,57 +103,49 @@ export default function ExercisePage() {
   const [result, setResult] = useState<GradeResult | null>(null)
   const submittedRef = useRef(false)
 
-  // Single consolidated bootstrap: user + profile + exercise + existing submission.
-  // This avoids the cascade of dependent useEffects that fired many redundant requests.
+  // Bootstrap: exercice + résultat existant éventuel (routes Laravel dédiées).
   useEffect(() => {
     let active = true
     async function bootstrap() {
       setLoading(true)
-      // getSession reads locally (no network round-trip / no auth lock contention)
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      const user = session?.user
+
       if (!user) {
         if (active) setLoading(false)
         return
       }
 
-      const [exerciseRes, profileRes, submissionRes] = await Promise.all([
-        supabase.from("exercises").select("*").eq("id", params.exerciseId).single(),
-        supabase.from("profiles").select("first_name, last_name").eq("id", user.id).single(),
-        supabase
-          .from("exercise_submissions")
-          .select("*")
-          .eq("exercise_id", params.exerciseId)
-          .eq("student_id", user.id)
-          .maybeSingle(),
-      ])
+      try {
+        const [exerciseRes, resultatsRes] = await Promise.all([
+          apiClient(`/exercices/${params.exerciseId}`),
+          apiClient(`/exercices/${params.exerciseId}/resultats`).catch(() => ({ data: null })),
+        ])
 
-      if (!active) return
+        if (!active) return
 
-      if (exerciseRes.data) {
-        const parsed =
-          typeof exerciseRes.data.content === "string"
-            ? JSON.parse(exerciseRes.data.content)
-            : exerciseRes.data.content
-        setExercise({ ...exerciseRes.data, content: parsed })
-        if (exerciseRes.data.time_limit_minutes) {
-          setTimeLeft(exerciseRes.data.time_limit_minutes * 60)
+        const exerciseData = exerciseRes.data as any
+        if (exerciseData) {
+          const parsed =
+            typeof exerciseData.content === "string" ? JSON.parse(exerciseData.content) : exerciseData.content
+          setExercise({ ...exerciseData, content: parsed })
+          if (exerciseData.time_limit_minutes) {
+            setTimeLeft(exerciseData.time_limit_minutes * 60)
+          }
         }
-      }
 
-      const p = profileRes.data
-      setProfile({
-        id: user.id,
-        name: p ? `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || "Étudiant" : "Étudiant",
-      })
+        setProfile({
+          id: user.id,
+          name: user.name || `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "Étudiant",
+        })
 
-      if (submissionRes.data) {
-        setAnswers(submissionRes.data.answers || {})
-        if (submissionRes.data.score !== null) {
-          setShowResults(true)
+        const submissionData = resultatsRes.data as any
+        if (submissionData) {
+          setAnswers(submissionData.answers || {})
+          if (submissionData.score !== null && submissionData.score !== undefined) {
+            setShowResults(true)
+          }
         }
+      } catch (error) {
+        console.error("Error loading exercise:", error)
       }
 
       setLoading(false)
@@ -161,7 +154,7 @@ export default function ExercisePage() {
     return () => {
       active = false
     }
-  }, [params.exerciseId, supabase])
+  }, [params.exerciseId, user])
 
   const evalContent: EvaluationContent | null =
     exercise && isEvaluationContent(exercise.content) ? exercise.content : null
@@ -186,27 +179,25 @@ export default function ExercisePage() {
         setResult(graded)
       }
 
-      const { error } = await supabase.from("exercise_submissions").upsert(
-        {
-          exercise_id: exercise.id,
-          student_id: profile.id,
-          answers,
-          score,
-          max_score: maxScore,
-          is_passed: isPassed,
-          submitted_at: new Date().toISOString(),
-          graded_at: evalContent ? new Date().toISOString() : null,
-        },
-        { onConflict: "exercise_id,student_id" },
-      )
-      if (error) {
-        console.log("[v0] submission error:", error.message)
+      // Route Laravel réelle: POST /v1/exercices/{id}/soumettre
+      try {
+        await apiClient(`/exercices/${exercise.id}/soumettre`, {
+          method: "POST",
+          body: JSON.stringify({
+            answers,
+            score,
+            max_score: maxScore,
+            is_passed: isPassed,
+          }),
+        })
+      } catch (error) {
+        console.error("[submission error]:", error)
       }
       setShowResults(true)
     } finally {
       setSubmitting(false)
     }
-  }, [exercise, profile, evalContent, answers, supabase])
+  }, [exercise, profile, evalContent, answers])
 
   // Timer
   useEffect(() => {

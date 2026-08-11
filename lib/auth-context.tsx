@@ -1,9 +1,8 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
+import { login as loginAction, logout as logoutAction } from '@/app/actions/auth'
+import { apiClient } from '@/lib/api/client'
 
 export type UserRole = 'admin' | 'professor' | 'student'
 
@@ -32,121 +31,68 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-function buildUser(authUser: SupabaseUser, profile: Record<string, unknown> | null): User {
-  const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>
-  const firstName = (profile?.first_name as string) || (meta.first_name as string) || ''
-  const lastName = (profile?.last_name as string) || (meta.last_name as string) || ''
-  const role = ((profile?.role as UserRole) || (meta.role as UserRole) || 'student') as UserRole
-  const avatarUrl = (profile?.avatar_url as string) ?? null
-  const name = [firstName, lastName].filter(Boolean).join(' ') || (authUser.email ?? 'Utilisateur')
+function buildUser(raw: any): User {
+  const firstName = raw.first_name ?? ''
+  const lastName = raw.last_name ?? ''
+  const role = (raw.role ?? 'student') as UserRole
+  const avatarUrl = raw.avatar_url ?? null
+  const name = [firstName, lastName].filter(Boolean).join(' ') || raw.email || 'Utilisateur'
 
   return {
-    id: authUser.id,
-    email: authUser.email ?? '',
+    id: String(raw.id),
+    email: raw.email ?? '',
     name,
     first_name: firstName,
     last_name: lastName,
     role,
     avatar: avatarUrl ?? undefined,
     avatar_url: avatarUrl,
-    phone: (profile?.phone as string) ?? null,
-    formation: (profile?.formation as string) ?? undefined,
-    createdAt: (profile?.created_at as string) || authUser.created_at || new Date().toISOString(),
+    phone: raw.phone ?? null,
+    formation: raw.formation ?? undefined,
+    createdAt: raw.created_at ?? new Date().toISOString(),
   }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
-
-  const loadProfile = useCallback(
-    async (authUser: SupabaseUser | null) => {
-      if (!authUser) {
-        setUser(null)
-        return null
-      }
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .maybeSingle()
-
-      const built = buildUser(authUser, profile)
-      setUser(built)
-      return built
-    },
-    [supabase],
-  )
 
   const refresh = useCallback(async () => {
-    const { data } = await supabase.auth.getUser()
-    await loadProfile(data.user ?? null)
-  }, [supabase, loadProfile])
+    try {
+      const res = await apiClient('/me')
+      setUser(res.data ? buildUser(res.data) : null)
+    } catch {
+      setUser(null)
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
-
-    async function init() {
-      // getSession reads from local storage/cookies (no network), avoiding lock contention
-      const { data } = await supabase.auth.getSession()
-      if (!active) return
-      await loadProfile(data.session?.user ?? null)
+    refresh().finally(() => {
       if (active) setIsLoading(false)
-    }
-
-    init()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      // IMPORTANT: do not `await` Supabase calls directly inside this callback.
-      // supabase-js holds an internal lock during the callback; awaiting another
-      // Supabase request here causes a deadlock. Defer the work instead.
-      const sessionUser = session?.user ?? null
-      setTimeout(() => {
-        if (!active) return
-        loadProfile(sessionUser).finally(() => {
-          if (active) setIsLoading(false)
-        })
-      }, 0)
     })
-
     return () => {
       active = false
-      subscription.unsubscribe()
     }
-  }, [supabase, loadProfile])
+  }, [refresh])
 
-  const login = useCallback(
-    async (email: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-
-      if (error) {
-        const message =
-          error.message === 'Invalid login credentials'
-            ? 'Email ou mot de passe incorrect'
-            : error.message === 'Email not confirmed'
-              ? 'Veuillez confirmer votre email avant de vous connecter'
-              : error.message
-        return { success: false, error: message }
-      }
-
-      const built = await loadProfile(data.user)
-      return { success: true, role: built?.role }
-    },
-    [supabase, loadProfile],
-  )
+  const login = useCallback(async (email: string, password: string) => {
+    const result = await loginAction(email, password)
+    if (!result.success) {
+      return { success: false, error: result.message || 'Email ou mot de passe incorrect' }
+    }
+    const built = buildUser(result.user)
+    setUser(built)
+    return { success: true, role: built.role }
+  }, [])
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut()
+    await logoutAction()
     setUser(null)
-  }, [supabase])
+  }, [])
 
   return (
-    <AuthContext.Provider
-      value={{ user, isLoading, login, logout, refresh, isAuthenticated: !!user }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, login, logout, refresh, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   )

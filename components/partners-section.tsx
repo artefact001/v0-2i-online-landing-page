@@ -10,11 +10,6 @@ const partners = [
     image: "/images/FB_IMG_1776855096946.jpg",
   },
   {
-    name: "Ministère de la Formation Professionnelle",
-    domain: "Formation Professionnelle",
-    image: "/images/FB_IMG_1776855096946.jpg",
-  },
-  {
     name: "Force N",
     domain: "Formation Professionnelle",
     image: "/images/1000769413.jpg",
@@ -42,7 +37,7 @@ const partners = [
   {
     name: "Mairie de Bargny",
     domain: "Collectivité Territoriale",
-    image: "/images/logo-mairie-bargny.jpg",
+    image: "/images/logo mairie bargny.jpg",
   },
   {
     name: "ADEPME",
@@ -61,13 +56,13 @@ export function PartnersSection() {
           if (entry.isIntersecting) {
             entry.target.querySelectorAll(".reveal").forEach((el, index) => {
               setTimeout(() => {
-                el.classList.add("opacity-100", "translate-y-0")
-              }, index * 120)
+                el.classList.add("visible")
+              }, index * 100)
             })
           }
         })
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     )
 
     if (sectionRef.current) {
@@ -94,16 +89,13 @@ export function PartnersSection() {
           </p>
 
           <h2 className="reveal opacity-0 translate-y-6 transition-all duration-700 mt-4 font-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-white">
-            Nos{" "}
-            <span className="text-[#C9A227] italic font-light">
-              Partenaires
-            </span>
+            Nos <span className="text-[#C9A227] italic font-light">Partenaires</span>
           </h2>
 
           <p className="reveal opacity-0 translate-y-6 transition-all duration-700 mt-6 text-[#D5DCEC] max-w-2xl mx-auto leading-8">
-            Nous collaborons avec des institutions publiques, entreprises,
-            organisations et partenaires engagés pour offrir une formation
-            professionnelle de qualité et favoriser l'insertion des jeunes.
+            Nous collaborons avec des institutions publiques, entreprises, organisations et
+            partenaires engagés pour offrir une formation professionnelle de qualité et favoriser
+            l'insertion des jeunes.
           </p>
         </div>
 
@@ -111,12 +103,11 @@ export function PartnersSection() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {partners.map((partner, index) => (
             <div
-              key={partner.name}
+              key={`${partner.name}-${index}`}
               className="reveal opacity-0 translate-y-6 transition-all duration-700"
               style={{ transitionDelay: `${index * 80}ms` }}
             >
               <div className="group h-full rounded-3xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#C9A227] hover:bg-white/10 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_15px_45px_rgba(201,162,39,.25)] p-8">
-
                 {/* Logo */}
                 <div className="flex justify-center mb-6">
                   <div className="relative w-28 h-28 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden p-4">
@@ -124,6 +115,8 @@ export function PartnersSection() {
                       src={partner.image}
                       alt={partner.name}
                       fill
+                      sizes="112px"
+                      loading={index < 4 ? "eager" : "lazy"}
                       className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
@@ -146,8 +139,8 @@ export function PartnersSection() {
         {/* Bottom Text */}
         <div className="reveal opacity-0 translate-y-6 transition-all duration-700 mt-20 text-center">
           <p className="text-[#9AA5BF] text-lg">
-            Ensemble, nous développons des compétences et créons des
-            opportunités pour la jeunesse africaine.
+            Ensemble, nous développons des compétences et créons des opportunités pour la
+            jeunesse africaine.
           </p>
         </div>
       </div>

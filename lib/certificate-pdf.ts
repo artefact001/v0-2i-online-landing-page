@@ -59,12 +59,12 @@ export function generateCertificatePDF(data: CertificateData): jsPDF {
   doc.setFont('times', 'bold')
   doc.setFontSize(30)
   doc.setTextColor(...GOLD)
-  doc.text('CERTIFICAT DE REUSSITE', w / 2, 62, { align: 'center' })
+  doc.text('CERTIFICAT DE RÉUSSITE', w / 2, 62, { align: 'center' })
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(12)
   doc.setTextColor(200, 200, 200)
-  doc.text('Ce certificat est decerne a', w / 2, 76, { align: 'center' })
+  doc.text('Ce certificat est décerné à', w / 2, 76, { align: 'center' })
 
   // Student name
   doc.setFont('times', 'bolditalic')
@@ -82,7 +82,7 @@ export function generateCertificatePDF(data: CertificateData): jsPDF {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(12)
   doc.setTextColor(200, 200, 200)
-  doc.text('pour avoir reussi avec succes l\'evaluation', w / 2, 108, { align: 'center' })
+  doc.text('pour avoir réussi avec succès l\'évaluation', w / 2, 108, { align: 'center' })
 
   doc.setFont('times', 'bold')
   doc.setFontSize(16)
@@ -105,7 +105,7 @@ export function generateCertificatePDF(data: CertificateData): jsPDF {
   doc.setFontSize(10)
   doc.setTextColor(180, 180, 180)
   doc.text(
-    `Delivre le ${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+    `Délivré le ${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`,
     32,
     h - 26,
   )
