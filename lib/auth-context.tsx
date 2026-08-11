@@ -31,10 +31,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// Le backend Laravel stocke et renvoie les rôles en français ('admin',
+// 'formateur', 'etudiant' — ce sont les valeurs exactes utilisées par le
+// middleware role: dans routes/api.php). Le frontend utilise des valeurs
+// anglaises partout ('admin', 'professor', 'student'). Sans cette
+// normalisation, un professeur ou un étudiant reçoit un rôle qui ne
+// correspond à aucun des if (user.role === ...) du frontend, cassant
+// silencieusement la redirection après connexion et toutes les
+// vérifications de permission basées sur le rôle.
+function normalizeRole(rawRole: unknown): UserRole {
+  const value = String(rawRole ?? '').toLowerCase().trim()
+
+  switch (value) {
+    case 'admin':
+    case 'administrateur':
+      return 'admin'
+    case 'formateur':
+    case 'professor':
+    case 'prof':
+    case 'professeur':
+      return 'professor'
+    case 'etudiant':
+    case 'étudiant':
+    case 'student':
+    case 'eleve':
+    case 'élève':
+      return 'student'
+    default:
+      console.warn(`[auth] Rôle inconnu reçu du backend: "${rawRole}" — repli sur "student"`)
+      return 'student'
+  }
+}
+
 function buildUser(raw: any): User {
   const firstName = raw.first_name ?? ''
   const lastName = raw.last_name ?? ''
-  const role = (raw.role ?? 'student') as UserRole
+  const role = normalizeRole(raw.role)
   const avatarUrl = raw.avatar_url ?? null
   const name = [firstName, lastName].filter(Boolean).join(' ') || raw.email || 'Utilisateur'
 
