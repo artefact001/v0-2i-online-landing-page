@@ -57,3 +57,46 @@ export async function logout() {
   cookieStore.delete('auth_token')
   return { success: true }
 }
+
+// Route Laravel réelle: POST /v1/forgotPassword (publique)
+export async function forgotPassword(email: string) {
+  try {
+    const res = await fetch(`${API_URL}/v1/forgotPassword`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    const json = await res.json()
+    if (!res.ok || !json.success) {
+      return { success: false, message: json.message || "Erreur lors de l'envoi du code" }
+    }
+    return { success: true, message: json.message }
+  } catch (error) {
+    return { success: false, message: 'Erreur de connexion au serveur' }
+  }
+}
+
+// Route Laravel réelle: POST /v1/resetPassword (publique)
+// À VÉRIFIER: champs exacts attendus par ResetPasswordRequest — on suppose
+// email, code, password, password_confirmation (pattern standard Laravel).
+export async function resetPassword(data: {
+  email: string
+  code: string
+  password: string
+  password_confirmation: string
+}) {
+  try {
+    const res = await fetch(`${API_URL}/v1/resetPassword`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(data),
+    })
+    const json = await res.json()
+    if (!res.ok || !json.success) {
+      return { success: false, message: json.message || 'Erreur lors de la réinitialisation' }
+    }
+    return { success: true, message: json.message }
+  } catch (error) {
+    return { success: false, message: 'Erreur de connexion au serveur' }
+  }
+}
