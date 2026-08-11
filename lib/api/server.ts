@@ -1,11 +1,15 @@
 import { cookies } from 'next/headers'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export async function apiServer<T = any>(
   path: string,
   options: RequestInit = {},
 ): Promise<{ success: boolean; message?: string; data?: T }> {
+  if (!API_URL) {
+    throw new Error('Configuration serveur manquante (NEXT_PUBLIC_API_URL)')
+  }
+
   const cookieStore = await cookies()
   const token = cookieStore.get('auth_token')?.value
 
@@ -20,8 +24,17 @@ export async function apiServer<T = any>(
     cache: 'no-store',
   })
 
-  const json = await res.json()
-  if (!res.ok) throw new Error(json.message || `Erreur API (${res.status})`)
+  const text = await res.text()
+  let json: any = null
+  if (text) {
+    try {
+      json = JSON.parse(text)
+    } catch {
+      throw new Error(`Réponse invalide du serveur API (HTTP ${res.status})`)
+    }
+  }
+
+  if (!res.ok) throw new Error(json?.message || `Erreur API (${res.status})`)
   return json
 }
 

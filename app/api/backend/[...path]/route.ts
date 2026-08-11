@@ -1,9 +1,19 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 async function proxy(request: NextRequest, path: string[], method: string) {
+  // Si la variable d'environnement n'est pas définie sur Vercel, on le dit
+  // clairement au lieu de planter sur une URL "undefined/v1/...".
+  if (!API_URL) {
+    console.error('[api/backend] NEXT_PUBLIC_API_URL is not set in the environment')
+    return NextResponse.json(
+      { success: false, message: 'Configuration serveur manquante (NEXT_PUBLIC_API_URL)' },
+      { status: 500 },
+    )
+  }
+
   const cookieStore = await cookies()
   const token = cookieStore.get('auth_token')?.value
 
@@ -24,14 +34,42 @@ async function proxy(request: NextRequest, path: string[], method: string) {
     }
   }
 
-  const res = await fetch(`${API_URL}/v1/${path.join('/')}${request.nextUrl.search}`, {
-    method,
-    headers,
-    body,
-  })
+  const targetUrl = `${API_URL}/v1/${path.join('/')}${request.nextUrl.search}`
+
+  let res: Response
+  try {
+    res = await fetch(targetUrl, { method, headers, body })
+  } catch (err) {
+    // Le backend Laravel est injoignable (DNS, réseau, certificat, etc.)
+    console.error('[api/backend] fetch failed:', targetUrl, err)
+    return NextResponse.json(
+      { success: false, message: 'Impossible de joindre le serveur API' },
+      { status: 502 },
+    )
+  }
 
   const text = await res.text()
-  const json = text ? JSON.parse(text) : null
+
+  let json: unknown = null
+  if (text) {
+    try {
+      json = JSON.parse(text)
+    } catch {
+      // Laravel a renvoyé du HTML (page d'erreur 500 en mode debug, 404 par
+      // défaut, etc.) au lieu de JSON. On ne plante pas dessus — on renvoie
+      // un message exploitable avec le statut d'origine et un extrait brut
+      // pour le débogage.
+      console.error('[api/backend] non-JSON response from Laravel:', targetUrl, res.status, text.slice(0, 500))
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Réponse invalide du serveur API (HTTP ${res.status})`,
+          raw: text.slice(0, 500),
+        },
+        { status: res.status },
+      )
+    }
+  }
 
   return NextResponse.json(json, { status: res.status })
 }

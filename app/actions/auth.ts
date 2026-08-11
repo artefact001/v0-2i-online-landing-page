@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 async function setAuthCookie(token: string) {
   const cookieStore = await cookies()
@@ -15,39 +15,76 @@ async function setAuthCookie(token: string) {
   })
 }
 
-export async function login(email: string, password: string) {
-  const res = await fetch(`${API_URL}/v1/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  const json = await res.json()
-  if (!res.ok || !json.success) {
-    return { success: false, message: json.message || 'Identifiants invalides' }
+async function safeJson(res: Response) {
+  const text = await res.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text)
+  } catch {
+    console.error('[auth] Réponse non-JSON du serveur API:', res.status, text.slice(0, 500))
+    return null
   }
-  await setAuthCookie(json.token)
-  return { success: true, user: json.user }
+}
+
+export async function login(email: string, password: string) {
+  if (!API_URL) {
+    return { success: false, message: 'Configuration serveur manquante (NEXT_PUBLIC_API_URL)' }
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/v1/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    const json = await safeJson(res)
+
+    if (!res.ok || !json?.success) {
+      return {
+        success: false,
+        message: json?.message || `Identifiants invalides (HTTP ${res.status})`,
+      }
+    }
+    await setAuthCookie(json.token)
+    return { success: true, user: json.user }
+  } catch (error) {
+    console.error('[auth] login fetch failed:', error)
+    return { success: false, message: 'Impossible de joindre le serveur' }
+  }
 }
 
 export async function register(data: Record<string, any>) {
-  const res = await fetch(`${API_URL}/v1/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(data),
-  })
-  const json = await res.json()
-  if (!res.ok || !json.success) {
-    return { success: false, message: json.message || "Erreur lors de l'inscription" }
+  if (!API_URL) {
+    return { success: false, message: 'Configuration serveur manquante (NEXT_PUBLIC_API_URL)' }
   }
-  await setAuthCookie(json.token)
-  return { success: true, user: json.user }
+
+  try {
+    const res = await fetch(`${API_URL}/v1/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(data),
+    })
+    const json = await safeJson(res)
+
+    if (!res.ok || !json?.success) {
+      return {
+        success: false,
+        message: json?.message || `Erreur lors de l'inscription (HTTP ${res.status})`,
+      }
+    }
+    await setAuthCookie(json.token)
+    return { success: true, user: json.user }
+  } catch (error) {
+    console.error('[auth] register fetch failed:', error)
+    return { success: false, message: 'Impossible de joindre le serveur' }
+  }
 }
 
 export async function logout() {
   const cookieStore = await cookies()
   const token = cookieStore.get('auth_token')?.value
 
-  if (token) {
+  if (token && API_URL) {
     await fetch(`${API_URL}/v1/logout`, {
       method: 'POST',
       headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
@@ -60,18 +97,27 @@ export async function logout() {
 
 // Route Laravel réelle: POST /v1/forgotPassword (publique)
 export async function forgotPassword(email: string) {
+  if (!API_URL) {
+    return { success: false, message: 'Configuration serveur manquante (NEXT_PUBLIC_API_URL)' }
+  }
+
   try {
     const res = await fetch(`${API_URL}/v1/forgotPassword`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ email }),
     })
-    const json = await res.json()
-    if (!res.ok || !json.success) {
-      return { success: false, message: json.message || "Erreur lors de l'envoi du code" }
+    const json = await safeJson(res)
+
+    if (!res.ok || !json?.success) {
+      return {
+        success: false,
+        message: json?.message || `Erreur lors de l'envoi du code (HTTP ${res.status})`,
+      }
     }
     return { success: true, message: json.message }
   } catch (error) {
+    console.error('[auth] forgotPassword fetch failed:', error)
     return { success: false, message: 'Erreur de connexion au serveur' }
   }
 }
@@ -85,18 +131,27 @@ export async function resetPassword(data: {
   password: string
   password_confirmation: string
 }) {
+  if (!API_URL) {
+    return { success: false, message: 'Configuration serveur manquante (NEXT_PUBLIC_API_URL)' }
+  }
+
   try {
     const res = await fetch(`${API_URL}/v1/resetPassword`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(data),
     })
-    const json = await res.json()
-    if (!res.ok || !json.success) {
-      return { success: false, message: json.message || 'Erreur lors de la réinitialisation' }
+    const json = await safeJson(res)
+
+    if (!res.ok || !json?.success) {
+      return {
+        success: false,
+        message: json?.message || `Erreur lors de la réinitialisation (HTTP ${res.status})`,
+      }
     }
     return { success: true, message: json.message }
   } catch (error) {
+    console.error('[auth] resetPassword fetch failed:', error)
     return { success: false, message: 'Erreur de connexion au serveur' }
   }
 }
