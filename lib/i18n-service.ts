@@ -11,7 +11,6 @@ export const translations = {
     tarifs: 'Tarifs',
     faq: 'FAQ',
     connexion: 'Connexion',
-    sinscrire: 'S\'inscrire',
 
     // Dashboard
     dashboard: 'Tableau de bord',
@@ -101,6 +100,8 @@ export const translations = {
   },
 };
 
+export type TranslationKey = keyof typeof translations.fr;
+
 export class I18nService {
   private static currentLanguage: Language = 'fr';
 
@@ -115,21 +116,25 @@ export class I18nService {
     return saved || 'fr';
   }
 
-  static t(key: keyof typeof translations.fr): string {
+  static t(key: TranslationKey): string {
     const lang = this.getLanguage();
-    const text = translations[lang][key as keyof typeof translations[typeof lang]];
-    return text || key;
+    const dict = translations[lang] as Record<TranslationKey, string>;
+    return dict[key] || key;
   }
 
   static translate(text: string, lang: Language = 'fr'): string {
-    const key = text as keyof typeof translations.fr;
-    return translations[lang][key as keyof typeof translations[lang]] || text;
+    const key = text as TranslationKey;
+    const dict = translations[lang] as Record<TranslationKey, string>;
+    return dict[key] || text;
   }
 }
 
 export const useTranslation = (lang: Language = 'fr') => {
   return {
-    t: (key: keyof typeof translations.fr) => translations[lang][key as keyof typeof translations[lang]] || key,
+    t: (key: TranslationKey) => {
+      const dict = translations[lang] as Record<TranslationKey, string>;
+      return dict[key] || key;
+    },
     lang,
   };
 };

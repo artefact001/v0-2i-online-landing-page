@@ -14,8 +14,6 @@
  * - Resend
  */
 
-import { createClient } from '@/lib/supabase/client'
-
 export interface EmailTemplate {
   subject: string
   htmlContent: string
@@ -23,7 +21,6 @@ export interface EmailTemplate {
 }
 
 export class EmailService {
-  private supabase = createClient()
 
   /**
    * Send enrollment confirmation email

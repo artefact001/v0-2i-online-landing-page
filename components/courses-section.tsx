@@ -74,6 +74,7 @@ function CourseCard({ course, index }: { course: (typeof formations)[number]; in
                  
               </span>
               <div className="text-sm font-medium text-white">Diplôme d'Etat</div>
+              <div className="text-sm font-medium text-white">Diplôme d'État</div>
             </div>
           )}
 

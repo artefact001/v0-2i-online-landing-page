@@ -26,7 +26,27 @@ const faqItems = [
   },
   {
     question: "Quand démarre la prochaine session de formation ?",
-    answer: "Les inscriptions sont ouvertes en continu pour les formations en ligne. Les prochaines sessions avec évaluation présentielle sont prévues pour juin 2026. Les places étant limitées, nous vous recommandons de vous préinscrire dés maintenant.",
+    answer: "En 4 étapes simples : 1) Choisissez votre formation dans le catalogue depuis votre téléphone (programme, durée, certificat et tarif détaillés). 2) Payez en Mobile Money via Wave, Orange Money ou Free Money — l'accès est activé instantanément. 3) Apprenez à votre rythme avec des vidéos HD, des fiches PDF téléchargeables, des quiz et des exercices pratiques, depuis n'importe où. 4) Obtenez votre certificat numérique Incub Institut, vérifiable en ligne et reconnu par les employeurs.",
+  },
+  {
+    question: "Les diplômes 2I Online sont-ils reconnus par l'État ?",
+    answer: "Oui. Incub Institut est un centre de formation agréé. Les certifications CAP HCR (Cuisinier, Pâtissier, Serveur) sont des diplômes nationaux reconnus par l'État sénégalais et par les partenaires employeurs de la filière hôtellerie-restauration en Afrique de l'Ouest.",
+  },
+  {
+    question: "Comment se déroulent les évaluations et examens ?",
+    answer: "Les cours se suivent en ligne à votre rythme (vidéos, fiches PDF, quiz). Les évaluations pratiques et examens certificatifs se déroulent en présentiel à Bargny ou dans un centre partenaire proche de chez vous. Vous serez informé des dates avec suffisamment d'avance pour vous organiser.",
+  },
+  {
+    question: "Puis-je payer en plusieurs fois ?",
+    answer: "Oui, le paiement fractionné est possible. Nous proposons des modalités flexibles adaptées aux réalités africaines — en plusieurs tranches mensuelles via Mobile Money (Wave, Orange Money) ou virement bancaire. Contactez-nous sur WhatsApp pour convenir d'un calendrier de paiement personnalisé.",
+  },
+  {
+    question: "Est-ce accessible depuis n'importe quel pays d'Afrique ?",
+    answer: "Absolument. La plateforme 2I Online est accessible depuis n'importe quel appareil connecté — smartphone, tablette ou ordinateur — sur tout le continent africain. Certains modules peuvent même être téléchargés pour être consultés hors connexion.",
+  },
+  {
+    question: "Quand demarre la prochaine session de formation ?",
+    answer: "Les inscriptions sont ouvertes en continu pour les formations en ligne. Les prochaines sessions avec évaluation présentielle sont prévues pour juin 2026. Les places étant limitées, nous vous recommandons de vous préinscrire dès maintenant.",
   },
   {
     question: "Y a-t-il un accompagnement humain ou apprend-on seul ?",
@@ -68,13 +88,14 @@ export function FAQSection() {
           {/* Left side - Header */}
           <div className="lg:sticky lg:top-32">
             <p className="reveal text-[10px] font-semibold tracking-[5px] uppercase text-[#C9A227] mb-4">
-              Questions frequentes
+              Questions fréquentes
             </p>
             <h2 className="reveal font-serif text-[clamp(32px,4vw,48px)] font-semibold text-white leading-tight mb-6">
               Tout ce que vous <em className="italic text-[#C9A227] font-light">voulez savoir</em>
             </h2>
             <p className="reveal text-base text-[#d0daf0] leading-relaxed mb-8">
               Vous avez une question ? Elle est probablement déjà la. Sinon, contactez-nous sur WhatsApp.
+              Vous avez une question ? Elle est probablement déjà là. Sinon, contactez-nous sur WhatsApp.
             </p>
             
             <div className="reveal bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.08)] rounded-xl p-6">

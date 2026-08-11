@@ -84,10 +84,10 @@ export default async function FormationDetailPage({
             </div>
             <div>
               <div className="text-[10px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider mb-1">
-                {formation.price ? "Tarif" : "Diplome"}
+                {formation.price ? "Tarif" : "Diplôme"}
               </div>
               <div className="font-serif text-xl font-bold text-[#C9A227]">
-                {formation.price ?? "Reconnu Etat"}
+                {formation.price ?? "Reconnu État"}
               </div>
             </div>
             <Link
@@ -160,7 +160,7 @@ export default async function FormationDetailPage({
                   <dd className="text-white">{formation.prerequisites}</dd>
                 </div>
                 <div>
-                  <dt className="text-[rgba(255,255,255,0.4)] mb-1">Diplome / Certification</dt>
+                  <dt className="text-[rgba(255,255,255,0.4)] mb-1">Diplôme / Certification</dt>
                   <dd className="text-white">{formation.diploma}</dd>
                 </div>
               </dl>

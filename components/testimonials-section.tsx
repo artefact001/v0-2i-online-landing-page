@@ -10,7 +10,7 @@ const testimonials = [
     image: "/images/testimonial-1.jpg",
     name: "Ndeye Aida Niang",
     role: "Restauratrice",
-    location: "Dakar, Senegal",
+    location: "Dakar, Sénégal",
   },
   {
     stars: 5,
@@ -18,7 +18,7 @@ const testimonials = [
     image: "/images/testimonial-2.jpg",
     name: "Dieynaba Thioube / Diass Awa Samb",
     role: "Entrepreneuses en restauration",
-    location: "Dakar, Senegal",
+    location: "Dakar, Sénégal",
   },
   {
     stars: 5,
@@ -26,7 +26,7 @@ const testimonials = [
     image: "/images/testimonial-3.jpg",
     name: "Mbayame Ndione",
     role: "Cuisinière",
-    location: "Dakar, Senegal",
+    location: "Dakar, Sénégal",
   },
 ]
 
@@ -64,7 +64,7 @@ export function TestimonialsSection() {
       <div className="max-w-7xl mx-auto relative">
         <div className="text-center mb-16">
           <p className="reveal text-[10px] font-semibold tracking-[5px] uppercase text-[#C9A227] mb-4">
-            Temoignages
+            Témoignages
           </p>
           <h2 className="reveal font-serif text-[clamp(36px,4vw,56px)] font-semibold text-white mb-4">
             Ce qu&apos;ils <em className="italic text-[#C9A227] font-light">disent</em> de nous
@@ -152,7 +152,7 @@ export function TestimonialsSection() {
             </div>
             <div className="text-left">
               <div className="text-2xl font-serif font-bold text-[#C9A227]">50+</div>
-              <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider">Diplomes</div>
+              <div className="text-[11px] text-[rgba(255,255,255,0.4)] uppercase tracking-wider">Diplômes</div>
             </div>
           </div>
           

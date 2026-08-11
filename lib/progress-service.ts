@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { apiClient } from '@/lib/api/client'
 
 export interface LessonProgress {
   id: string
@@ -21,24 +21,13 @@ export interface FormationProgress {
 }
 
 export class ProgressService {
-  private supabase = createClient()
-
-  async getLessonProgress(
-    studentId: string,
-    lessonId: string
-  ): Promise<LessonProgress | null> {
+  // GET /v1/progressions?student_id=...&lesson_id=...
+  // À VÉRIFIER: ProgressionController::index accepte-t-il ces filtres en query params ?
+  async getLessonProgress(studentId: string, lessonId: string): Promise<LessonProgress | null> {
     try {
-      const { data, error } = await this.supabase
-        .from('lesson_progress')
-        .select('*')
-        .eq('student_id', studentId)
-        .eq('lesson_id', lessonId)
-        .single()
-
-      if (error?.code === 'PGRST116') return null // Not found
-      if (error) throw error
-
-      return data
+      const res = await apiClient(`/progressions?student_id=${studentId}&lesson_id=${lessonId}`)
+      const list = Array.isArray(res.data) ? res.data : []
+      return (list[0] as LessonProgress) ?? null
     } catch (error) {
       console.error('Error fetching lesson progress:', error)
       return null
@@ -50,40 +39,30 @@ export class ProgressService {
     lessonId: string,
     watchTimeSeconds: number,
     lastPositionSeconds: number,
-    isCompleted: boolean = false
+    isCompleted = false,
   ): Promise<boolean> {
     try {
-      const existingProgress = await this.getLessonProgress(studentId, lessonId)
-
-      if (existingProgress) {
-        const { error } = await this.supabase
-          .from('lesson_progress')
-          .update({
-            watch_time_seconds: watchTimeSeconds,
-            last_position_seconds: lastPositionSeconds,
-            is_completed: isCompleted,
-            completed_at: isCompleted ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('student_id', studentId)
-          .eq('lesson_id', lessonId)
-
-        if (error) throw error
-      } else {
-        const { error } = await this.supabase
-          .from('lesson_progress')
-          .insert({
-            student_id: studentId,
-            lesson_id: lessonId,
-            watch_time_seconds: watchTimeSeconds,
-            last_position_seconds: lastPositionSeconds,
-            is_completed: isCompleted,
-            completed_at: isCompleted ? new Date().toISOString() : null,
-          })
-
-        if (error) throw error
+      const existing = await this.getLessonProgress(studentId, lessonId)
+      const payload = {
+        student_id: studentId,
+        lesson_id: lessonId,
+        watch_time_seconds: watchTimeSeconds,
+        last_position_seconds: lastPositionSeconds,
+        is_completed: isCompleted,
+        completed_at: isCompleted ? new Date().toISOString() : null,
       }
 
+      if (existing) {
+        await apiClient(`/progressions/${existing.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        })
+      } else {
+        await apiClient('/progressions', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+      }
       return true
     } catch (error) {
       console.error('Error updating lesson progress:', error)
@@ -91,50 +70,27 @@ export class ProgressService {
     }
   }
 
-  async getFormationProgress(
-    studentId: string,
-    formationId: string
-  ): Promise<FormationProgress | null> {
+  // Reconstitue la progression d'une formation à partir de /v1/modules, /v1/lecons, /v1/progressions
+  // (aucune route dédiée "progression par formation" n'existe côté Laravel — calcul fait ici).
+  // À VÉRIFIER: ModuleController::index et LeconController::index acceptent-ils un filtre
+  // ?formation_id=... / ?module_id=... comme supposé ci-dessous.
+  async getFormationProgress(studentId: string, formationId: string): Promise<FormationProgress | null> {
     try {
-      // Get all lessons in the formation
-      const { data: modules, error: modulesError } = await this.supabase
-        .from('modules')
-        .select('id')
-        .eq('formation_id', formationId)
+      const modulesRes = await apiClient(`/modules?formation_id=${formationId}`)
+      const modules = Array.isArray(modulesRes.data) ? modulesRes.data : []
+      const moduleIds = modules.map((m: any) => m.id)
+      if (moduleIds.length === 0) return null
 
-      if (modulesError) throw modulesError
+      const leconsRes = await apiClient(`/lecons?module_id=${moduleIds.join(',')}`)
+      const lecons = Array.isArray(leconsRes.data) ? leconsRes.data : []
+      const totalLessons = lecons.length
+      if (totalLessons === 0) return null
 
-      const moduleIds = modules?.map(m => m.id) || []
-
-      if (moduleIds.length === 0) {
-        return null
-      }
-
-      // Get all lessons
-      const { data: lessons, error: lessonsError } = await this.supabase
-        .from('lessons')
-        .select('id')
-        .in('module_id', moduleIds)
-
-      if (lessonsError) throw lessonsError
-
-      const totalLessons = lessons?.length || 0
-
-      if (totalLessons === 0) {
-        return null
-      }
-
-      // Get student's completed lessons
-      const { data: completedProgress, error: progressError } = await this.supabase
-        .from('lesson_progress')
-        .select('id')
-        .eq('student_id', studentId)
-        .eq('is_completed', true)
-        .in('lesson_id', lessons?.map(l => l.id) || [])
-
-      if (progressError) throw progressError
-
-      const completedLessons = completedProgress?.length || 0
+      const progressRes = await apiClient(
+        `/progressions?student_id=${studentId}&is_completed=1&lesson_id=${lecons.map((l: any) => l.id).join(',')}`,
+      )
+      const completedList = Array.isArray(progressRes.data) ? progressRes.data : []
+      const completedLessons = completedList.length
       const completionPercentage = Math.round((completedLessons / totalLessons) * 100)
 
       return {
@@ -153,23 +109,14 @@ export class ProgressService {
 
   async getStudentAllProgress(studentId: string) {
     try {
-      const { data: enrollments, error: enrollmentsError } = await this.supabase
-        .from('enrollments')
-        .select('formation_id')
-        .eq('student_id', studentId)
-        .eq('status', 'active')
-
-      if (enrollmentsError) throw enrollmentsError
+      const res = await apiClient(`/inscriptions?student_id=${studentId}&status=active`)
+      const enrollments = Array.isArray(res.data) ? res.data : []
 
       const progressData = []
-
-      for (const enrollment of enrollments || []) {
+      for (const enrollment of enrollments) {
         const progress = await this.getFormationProgress(studentId, enrollment.formation_id)
-        if (progress) {
-          progressData.push(progress)
-        }
+        if (progress) progressData.push(progress)
       }
-
       return progressData
     } catch (error) {
       console.error('Error fetching all student progress:', error)
@@ -177,43 +124,26 @@ export class ProgressService {
     }
   }
 
-  async getProfessorStudentProgress(
-    professorId: string,
-    studentId: string
-  ) {
+  // AUCUN équivalent Laravel de la table "professor_formations" n'apparaît dans les routes.
+  // À confirmer: comment un formateur est-il lié à ses formations côté Laravel
+  // (champ formateur_id direct sur "formations" ? table pivot dédiée ?).
+  async getProfessorStudentProgress(professorId: string, studentId: string) {
     try {
-      // Get formations taught by professor
-      const { data: professorFormations, error: pfError } = await this.supabase
-        .from('professor_formations')
-        .select('formation_id')
-        .eq('professor_id', professorId)
+      const formationsRes = await apiClient(`/formations?formateur_id=${professorId}`)
+      const formations = Array.isArray(formationsRes.data) ? formationsRes.data : []
+      const formationIds = formations.map((f: any) => f.id)
+      if (formationIds.length === 0) return []
 
-      if (pfError) throw pfError
-
-      const formationIds = professorFormations?.map(pf => pf.formation_id) || []
-
-      if (formationIds.length === 0) {
-        return []
-      }
-
-      // Get student enrollments in those formations
-      const { data: enrollments, error: enrollmentsError } = await this.supabase
-        .from('enrollments')
-        .select('formation_id')
-        .eq('student_id', studentId)
-        .in('formation_id', formationIds)
-
-      if (enrollmentsError) throw enrollmentsError
+      const enrollmentsRes = await apiClient(
+        `/inscriptions?student_id=${studentId}&formation_id=${formationIds.join(',')}`,
+      )
+      const enrollments = Array.isArray(enrollmentsRes.data) ? enrollmentsRes.data : []
 
       const progressData = []
-
-      for (const enrollment of enrollments || []) {
+      for (const enrollment of enrollments) {
         const progress = await this.getFormationProgress(studentId, enrollment.formation_id)
-        if (progress) {
-          progressData.push(progress)
-        }
+        if (progress) progressData.push(progress)
       }
-
       return progressData
     } catch (error) {
       console.error('Error fetching professor student progress:', error)
@@ -221,61 +151,30 @@ export class ProgressService {
     }
   }
 
-  async getStudentsProgress(
-    professorId: string,
-    formationId: string
-  ) {
+  async getStudentsProgress(professorId: string, formationId: string) {
     try {
-      // Get students enrolled in this formation
-      const { data: enrollments, error: enrollmentsError } = await this.supabase
-        .from('enrollments')
-        .select('student_id, profiles(first_name, last_name)')
-        .eq('formation_id', formationId)
-        .eq('status', 'active')
-
-      if (enrollmentsError) throw enrollmentsError
+      const res = await apiClient(`/inscriptions?formation_id=${formationId}&status=active`)
+      const enrollments = Array.isArray(res.data) ? res.data : []
 
       const progressData = []
-
-      for (const enrollment of enrollments || []) {
+      for (const enrollment of enrollments) {
         const progress = await this.getFormationProgress(enrollment.student_id, formationId)
         if (progress) {
           progressData.push({
             ...progress,
-            student_name: `${enrollment.profiles?.first_name} ${enrollment.profiles?.last_name}`,
+            student_name: `${enrollment.student?.first_name ?? ''} ${enrollment.student?.last_name ?? ''}`.trim(),
           })
         }
       }
-
-      return progressData.sort((a, b) => 
-        b.completion_percentage - a.completion_percentage
-      )
+      return progressData.sort((a, b) => b.completion_percentage - a.completion_percentage)
     } catch (error) {
       console.error('Error fetching students progress:', error)
       return []
     }
   }
 
-  async markLessonAsCompleted(
-    studentId: string,
-    lessonId: string
-  ): Promise<boolean> {
-    try {
-      const { error } = await this.supabase
-        .from('lesson_progress')
-        .update({
-          is_completed: true,
-          completed_at: new Date().toISOString(),
-        })
-        .eq('student_id', studentId)
-        .eq('lesson_id', lessonId)
-
-      if (error) throw error
-      return true
-    } catch (error) {
-      console.error('Error marking lesson as completed:', error)
-      return false
-    }
+  async markLessonAsCompleted(studentId: string, lessonId: string): Promise<boolean> {
+    return this.updateLessonProgress(studentId, lessonId, 0, 0, true)
   }
 }
 

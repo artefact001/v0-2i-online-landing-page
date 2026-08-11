@@ -390,7 +390,6 @@ export function UsersManager({
                 <div className="p-4 border-t border-[rgba(255,255,255,0.05)]">
                   <TablePagination
                     currentPage={currentPage}
-                    totalPages={totalPages}
                     totalItems={filtered.length}
                     pageSize={PAGE_SIZE}
                     onPageChange={setCurrentPage}

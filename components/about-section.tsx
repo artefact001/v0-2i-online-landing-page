@@ -46,7 +46,7 @@ export function AboutSection() {
         </svg>
       ),
       title: "Français", 
-      desc: "Cours disponibles adaptable en Wolof" 
+      desc: "Cours disponibles adaptables en Wolof" 
     },
     { 
       icon: (
@@ -114,7 +114,7 @@ export function AboutSection() {
             <div className="relative rounded-2xl overflow-hidden">
               <Image
                 src="/images/about-learning.jpg"
-                alt="Etudiants en formation"
+                alt="Étudiants en formation"
                 width={600}
                 height={500}
                 className="w-full h-auto object-cover"
@@ -130,14 +130,15 @@ export function AboutSection() {
                 </div>
                 <div>
                   <div className="font-serif text-lg font-semibold text-white">Incub Institut</div>
-                  <div className="text-xs text-[#C9A227]">Bargny, Senegal</div>
+                  <div className="text-xs text-[#C9A227]">Bargny, Sénégal</div>
                 </div>
               </div>
               <p className="text-sm text-[#d0daf0] leading-relaxed mb-4">
                  <strong className="text-white">INCUB INSTITUT</strong>, est un centre d'incubation et de formation professionellle agréé par l'Etat, spécialisé dans l'Hôtellerie et la Restauration  .
+                 <strong className="text-white">INCUB INSTITUT</strong>, est un centre d'incubation et de formation professionnelle agréé par l'État, spécialisé dans l'Hôtellerie et la Restauration.
               </p>
               <div className="flex flex-wrap gap-2">
-                {["Senegal", "Afrique", "CAP HCR"].map((tag) => (
+                {["Sénégal", "Afrique", "CAP HCR"].map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center gap-1 bg-[rgba(201,162,39,0.1)] border border-[rgba(201,162,39,0.2)] rounded-full px-3 py-1 text-[10px] font-medium text-[#E8C050]"

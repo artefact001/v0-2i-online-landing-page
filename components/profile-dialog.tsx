@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,7 +21,6 @@ interface ProfileDialogProps {
 
 export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   const { user, refresh } = useAuth()
-  const supabase = createClient()
 
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -81,25 +80,29 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     setIsSaving(true)
     setFeedback(null)
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        phone: phone.trim() || null,
-        avatar_url: avatarUrl.trim() || null,
-        updated_at: new Date().toISOString(),
+    // ATTENTION: aucune route PUT /v1/me n'existe dans routes/api.php — seule
+    // GET /v1/me est exposée pour le profil de l'utilisateur connecté. Cet appel
+    // suppose qu'un endpoint équivalent sera ajouté côté Laravel ; en son absence
+    // il échouera avec une 404/405, ce qui est intentionnel (pas de faux succès).
+    try {
+      await apiClient("/me", {
+        method: "PUT",
+        body: JSON.stringify({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim() || null,
+          avatar_url: avatarUrl.trim() || null,
+        }),
       })
-      .eq("id", user.id)
-
-    if (error) {
-      setFeedback({ type: "error", message: "Erreur lors de l'enregistrement : " + error.message })
-      setIsSaving(false)
-      return
+      await refresh()
+      setFeedback({ type: "success", message: "Profil mis à jour avec succès." })
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message:
+          "Impossible d'enregistrer : aucun endpoint Laravel pour la mise à jour du profil (PUT /v1/me manquant).",
+      })
     }
-
-    await refresh()
-    setFeedback({ type: "success", message: "Profil mis à jour avec succès." })
     setIsSaving(false)
   }
 
