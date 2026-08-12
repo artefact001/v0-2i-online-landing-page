@@ -23,14 +23,12 @@ use Illuminate\Support\Str;
  * 4. Si `formations` a une contrainte de clé étrangère `categorie_id`
  *    obligatoire (NOT NULL), il faudra l'ajouter à chaque entrée — non
  *    inclus ici car je n'ai pas visibilité sur tes catégories existantes.
- * 5. Prix confirmés pour: CAP (60 000 F), VAE (150 000 F), Travail à
- *    domicile (60 000 F), HACCP (100 000 F), Incubation Street Food
- *    (100 000 F), Gestion de restauration (100 000 F).
- *    Les 3 CPS (Cuisinier/Pâtissier/Serveur) ont encore un prix
- *    PLACEHOLDER de 75 000 F, à confirmer — corrige les valeurs 'price'
- *    correspondantes ci-dessous si besoin, et mets à jour
- *    lib/formations-data.ts côté frontend en conséquence pour rester
- *    cohérent.
+ * 5. Prix d'inscription confirmés (tous) :
+ *    - CAP (Cuisinier/Pâtissier/Serveur) : 60 000 F
+ *    - CPS (Cuisinier/Pâtissier/Serveur) : 60 000 F
+ *    - VAE : 150 000 F
+ *    - Travail à domicile : 60 000 F
+ *    - HACCP, Incubation Street Food, Gestion de restauration : 100 000 F
  *
  * Exécution : php artisan db:seed --class=FormationsSeeder
  */
@@ -107,7 +105,7 @@ class FormationsSeeder extends Seeder
                 'short_description' => 'Spécialisation avancée en cuisine pour perfectionner vos techniques et votre expertise.',
                 'description' => 'Le Certificat Professionnel de Spécialité Cuisinier est une formation courte et intensive de 6 mois destinée à approfondir une spécialité culinaire. Idéale pour les débutants et professionnels souhaitant monter en compétence.',
                 'duration' => '6 mois',
-                'price' => 75000,
+                'price' => 60000,
                 'image' => '/images/course-cuisine1.jpg',
                 'prerequisites' => 'Expérience ou formation de base en cuisine recommandée.',
                 'diploma' => 'Certificat Professionnel de Spécialité',
@@ -122,7 +120,7 @@ class FormationsSeeder extends Seeder
                 'short_description' => 'Spécialisation avancée en pâtisserie pour maîtriser les techniques de haut niveau.',
                 'description' => 'Le Certificat Professionnel de Spécialité Pâtissier est une formation de 6 mois pour approfondir votre maîtrise de la pâtisserie. Un choix parfait pour se spécialiser.',
                 'duration' => '6 mois',
-                'price' => 75000,
+                'price' => 60000,
                 'image' => '/images/course-patisserie1.jpg',
                 'prerequisites' => 'Expérience ou formation de base en pâtisserie recommandée.',
                 'diploma' => 'Certificat Professionnel de Spécialité',
@@ -137,7 +135,7 @@ class FormationsSeeder extends Seeder
                 'short_description' => 'Spécialisation avancée en service pour exceller dans la restauration haut de gamme.',
                 'description' => 'Le Certificat Professionnel de Spécialité Serveur est une formation de 6 mois axée sur l\'excellence du service en restauration gastronomique. Maîtrisez les codes du service haut de gamme.',
                 'duration' => '6 mois',
-                'price' => 75000,
+                'price' => 60000,
                 'image' => '/images/course-service1.jpg',
                 'prerequisites' => 'Expérience ou formation de base en service recommandée.',
                 'diploma' => 'Certificat Professionnel de Spécialité',
