@@ -59,23 +59,14 @@ function CourseCard({ course, index }: { course: (typeof formations)[number]; in
           {course.mode}
         </div>
 
-        <p className="text-sm text-[#d0daf0] leading-relaxed mb-5 line-clamp-3">{course.shortDesc}</p>
+        <p className="text-sm text-[#d0daf0] leading-relaxed mb-5 line-clamp-4">{course.longDesc}</p>
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-4 border-t border-[rgba(255,255,255,0.06)] mt-auto">
-          {course.price ? (
-            <div>
-              <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider">A partir de</span>
-              <div className="font-serif text-xl font-bold text-[#C9A227]">{course.price}</div>
-            </div>
-          ) : (
-            <div>
-              <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider"> 
-                 
-              </span>
-              <div className="text-sm font-medium text-white">Diplôme d'État</div>
-            </div>
-          )}
+          <div>
+            <span className="text-[10px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider">Frais d&apos;inscription</span>
+            <div className="font-serif text-xl font-bold text-[#C9A227]">{course.price}</div>
+          </div>
 
           <Link
             href={`/formations/${course.slug}`}

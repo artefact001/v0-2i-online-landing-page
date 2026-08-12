@@ -2,6 +2,19 @@
 
 import Link from "next/link"
 import { useEffect, useRef } from "react"
+import {
+  ChefHat,
+  Cookie,
+  UtensilsCrossed,
+  ShieldCheck,
+  Building2,
+  ScrollText,
+  Rocket,
+  GraduationCap,
+  Home,
+  Hammer,
+  type LucideIcon,
+} from "lucide-react"
 
 interface PricingPlan {
   name: string
@@ -10,7 +23,7 @@ interface PricingPlan {
   price?: string
   featured?: boolean
   features: { text: string; included: boolean }[]
-  icon: string
+  icon: LucideIcon
 }
 
 interface PricingCategory {
@@ -36,7 +49,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Quiz et évaluations", included: true },
           { text: "Diplôme d'État", included: true },
         ],
-        icon: "👨‍🍳",
+        icon: ChefHat,
       },
       {
         name: "CAP Pâtisserie",
@@ -50,7 +63,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Quiz et évaluations", included: true },
           { text: "Diplôme d'État", included: true },
         ],
-        icon: "🧁",
+        icon: Cookie,
       },
       {
         name: "CAP Service en Salle",
@@ -64,7 +77,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Quiz et évaluations", included: true },
           { text: "Diplôme d'État", included: true },
         ],
-        icon: "🍽️",
+        icon: UtensilsCrossed,
       },
     ],
   },
@@ -83,7 +96,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Quiz pratiques", included: true },
           { text: "Certificat numérique", included: true },
         ],
-        icon: "🛡️",
+        icon: ShieldCheck,
         featured: false,
       },
       {
@@ -98,7 +111,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Gestion d'équipe", included: true },
           { text: "Certificat numérique", included: true },
         ],
-        icon: "🏢",
+        icon: Building2,
         featured: false,
       },
       {
@@ -112,7 +125,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Quiz et évaluations", included: true },
           { text: "Certification en présentiel obligatoire", included: true },
         ],
-        icon: "📜",
+        icon: ScrollText,
         featured: false,
       },
     ],
@@ -132,7 +145,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Support entrepreneurial", included: true },
           { text: "Réseau d'affaires", included: true },
         ],
-        icon: "🚀",
+        icon: Rocket,
         featured: true,
       },
       {
@@ -146,7 +159,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Documentation complète (Livret 1 , Livret 2)", included: true },
           { text: "Support administratif", included: true },
         ],
-        icon: "🎓",
+        icon: GraduationCap,
         featured: true,
       },
     ],
@@ -166,7 +179,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Forum d'entraide", included: true },
           { text: "Certificat", included: true },
         ],
-        icon: "🏠",
+        icon: Home,
       },
       {
         name: "Atelier Pratique (Séance)",
@@ -177,7 +190,7 @@ const pricingCategories: PricingCategory[] = [
           { text: "Pratique intensive", included: true },
           { text: "Accès à la communauté", included: true },
         ],
-        icon: "🎪",
+        icon: Hammer,
       },
     ],
   },
@@ -254,7 +267,9 @@ export function PricingSection() {
                   )}
 
                   <div className="flex items-start justify-between mb-4">
-                    <span className="text-3xl">{plan.icon}</span>
+                    <span className="w-12 h-12 rounded-xl bg-[rgba(201,162,39,0.12)] border border-[rgba(201,162,39,0.25)] flex items-center justify-center">
+                      <plan.icon className="w-6 h-6 text-[#C9A227]" strokeWidth={1.75} />
+                    </span>
                     {plan.featured && (
                       <span className="inline-flex items-center gap-1.5 bg-[#C9A227] text-[#0D2545] text-[9px] font-bold tracking-[2px] uppercase rounded-full px-3 py-1">
                         Premium

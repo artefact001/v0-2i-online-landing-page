@@ -5,7 +5,7 @@ export interface FormationDetail {
   mode: string
   shortDesc: string
   duration: string
-  price?: string
+  price: string
   popular?: boolean
   image: string
   longDesc: string
@@ -24,6 +24,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Réaliser des mets en respectant les normes de la gastronomie.",
     duration: "3 ans / 36 mois",
+    price: "50 000 F", // TODO: confirmer le vrai tarif d'inscription
     popular: true,
     image: "/images/course-cuisine.jpg",
     longDesc:
@@ -53,6 +54,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Pâtisserie française et africaine. Viennoiseries, chocolaterie, gestion d'une pâtisserie.",
     duration: "3 ans / 36 mois",
+    price: "50 000 F", // TODO: confirmer le vrai tarif d'inscription
     image: "/images/course-patisserie.jpg",
     longDesc:
       "Le CAP Pâtisserie vous forme aux techniques essentielles de l'art de la pâtisserie sur 36 mois, pour vous ouvrir toutes les portes du métier.",
@@ -79,6 +81,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "L'art du service d'excellence. Mise en place, protocole d'accueil et relation client.",
     duration: "3 ans / 36 mois",
+    price: "50 000 F", // TODO: confirmer le vrai tarif d'inscription
     image: "/images/course-service.jpg",
     longDesc:
       "Le CAP Serveur vous prépare au métier de serveur en hôtellerie. Sur 36 mois, vous apprenez l'art du service en salle, la mise en place, le protocole d'accueil, le service des boissons et l'excellence de la relation client.",
@@ -138,6 +141,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Spécialisation avancée en cuisine pour perfectionner vos techniques et votre expertise.",
     duration: "6 mois",
+    price: "75 000 F", // TODO: confirmer le vrai tarif d'inscription
     image: "/images/course-cuisine1.jpg",
     longDesc:
       "Le Certificat Professionnel de Spécialité Cuisinier est une formation courte et intensive de 6 mois destinée à approfondir une spécialité culinaire. Idéale pour les débutants et professionnels souhaitant monter en compétence.",
@@ -165,6 +169,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Spécialisation avancée en pâtisserie pour maîtriser les techniques de haut niveau.",
     duration: "6 mois",
+    price: "75 000 F", // TODO: confirmer le vrai tarif d'inscription
     image: "/images/course-patisserie1.jpg",
     longDesc:
       "Le Certificat Professionnel de Spécialité Pâtissier est une formation de 6 mois pour approfondir votre maîtrise de la pâtisserie. Un choix parfait pour se spécialiser.",
@@ -192,6 +197,7 @@ export const formations: FormationDetail[] = [
     shortDesc:
       "Spécialisation avancée en service pour exceller dans la restauration haut de gamme.",
     duration: "6 mois",
+    price: "75 000 F", // TODO: confirmer le vrai tarif d'inscription
     image: "/images/course-service1.jpg",
     longDesc:
       "Le Certificat Professionnel de Spécialité Serveur est une formation de 6 mois axée sur l'excellence du service en restauration gastronomique. Maîtrisez les codes du service haut de gamme.",

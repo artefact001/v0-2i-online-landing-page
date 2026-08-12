@@ -43,15 +43,6 @@ export function Hero() {
 
       {/* Content */}
       <div className="relative z-[2] px-6 md:px-[60px] max-w-[760px]">
-        {/* Eyebrow */}
-        <div className="flex items-center gap-4 mb-8 opacity-0 translate-y-5 animate-fade-up delay-300">
-          <div className="w-10 h-[1px] bg-[#C9A227]" />
-
-          <span className="text-[10px] font-semibold tracking-[4px] uppercase text-[#C9A227]">
-            Diplôme Reconnu par l&apos;État
-          </span>
-        </div>
-
         {/* Title */}
         <h1 className="font-serif text-[clamp(48px,7vw,88px)] font-bold leading-[0.95] text-white mb-5 opacity-0 translate-y-[30px] animate-fade-up delay-500">
           Forme ici.<br />
@@ -70,19 +61,24 @@ export function Hero() {
         </p>
 
         {/* Actions */}
-        <div className="flex items-center gap-5 flex-wrap opacity-0 translate-y-5 animate-fade-up delay-1100">
-          <Link
-            href="#inscription"
-            className="inline-flex items-center gap-2.5 bg-[#C9A227] text-[#0D2545] text-xs font-bold tracking-[2px] uppercase px-9 py-[18px] rounded no-underline transition-all duration-300 relative overflow-hidden hover:bg-[#E8C050] hover:scale-105"
-          >
-            <span className="relative z-[1]">Commencer maintenant</span>
-            <svg className="w-4 h-4 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
+        <div className="flex items-start gap-5 flex-wrap opacity-0 translate-y-5 animate-fade-up delay-1100">
+          <div className="flex flex-col items-start gap-2.5">
+            <Link
+              href="https://www.2i-online.com/#inscription"
+              className="inline-flex items-center gap-2.5 bg-[#C9A227] text-[#0D2545] text-xs font-bold tracking-[2px] uppercase px-9 py-[18px] rounded no-underline transition-all duration-300 relative overflow-hidden hover:bg-[#E8C050] hover:scale-105"
+            >
+              <span className="relative z-[1]">Commencer maintenant</span>
+              <svg className="w-4 h-4 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+            <span className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C9A227] pl-1">
+              Diplôme Reconnu par l&apos;État
+            </span>
+          </div>
           <Link
             href="#formations"
-            className="inline-flex items-center gap-2.5 text-[rgba(255,255,255,0.65)] text-xs font-medium tracking-[2px] uppercase no-underline transition-colors duration-300 hover:text-[#C9A227] group"
+            className="inline-flex items-center gap-2.5 text-[rgba(255,255,255,0.65)] text-xs font-medium tracking-[2px] uppercase no-underline transition-colors duration-300 hover:text-[#C9A227] group self-center"
           >
             <div className="w-12 h-12 rounded-full border border-[rgba(255,255,255,0.2)] flex items-center justify-center text-sm transition-all duration-300 group-hover:border-[#C9A227] group-hover:bg-[rgba(201,162,39,0.1)]">
               <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -95,17 +91,6 @@ export function Hero() {
 
         {/* Trust badges */}
         <div className="mt-12 flex items-center gap-8 opacity-0 translate-y-5 animate-fade-up delay-1300">
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1B3A6B] to-[#0D2545] border-2 border-[#080F1E] flex items-center justify-center text-xs text-[#C9A227]">
-                  {["A", "I", "F", "M"][i-1]}
-                </div>
-              ))}
-            </div>
-            <span className="text-xs text-[rgba(255,255,255,0.4)]">+500 apprenants</span>
-          </div>
-          <div className="h-6 w-px bg-[rgba(255,255,255,0.1)]" />
           <div className="flex items-center gap-2">
             <div className="text-[#C9A227] text-sm">
               {"★★★★★"}
