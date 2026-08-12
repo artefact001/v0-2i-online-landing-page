@@ -23,11 +23,14 @@ use Illuminate\Support\Str;
  * 4. Si `formations` a une contrainte de clé étrangère `categorie_id`
  *    obligatoire (NOT NULL), il faudra l'ajouter à chaque entrée — non
  *    inclus ici car je n'ai pas visibilité sur tes catégories existantes.
- * 5. 6 formations (les CAP et CPS) ont un prix PLACEHOLDER à confirmer
- *    côté métier (50 000 F pour les CAP, 75 000 F pour les CPS) — corrige
- *    les valeurs 'price' ci-dessous si elles sont incorrectes, et
- *    mets à jour lib/formations-data.ts côté frontend en conséquence pour
- *    rester cohérent.
+ * 5. Prix confirmés pour: CAP (60 000 F), VAE (150 000 F), Travail à
+ *    domicile (60 000 F), HACCP (100 000 F), Incubation Street Food
+ *    (100 000 F), Gestion de restauration (100 000 F).
+ *    Les 3 CPS (Cuisinier/Pâtissier/Serveur) ont encore un prix
+ *    PLACEHOLDER de 75 000 F, à confirmer — corrige les valeurs 'price'
+ *    correspondantes ci-dessous si besoin, et mets à jour
+ *    lib/formations-data.ts côté frontend en conséquence pour rester
+ *    cohérent.
  *
  * Exécution : php artisan db:seed --class=FormationsSeeder
  */
@@ -44,7 +47,7 @@ class FormationsSeeder extends Seeder
                 'short_description' => 'Réaliser des mets en respectant les normes de la gastronomie.',
                 'description' => 'Le CAP Cuisinier est une formation complète qui vous prépare au métier de cuisinier professionnel. Sur 36 mois, vous apprenez l\'ensemble des techniques culinaires, de la préparation des aliments à la réalisation de plats élaborés, en passant par la gestion d\'une cuisine professionnelle.',
                 'duration' => '3 ans / 36 mois',
-                'price' => 50000,
+                'price' => 60000,
                 'image' => '/images/course-cuisine.jpg',
                 'prerequisites' => 'Aucun diplôme requis. Motivation et passion pour la cuisine.',
                 'diploma' => 'Diplôme CAP reconnu par l\'État',
@@ -59,7 +62,7 @@ class FormationsSeeder extends Seeder
                 'short_description' => 'Pâtisserie française et africaine. Viennoiseries, chocolaterie, gestion d\'une pâtisserie.',
                 'description' => 'Le CAP Pâtisserie vous forme aux techniques essentielles de l\'art de la pâtisserie sur 36 mois, pour vous ouvrir toutes les portes du métier.',
                 'duration' => '3 ans / 36 mois',
-                'price' => 50000,
+                'price' => 60000,
                 'image' => '/images/course-patisserie.jpg',
                 'prerequisites' => 'Aucun diplôme requis. Sens du détail et créativité.',
                 'diploma' => 'Diplôme CAP reconnu par l\'État',
@@ -74,7 +77,7 @@ class FormationsSeeder extends Seeder
                 'short_description' => 'L\'art du service d\'excellence. Mise en place, protocole d\'accueil et relation client.',
                 'description' => 'Le CAP Serveur vous prépare au métier de serveur en hôtellerie. Sur 36 mois, vous apprenez l\'art du service en salle, la mise en place, le protocole d\'accueil, le service des boissons et l\'excellence de la relation client.',
                 'duration' => '3 ans / 36 mois',
-                'price' => 50000,
+                'price' => 60000,
                 'image' => '/images/course-service.jpg',
                 'prerequisites' => 'Aucun diplôme requis. Sens du contact et présentation soignée.',
                 'diploma' => 'Diplôme CAP reconnu par l\'État',
