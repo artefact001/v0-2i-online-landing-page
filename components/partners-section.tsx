@@ -5,9 +5,9 @@ import Image from "next/image"
 
 const partners = [
   {
-    name: "Ministère de la Formation Professionnelle",
-    domain: "Formation Professionnelle",
-    image: "/images/FB_IMG_1776855096946.jpg",
+    name: "OFII (Office Français de l'Immigration et de l'Intégration)",
+    domain: "Coopération Internationale",
+    image: "/images/ofii-logo.png",
   },
   {
     name: "Force N",

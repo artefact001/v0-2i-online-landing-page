@@ -73,6 +73,13 @@ export function CoursesNavbar({ currentPage }: CoursesNavbarProps) {
             </svg>
             Retour Accueil
           </Link>
+          <div className="w-px h-4 bg-[rgba(255,255,255,0.15)]" />
+          <Link
+            href="/login"
+            className="text-[10px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] px-4 py-2.5 rounded-lg no-underline transition-all duration-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
+          >
+            Connexion
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -144,6 +151,16 @@ export function CoursesNavbar({ currentPage }: CoursesNavbarProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>Retour Accueil</span>
+          </Link>
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 bg-[#C9A227] text-[#0D2545] text-sm font-bold tracking-[2px] uppercase px-6 py-4 rounded-lg no-underline transition-all duration-300 hover:bg-[#E8C050]"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Connexion
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </Link>
         </div>
       </div>
