@@ -1,122 +1,83 @@
 import { apiClient } from '@/lib/api/client'
 
 /**
- * NOTE IMPORTANTE: le code d'origine (Supabase) ne faisait déjà QUE simuler les paiements
- * (URLs "demo", aucun vrai appel aux API Wave/Orange Money/Free Money). Cette version
- * reproduit fidèlement ce comportement de simulation via /v1/paiements.
+ * Intégration Bictorys (mode Checkout — page de paiement hébergée).
+ * L'utilisateur choisit Mobile Money (Wave/Orange Money/Free Money) ou
+ * carte bancaire directement sur la page Bictorys ; on n'a plus besoin de
+ * lui faire choisir un opérateur ni saisir son numéro sur notre propre page.
  *
- * Pour une vraie intégration: la validation des paiements (webhooks Wave/OM/FreeMoney,
- * vérification de signature) doit être implémentée côté Laravel (PaiementController),
- * jamais côté frontend — un statut "completed" ne doit jamais pouvoir être forgé
- * uniquement par un appel client.
+ * IMPORTANT: le statut "completed" d'un paiement n'est JAMAIS positionné
+ * depuis le frontend. Seul le webhook Bictorys, vérifié côté Laravel via
+ * une clé secrète, peut confirmer un paiement. Le frontend se contente de
+ * rediriger vers Bictorys puis, au retour, d'aller RELIRE le statut réel
+ * depuis l'API (jamais de le déduire de l'URL de redirection elle-même).
  */
 
-export interface PaymentRequest {
+export interface CreatePaymentInput {
   studentId: string
   enrollmentId: string
   amount: number
-  paymentMethod: 'wave' | 'orange_money' | 'free_money'
-  phone: string
 }
 
-export interface PaymentResponse {
+export interface InitiatePaymentResult {
   success: boolean
-  transactionId?: string
   message: string
-  redirectUrl?: string
-}
-
-const METHOD_LABELS: Record<PaymentRequest['paymentMethod'], string> = {
-  wave: 'Wave',
-  orange_money: 'Orange Money',
-  free_money: 'Free Money',
-}
-
-const DEMO_CHECKOUT_HOSTS: Record<PaymentRequest['paymentMethod'], string> = {
-  wave: 'https://wave.com/checkout/demo',
-  orange_money: 'https://orangemoney.com/checkout/demo',
-  free_money: 'https://freemoney.com/checkout/demo',
+  checkoutUrl?: string
+  paiementId?: string
 }
 
 export class PaymentService {
-  // POST /v1/paiements
-  private async initiatePayment(
-    request: PaymentRequest,
-    method: PaymentRequest['paymentMethod'],
-  ): Promise<PaymentResponse> {
+  // POST /v1/paiements — crée l'enregistrement de paiement côté Laravel
+  // (statut "pending"), puis POST /v1/paiements/{id}/bictorys pour obtenir
+  // l'URL de paiement hébergée Bictorys.
+  async initiateBictorysPayment(input: CreatePaymentInput): Promise<InitiatePaymentResult> {
     try {
-      const res = await apiClient<{ id: string }>('/paiements', {
+      const createRes = await apiClient<{ id: string }>('/paiements', {
         method: 'POST',
         body: JSON.stringify({
-          student_id: request.studentId,
-          enrollment_id: request.enrollmentId,
-          amount: request.amount,
-          payment_method: METHOD_LABELS[method],
+          student_id: input.studentId,
+          enrollment_id: input.enrollmentId,
+          amount: input.amount,
+          payment_method: 'Bictorys',
           currency: 'XOF',
           status: 'pending',
         }),
       })
 
-      const paymentId = (res.data as any)?.id
-      const checkoutUrl = `${DEMO_CHECKOUT_HOSTS[method]}?amount=${request.amount}&phone=${request.phone}&ref=${paymentId}`
-
-      return {
-        success: true,
-        transactionId: paymentId,
-        message: `Paiement ${METHOD_LABELS[method]} initié`,
-        redirectUrl: checkoutUrl,
+      const paiementId = (createRes.data as any)?.id
+      if (!paiementId) {
+        return { success: false, message: "Impossible de créer l'enregistrement de paiement" }
       }
-    } catch (error) {
-      console.error(`${METHOD_LABELS[method]} payment error:`, error)
-      return {
-        success: false,
-        message: `Erreur lors du paiement ${METHOD_LABELS[method]}`,
-      }
-    }
-  }
 
-  async initiateWavePayment(request: PaymentRequest) {
-    return this.initiatePayment(request, 'wave')
-  }
-
-  async initiateOrangeMoneyPayment(request: PaymentRequest) {
-    return this.initiatePayment(request, 'orange_money')
-  }
-
-  async initiateFreeMoneyPayment(request: PaymentRequest) {
-    return this.initiatePayment(request, 'free_money')
-  }
-
-  // PUT /v1/paiements/{id} puis, si complété, PUT /v1/inscriptions/{id}
-  async updatePaymentStatus(
-    paymentId: string,
-    status: 'pending' | 'completed' | 'failed' | 'cancelled',
-  ): Promise<boolean> {
-    try {
-      await apiClient(`/paiements/${paymentId}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          status,
-          paid_at: status === 'completed' ? new Date().toISOString() : null,
-        }),
+      const chargeRes = await apiClient<{ checkout_url: string }>(`/paiements/${paiementId}/bictorys`, {
+        method: 'POST',
       })
 
-      if (status === 'completed') {
-        const paymentRes = await apiClient(`/paiements/${paymentId}`)
-        const enrollmentId = (paymentRes.data as any)?.enrollment_id
-
-        if (enrollmentId) {
-          await apiClient(`/inscriptions/${enrollmentId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: 'active', payment_status: 'completed' }),
-          })
+      const checkoutUrl = (chargeRes.data as any)?.checkout_url
+      if (!chargeRes.success || !checkoutUrl) {
+        return {
+          success: false,
+          message: chargeRes.message || "Erreur lors de l'initialisation du paiement Bictorys",
+          paiementId,
         }
       }
 
-      return true
+      return { success: true, message: 'Redirection vers Bictorys...', checkoutUrl, paiementId }
     } catch (error) {
-      console.error('Error updating payment status:', error)
-      return false
+      console.error('Bictorys payment initiation error:', error)
+      return { success: false, message: 'Erreur lors du paiement' }
+    }
+  }
+
+  // GET /v1/paiements/{id} — relit le statut RÉEL (mis à jour uniquement
+  // par le webhook Laravel), jamais déduit de l'URL de retour.
+  async getPaymentStatus(paiementId: string) {
+    try {
+      const res = await apiClient(`/paiements/${paiementId}`)
+      return res.data as { status: 'pending' | 'completed' | 'failed' | 'cancelled'; enrollment_id?: string } | null
+    } catch (error) {
+      console.error('Error fetching payment status:', error)
+      return null
     }
   }
 

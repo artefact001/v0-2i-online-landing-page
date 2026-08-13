@@ -1,0 +1,58 @@
+### Modifications à apporter à routes/api.php
+
+1) Ajouter l'import en haut du fichier :
+use App\Http\Controllers\BictorysController;
+
+2) Route PUBLIQUE (hors middleware auth:sanctum) — Bictorys appelle ceci
+   directement depuis leurs serveurs, sans session utilisateur, donc
+   auth:sanctum la bloquerait à tort. À placer au même niveau que
+   /register, /login, /forgotPassword :
+
+    Route::post('/webhooks/bictorys', [BictorysController::class, 'webhook']);
+
+3) Route PROTÉGÉE — à ajouter DANS le groupe middleware('auth:sanctum'),
+   au même niveau que les routes /paiements existantes (accessible à tout
+   utilisateur connecté, pas seulement admin/formateur, puisque c'est
+   l'étudiant qui paie sa propre inscription) :
+
+    Route::post('/paiements/{paiement}/bictorys', [BictorysController::class, 'initiate']);
+
+Résultat attendu (extrait) :
+
+    Route::post('/webhooks/bictorys', [BictorysController::class, 'webhook']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        // ... routes existantes ...
+
+        Route::apiResource('paiements', PaiementController::class);
+        Route::post('/paiements/{paiement}/bictorys', [BictorysController::class, 'initiate']);
+
+        // ... reste des routes existantes ...
+    });
+
+### .env à ajouter
+
+BICTORYS_BASE_URL=https://api.test.bictorys.com
+BICTORYS_PUBLIC_KEY=test_public-2fca5c34-d2f8-49d4-b6d9-0a46694d17db.QDxsd6bd7ruTUDPKmpt8O1pcxOWiu90Ay7XrBdTuuvsjBuWDZUzJl5PcHShJeAkB
+BICTORYS_WEBHOOK_SECRET=<à générer/copier depuis le dashboard Bictorys, section Développeurs>
+FRONTEND_URL=https://www.2i-online.com
+
+### config/services.php à ajouter
+
+    'bictorys' => [
+        'base_url' => env('BICTORYS_BASE_URL', 'https://api.test.bictorys.com'),
+        'public_key' => env('BICTORYS_PUBLIC_KEY'),
+        'webhook_secret' => env('BICTORYS_WEBHOOK_SECRET'),
+    ],
+
+### config/app.php à ajouter (ou vérifier si déjà présent)
+
+    'frontend_url' => env('FRONTEND_URL', 'https://www.2i-online.com'),
+
+### Dashboard Bictorys — configuration du webhook
+
+Dans dashboard.bictorys.com > Développeurs > Webhooks, configure l'URL :
+    https://api.2i-online.com/api/v1/webhooks/bictorys
+(à adapter selon le vrai chemin monté par ton app — vérifie le préfixe
+exact avec `php artisan route:list --path=webhooks`)
+Puis copie la "clé secrète du webhook" affichée dans BICTORYS_WEBHOOK_SECRET.

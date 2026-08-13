@@ -94,7 +94,7 @@ export default function InscriptionPage() {
       // À VÉRIFIER: champs attendus par InscriptionController::store
       if (formData.formationId && result.user) {
         try {
-          await apiClient('/inscriptions', {
+          const enrollRes = await apiClient<{ id: string }>('/inscriptions', {
             method: 'POST',
             body: JSON.stringify({
               student_id: result.user.id,
@@ -103,11 +103,20 @@ export default function InscriptionPage() {
               payment_status: 'pending',
             }),
           })
+
+          const enrollmentId = (enrollRes.data as any)?.id
+          if (enrollmentId) {
+            // Compte + inscription créés : direction le paiement pour finaliser.
+            router.push(`/payment?enrollment_id=${enrollmentId}`)
+            return
+          }
         } catch (enrollErr) {
           console.error('Error creating enrollment:', enrollErr)
         }
       }
 
+      // Pas de formation sélectionnée (ou création d'inscription échouée) :
+      // écran de confirmation classique.
       setSuccess(true)
     } catch (err) {
       setError('Une erreur est survenue')
