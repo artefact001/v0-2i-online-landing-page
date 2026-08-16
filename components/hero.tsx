@@ -42,7 +42,7 @@ export function Hero() {
       </div>
 
       {/* Content */}
-      <div className="relative z-[2] px-6 md:px-[60px] max-w-[760px]">
+      <div className="relative z-[2] px-6 md:px-[60px] max-w-[760px] pt-24 sm:pt-20 lg:pt-0">
         {/* Title */}
         <h1 className="font-serif text-[clamp(48px,7vw,88px)] font-bold leading-[0.95] text-white mb-5 opacity-0 translate-y-[30px] animate-fade-up delay-500">
           Forme ici.<br />
@@ -64,7 +64,7 @@ export function Hero() {
         <div className="flex items-start gap-5 flex-wrap opacity-0 translate-y-5 animate-fade-up delay-1100">
           <div className="flex flex-col items-start gap-2.5">
             <Link
-              href="https://www.2i-online.com/#inscription"
+              href="/login"
               className="inline-flex items-center gap-2.5 bg-[#C9A227] text-[#0D2545] text-xs font-bold tracking-[2px] uppercase px-9 py-[18px] rounded no-underline transition-all duration-300 relative overflow-hidden hover:bg-[#E8C050] hover:scale-105"
             >
               <span className="relative z-[1]">Commencer maintenant</span>

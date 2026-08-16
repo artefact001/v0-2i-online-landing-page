@@ -273,7 +273,7 @@ function CoursLivePageContent() {
       <footer className="py-8 border-t border-[rgba(201,162,39,0.1)]">
         <div className="max-w-7xl mx-auto px-6 md:px-10 text-center">
           <p className="text-sm text-[rgba(255,255,255,0.5)]">
-            © 2024 2I Online by Incub&apos;Institut. Tous droits réservés.
+            © 2026 2I Online by Incub Institut. Tous droits réservés.
           </p>
         </div>
       </footer>

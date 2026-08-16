@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import Image from "next/image"
 import {
   actualites,
@@ -92,13 +93,16 @@ export function ActualitesContent() {
 
           {/* Featured article */}
           {featured && (
-            <article className="grid md:grid-cols-2 gap-8 mb-14 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl overflow-hidden">
+            <Link
+              href={`/actualites/${featured.slug}`}
+              className="group grid md:grid-cols-2 gap-8 mb-14 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl overflow-hidden hover:border-[rgba(201,162,39,0.4)] transition-all"
+            >
               <div className="relative h-64 md:h-full min-h-[280px]">
                 <Image
                   src={featured.image || "/placeholder.svg"}
                   alt={featured.title}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
               <div className="p-8 flex flex-col justify-center">
@@ -110,24 +114,25 @@ export function ActualitesContent() {
                   </span>
                   <span className="text-[rgba(255,255,255,0.4)] text-xs">{formatNewsDate(featured.date)}</span>
                 </div>
-                <h2 className="font-serif text-2xl md:text-3xl font-bold text-white mb-4 text-balance">
+                <h2 className="font-serif text-2xl md:text-3xl font-bold text-white mb-4 text-balance group-hover:text-[#C9A227] transition-colors">
                   {featured.title}
                 </h2>
                 <p className="text-[rgba(255,255,255,0.6)] leading-relaxed mb-6">{featured.excerpt}</p>
                 <div className="flex items-center gap-2 text-[#C9A227] text-sm font-medium">
                   <span>Lire l&apos;article</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </div>
               </div>
-            </article>
+            </Link>
           )}
 
           {/* Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {rest.map((a) => (
-              <article
+              <Link
+                href={`/actualites/${a.slug}`}
                 key={a.id}
                 className="group bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-xl overflow-hidden hover:border-[rgba(201,162,39,0.4)] transition-all"
               >
@@ -154,7 +159,7 @@ export function ActualitesContent() {
                   </p>
                   <span className="text-[rgba(255,255,255,0.4)] text-xs">{formatNewsDate(a.date)}</span>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
@@ -180,16 +185,19 @@ export function ActualitesContent() {
           {/* Opportunity list */}
           <div className="grid md:grid-cols-2 gap-6">
             {filteredOppos.map((o) => (
-              <article
+              <Link
+                href={`/opportunites/${o.slug}`}
                 key={o.id}
-                className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 hover:border-[rgba(201,162,39,0.4)] transition-all"
+                className="group block bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 hover:border-[rgba(201,162,39,0.4)] transition-all"
               >
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${categoryColors[o.category]}`}>
                       {o.category}
                     </span>
-                    <h3 className="font-serif text-xl font-bold text-white mt-3">{o.title}</h3>
+                    <h3 className="font-serif text-xl font-bold text-white mt-3 group-hover:text-[#C9A227] transition-colors">
+                      {o.title}
+                    </h3>
                     <p className="text-[#C9A227] text-sm mt-1">{o.organization}</p>
                   </div>
                 </div>
@@ -224,11 +232,14 @@ export function ActualitesContent() {
                   <span className="text-[rgba(255,255,255,0.45)] text-xs">
                     Date limite : <span className="text-white">{formatNewsDate(o.deadline)}</span>
                   </span>
-                  <button className="px-4 py-2 rounded-lg bg-[#C9A227] text-[#0D2545] text-xs font-bold tracking-wide hover:bg-[#E8C050] transition-colors">
-                    Postuler
-                  </button>
+                  <span className="flex items-center gap-1.5 text-[#C9A227] text-xs font-bold tracking-wide">
+                    Voir les détails
+                    <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
