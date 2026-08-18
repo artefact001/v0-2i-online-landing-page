@@ -64,11 +64,16 @@ function normalizeRole(rawRole: unknown): UserRole {
 }
 
 function buildUser(raw: any): User {
-  const firstName = raw.first_name ?? ''
-  const lastName = raw.last_name ?? ''
+  // Tolère plusieurs conventions de nommage possibles côté Laravel
+  // (anglais first_name/last_name, français prenom/nom, ou un champ "name"
+  // unique déjà combiné) — évite un nom vide si le UserResource réel
+  // n'utilise pas exactement les noms de champs supposés.
+  const firstName = raw.first_name ?? raw.firstName ?? raw.prenom ?? ''
+  const lastName = raw.last_name ?? raw.lastName ?? raw.nom ?? ''
   const role = normalizeRole(raw.role)
-  const avatarUrl = raw.avatar_url ?? null
-  const name = [firstName, lastName].filter(Boolean).join(' ') || raw.email || 'Utilisateur'
+  const avatarUrl = raw.avatar_url ?? raw.avatarUrl ?? raw.photo ?? null
+  const combinedName = [firstName, lastName].filter(Boolean).join(' ')
+  const name = combinedName || raw.name || raw.full_name || raw.email || 'Utilisateur'
 
   return {
     id: String(raw.id),
@@ -79,9 +84,9 @@ function buildUser(raw: any): User {
     role,
     avatar: avatarUrl ?? undefined,
     avatar_url: avatarUrl,
-    phone: raw.phone ?? null,
+    phone: raw.phone ?? raw.telephone ?? null,
     formation: raw.formation ?? undefined,
-    createdAt: raw.created_at ?? new Date().toISOString(),
+    createdAt: raw.created_at ?? raw.createdAt ?? new Date().toISOString(),
   }
 }
 
@@ -92,6 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       const res = await apiClient('/me')
+      if (res.data) {
+        console.log('[auth] Réponse brute de /me (pour vérifier les noms de champs):', res.data)
+      }
       setUser(res.data ? buildUser(res.data) : null)
     } catch {
       setUser(null)
