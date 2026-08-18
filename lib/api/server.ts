@@ -44,7 +44,7 @@ export async function getCurrentUser() {
   if (!token) return null
 
   try {
-    const res = await apiServer('/v1/me')
+    const res = await apiServer('/api/v1/me')
     return res.data ?? null
   } catch {
     return null

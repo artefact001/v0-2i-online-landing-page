@@ -34,7 +34,7 @@ async function proxy(request: NextRequest, path: string[], method: string) {
     }
   }
 
-  const targetUrl = `${API_URL}/v1/${path.join('/')}${request.nextUrl.search}`
+  const targetUrl = `${API_URL}/api/v1/${path.join('/')}${request.nextUrl.search}`
 
   let res: Response
   try {

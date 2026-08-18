@@ -32,7 +32,7 @@ export async function login(email: string, password: string) {
   }
 
   try {
-    const res = await fetch(`${API_URL}/v1/login`, {
+    const res = await fetch(`${API_URL}/api/v1/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -59,7 +59,7 @@ export async function register(data: Record<string, any>) {
   }
 
   try {
-    const res = await fetch(`${API_URL}/v1/register`, {
+    const res = await fetch(`${API_URL}/api/v1/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(data),
@@ -85,7 +85,7 @@ export async function logout() {
   const token = cookieStore.get('auth_token')?.value
 
   if (token && API_URL) {
-    await fetch(`${API_URL}/v1/logout`, {
+    await fetch(`${API_URL}/api/v1/logout`, {
       method: 'POST',
       headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
     }).catch(() => null)
@@ -95,14 +95,14 @@ export async function logout() {
   return { success: true }
 }
 
-// Route Laravel réelle: POST /v1/forgotPassword (publique)
+// Route Laravel réelle: POST /api/v1/forgotPassword (publique)
 export async function forgotPassword(email: string) {
   if (!API_URL) {
     return { success: false, message: 'Configuration serveur manquante (NEXT_PUBLIC_API_URL)' }
   }
 
   try {
-    const res = await fetch(`${API_URL}/v1/forgotPassword`, {
+    const res = await fetch(`${API_URL}/api/v1/forgotPassword`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ email }),
@@ -122,7 +122,7 @@ export async function forgotPassword(email: string) {
   }
 }
 
-// Route Laravel réelle: POST /v1/resetPassword (publique)
+// Route Laravel réelle: POST /api/v1/resetPassword (publique)
 // À VÉRIFIER: champs exacts attendus par ResetPasswordRequest — on suppose
 // email, code, password, password_confirmation (pattern standard Laravel).
 export async function resetPassword(data: {
@@ -136,7 +136,7 @@ export async function resetPassword(data: {
   }
 
   try {
-    const res = await fetch(`${API_URL}/v1/resetPassword`, {
+    const res = await fetch(`${API_URL}/api/v1/resetPassword`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(data),

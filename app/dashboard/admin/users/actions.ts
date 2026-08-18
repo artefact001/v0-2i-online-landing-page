@@ -58,8 +58,8 @@ export async function listUsers(): Promise<ManagedUser[]> {
   await requireAdmin()
 
   const [formateursRes, etudiantsRes] = await Promise.all([
-    apiServer("/v1/formateurs"),
-    apiServer("/v1/etudiants"),
+    apiServer("/api/v1/formateurs"),
+    apiServer("/api/v1/etudiants"),
   ])
 
   const formateurs = Array.isArray(formateursRes.data) ? formateursRes.data : []
@@ -89,7 +89,7 @@ export async function createUser(input: {
       }
     }
 
-    const endpoint = input.role === "professor" ? "/v1/formateurs" : "/v1/etudiants"
+    const endpoint = input.role === "professor" ? "/api/v1/formateurs" : "/api/v1/etudiants"
 
     await apiServer(endpoint, {
       method: "POST",
@@ -125,7 +125,7 @@ export async function updateUser(
       return { success: false, error: "Gestion des comptes admin non exposée par l'API." }
     }
 
-    const endpoint = input.role === "professor" ? `/v1/formateurs/${id}` : `/v1/etudiants/${id}`
+    const endpoint = input.role === "professor" ? `/api/v1/formateurs/${id}` : `/api/v1/etudiants/${id}`
 
     await apiServer(endpoint, {
       method: "PUT",
@@ -171,9 +171,9 @@ export async function deleteUser(id: string): Promise<ActionResult> {
 
     // On ne connaît pas le rôle a priori : on tente formateur puis étudiant.
     try {
-      await apiServer(`/v1/formateurs/${id}`, { method: "DELETE" })
+      await apiServer(`/api/v1/formateurs/${id}`, { method: "DELETE" })
     } catch {
-      await apiServer(`/v1/etudiants/${id}`, { method: "DELETE" })
+      await apiServer(`/api/v1/etudiants/${id}`, { method: "DELETE" })
     }
 
     revalidatePath("/dashboard/admin/users")
