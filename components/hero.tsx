@@ -61,24 +61,19 @@ export function Hero() {
         </p>
 
         {/* Actions */}
-        <div className="flex items-start gap-5 flex-wrap opacity-0 translate-y-5 animate-fade-up delay-1100">
-          <div className="flex flex-col items-start gap-2.5">
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2.5 bg-[#C9A227] text-[#0D2545] text-xs font-bold tracking-[2px] uppercase px-9 py-[18px] rounded no-underline transition-all duration-300 relative overflow-hidden hover:bg-[#E8C050] hover:scale-105"
-            >
-              <span className="relative z-[1]">Commencer maintenant</span>
-              <svg className="w-4 h-4 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            <span className="text-[10px] font-semibold tracking-[2px] uppercase text-[#C9A227] pl-1">
-              Diplôme Reconnu par l&apos;État
-            </span>
-          </div>
+        <div className="flex items-center gap-5 flex-wrap opacity-0 translate-y-5 animate-fade-up delay-1100">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2.5 bg-[#C9A227] text-[#0D2545] text-xs font-bold tracking-[2px] uppercase px-9 py-[18px] rounded no-underline transition-all duration-300 relative overflow-hidden hover:bg-[#E8C050] hover:scale-105"
+          >
+            <span className="relative z-[1]">Commencer maintenant</span>
+            <svg className="w-4 h-4 relative z-[1]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
           <Link
             href="#formations"
-            className="inline-flex items-center gap-2.5 text-[rgba(255,255,255,0.65)] text-xs font-medium tracking-[2px] uppercase no-underline transition-colors duration-300 hover:text-[#C9A227] group self-center"
+            className="inline-flex items-center gap-2.5 text-[rgba(255,255,255,0.65)] text-xs font-medium tracking-[2px] uppercase no-underline transition-colors duration-300 hover:text-[#C9A227] group"
           >
             <div className="w-12 h-12 rounded-full border border-[rgba(255,255,255,0.2)] flex items-center justify-center text-sm transition-all duration-300 group-hover:border-[#C9A227] group-hover:bg-[rgba(201,162,39,0.1)]">
               <svg className="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
