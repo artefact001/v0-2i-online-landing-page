@@ -48,18 +48,18 @@ interface Exercise {
 
 interface Formation {
   id: string
-  name: string
+  titre: string
 }
 
 interface Module {
   id: string
-  title: string
+  titre: string
   formation_id: string
 }
 
 interface Lesson {
   id: string
-  title: string
+  titre: string
   module_id: string
 }
 
@@ -108,7 +108,7 @@ export default function ExercisesPage() {
       if (!user) return
       // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
       // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
-      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const res = await apiClient<Formation[]>(`/formations?user_id=${user.id}`)
       const list = res.data || []
       setFormations(list)
       if (list.length > 0) setSelectedFormation(list[0].id)
@@ -351,7 +351,7 @@ export default function ExercisesPage() {
       <div className="space-y-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5">
         <div className="space-y-3">
           <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Classe / Formation</p>
-          <FormationPills formations={formations} selected={selectedFormation} onSelect={setSelectedFormation} />
+          <FormationPills formations={formations.map((f) => ({ id: f.id, name: f.titre }))} selected={selectedFormation} onSelect={setSelectedFormation} />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -363,7 +363,7 @@ export default function ExercisesPage() {
               <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
                 {modules.map((m) => (
                   <SelectItem key={m.id} value={m.id} className="text-white">
-                    {m.title}
+                    {m.titre}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -378,7 +378,7 @@ export default function ExercisesPage() {
               <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
                 {lessons.map((l) => (
                   <SelectItem key={l.id} value={l.id} className="text-white">
-                    {l.title}
+                    {l.titre}
                   </SelectItem>
                 ))}
               </SelectContent>

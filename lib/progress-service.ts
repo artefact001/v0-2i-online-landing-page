@@ -129,7 +129,7 @@ export class ProgressService {
   // (champ formateur_id direct sur "formations" ? table pivot dédiée ?).
   async getProfessorStudentProgress(professorId: string, studentId: string) {
     try {
-      const formationsRes = await apiClient(`/formations?formateur_id=${professorId}`)
+      const formationsRes = await apiClient(`/formations?user_id=${professorId}`)
       const formations = Array.isArray(formationsRes.data) ? formationsRes.data : []
       const formationIds = formations.map((f: any) => f.id)
       if (formationIds.length === 0) return []

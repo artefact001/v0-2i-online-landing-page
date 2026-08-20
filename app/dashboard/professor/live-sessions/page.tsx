@@ -14,7 +14,7 @@ import { Edit, Trash2, Plus, Calendar, Radio, Youtube } from 'lucide-react'
 interface LiveSession {
   id: string
   formation_id: string
-  formateur_id: string
+  user_id: string
   title: string
   description: string
   youtube_video_id: string
@@ -76,7 +76,7 @@ export default function LiveSessionsPage() {
       if (!user) return
       // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
       // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
-      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      const res = await apiClient<Formation[]>(`/formations?user_id=${user.id}`)
       const uniqueFormations = res.data || []
       setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {

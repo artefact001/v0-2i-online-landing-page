@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 interface Enrollment {
   id: string
   formation_id: string
-  formations?: { name: string; slug: string }
+  formations?: { titre: string }
 }
 
 export default function StudentCoursesPage() {
@@ -71,20 +71,18 @@ export default function StudentCoursesPage() {
                 return (
                   <Card key={e.id} className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
                     <CardContent className="p-6">
-                      <h3 className="text-white font-serif text-lg mb-3">{e.formations?.name || 'Formation'}</h3>
+                      <h3 className="text-white font-serif text-lg mb-3">{e.formations?.titre || 'Formation'}</h3>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="h-1.5 flex-1 bg-[rgba(255,255,255,0.1)] rounded-full overflow-hidden">
                           <div className="h-full bg-[#C9A227] rounded-full" style={{ width: `${progress}%` }} />
                         </div>
                         <span className="text-[#C9A227] text-xs">{progress}%</span>
                       </div>
-                      {e.formations?.slug && (
-                        <Link href={`/cours/${e.formations.slug}`}>
-                          <Button className="w-full bg-[#C9A227] hover:bg-[#B8860B]">
-                            {progress > 0 ? 'Continuer' : 'Commencer'}
-                          </Button>
-                        </Link>
-                      )}
+                      <Link href={`/cours/${e.formation_id}`}>
+                        <Button className="w-full bg-[#C9A227] hover:bg-[#B8860B]">
+                          {progress > 0 ? 'Continuer' : 'Commencer'}
+                        </Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 )

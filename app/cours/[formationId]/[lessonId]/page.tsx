@@ -28,29 +28,29 @@ import { Progress } from "@/components/ui/progress"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
+// Schéma Laravel réel (lecons) : titre, contenu, video, document, ordre
 interface Lesson {
   id: string
-  title: string
-  description: string
-  video_url: string | null
-  content: string | null
-  duration_minutes: number
-  order_index: number
-  is_published: boolean
+  titre: string
+  contenu: string | null
+  video: string | null
+  document: string | null
+  ordre: number
   module_id: string
 }
 
+// Schéma Laravel réel (modules) : titre, description, ordre
 interface Module {
   id: string
-  title: string
-  order_index: number
+  titre: string
+  ordre: number
   lessons: Lesson[]
 }
 
+// Schéma Laravel réel (formations) : titre (pas de slug)
 interface Formation {
   id: string
-  name: string
-  slug: string
+  titre: string
 }
 
 interface LessonProgress {
@@ -109,8 +109,8 @@ export default function CoursePage() {
       }
 
       try {
-        const formationRes = await apiClient<Formation[]>(`/formations?slug=${params.formationSlug}`)
-        const formationData = Array.isArray(formationRes.data) ? formationRes.data[0] : null
+        const formationRes = await apiClient<Formation>(`/formations/${params.formationId}`)
+        const formationData = formationRes.data
 
         if (formationData) {
           setFormation(formationData)
@@ -131,23 +131,20 @@ export default function CoursePage() {
           }
           setIsEnrolled(true)
 
-          const modulesRes = await apiClient<Module[]>(
-            `/modules?formation_id=${formationData.id}&is_published=1`,
-          )
+          const modulesRes = await apiClient<Module[]>(`/modules?formation_id=${formationData.id}`)
           const modulesData = modulesRes.data || []
 
-          // Route Laravel réelle: /v1/lecons — seules les leçons publiées par le
-          // prof sont chargées, les brouillons restent invisibles côté étudiant.
+          // Route Laravel réelle: /v1/lecons
           const modulesWithLessons = await Promise.all(
             modulesData.map(async (m: any) => {
-              const leconsRes = await apiClient<Lesson[]>(`/lecons?module_id=${m.id}&is_published=1`)
+              const leconsRes = await apiClient<Lesson[]>(`/lecons?module_id=${m.id}`)
               const lessons = (leconsRes.data || []).sort(
-                (a: Lesson, b: Lesson) => a.order_index - b.order_index,
+                (a: Lesson, b: Lesson) => a.ordre - b.ordre,
               )
               return { ...m, lessons }
             }),
           )
-          setModules(modulesWithLessons)
+          setModules(modulesWithLessons.sort((a, b) => a.ordre - b.ordre))
           setExpandedModules(modulesWithLessons.map((m) => m.id))
 
           if (params.lessonId) {
@@ -159,7 +156,7 @@ export default function CoursePage() {
               }
             }
           } else if (modulesWithLessons.length > 0 && modulesWithLessons[0].lessons.length > 0) {
-            router.push(`/cours/${params.formationSlug}/${modulesWithLessons[0].lessons[0].id}`)
+            router.push(`/cours/${params.formationId}/${modulesWithLessons[0].lessons[0].id}`)
           }
         }
       } catch (error) {
@@ -170,7 +167,7 @@ export default function CoursePage() {
     }
 
     fetchData()
-  }, [params.formationSlug, params.lessonId, router, user])
+  }, [params.formationId, params.lessonId, router, user])
 
   // Fetch exercises for current lesson — route réelle: /v1/exercices
   useEffect(() => {
@@ -246,7 +243,7 @@ export default function CoursePage() {
     const allLessons = getAllLessons()
     const currentIndex = getCurrentIndex()
     if (currentIndex > 0) {
-      router.push(`/cours/${params.formationSlug}/${allLessons[currentIndex - 1].id}`)
+      router.push(`/cours/${params.formationId}/${allLessons[currentIndex - 1].id}`)
     }
   }
 
@@ -254,7 +251,7 @@ export default function CoursePage() {
     const allLessons = getAllLessons()
     const currentIndex = getCurrentIndex()
     if (currentIndex < allLessons.length - 1) {
-      router.push(`/cours/${params.formationSlug}/${allLessons[currentIndex + 1].id}`)
+      router.push(`/cours/${params.formationId}/${allLessons[currentIndex + 1].id}`)
     }
   }
 
@@ -295,7 +292,7 @@ export default function CoursePage() {
             Tu n'es pas inscrit(e) à cette formation, ou ton inscription n'est pas encore active.
           </p>
           <Link
-            href={`/cours/${params.formationSlug}`}
+            href={`/cours/${params.formationId}`}
             className="text-[#C9A227] hover:underline"
           >
             Voir la formation
@@ -332,7 +329,7 @@ export default function CoursePage() {
               <ChevronLeft className="w-4 h-4" />
               Retour
             </Link>
-            <h2 className="font-bold text-lg text-white">{formation.name}</h2>
+            <h2 className="font-bold text-lg text-white">{formation.titre}</h2>
             <div className="mt-3">
               <div className="flex justify-between text-xs text-gray-400 mb-1">
                 <span>Progression</span>
@@ -354,7 +351,7 @@ export default function CoursePage() {
                     <span className="w-6 h-6 rounded-full bg-[#C9A227] text-[#0D1B2A] text-xs font-bold flex items-center justify-center">
                       {moduleIndex + 1}
                     </span>
-                    <span className="text-sm font-medium text-left">{module.title}</span>
+                    <span className="text-sm font-medium text-left">{module.titre}</span>
                   </div>
                   {expandedModules.includes(module.id) ? (
                     <ChevronUp className="w-4 h-4 text-gray-400" />
@@ -383,7 +380,7 @@ export default function CoursePage() {
                             return (
                               <Link
                                 key={lesson.id}
-                                href={`/cours/${params.formationSlug}/${lesson.id}`}
+                                href={`/cours/${params.formationId}/${lesson.id}`}
                                 className={`flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${
                                   isActive 
                                     ? "bg-[#C9A227]/20 border border-[#C9A227]/50" 
@@ -397,13 +394,11 @@ export default function CoursePage() {
                                 )}
                                 <div className="flex-1 min-w-0">
                                   <p className={`text-sm truncate ${isActive ? "text-[#C9A227] font-medium" : "text-gray-300"}`}>
-                                    {moduleIndex + 1}.{lessonIndex + 1} {lesson.title}
+                                    {moduleIndex + 1}.{lessonIndex + 1} {lesson.titre}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                                    {lesson.video_url && <Video className="w-3 h-3" />}
-                                    {lesson.content && <FileText className="w-3 h-3" />}
-                                    <Clock className="w-3 h-3" />
-                                    <span>{lesson.duration_minutes} min</span>
+                                    {lesson.video && <Video className="w-3 h-3" />}
+                                    {lesson.document && <FileText className="w-3 h-3" />}
                                   </div>
                                 </div>
                               </Link>
@@ -446,7 +441,7 @@ export default function CoursePage() {
               <p className="text-xs text-gray-400">
                 Lecon {currentIndex + 1} sur {allLessons.length}
               </p>
-              <h1 className="font-semibold text-white">{currentLesson.title}</h1>
+              <h1 className="font-semibold text-white">{currentLesson.titre}</h1>
             </div>
           </div>
           
@@ -508,11 +503,11 @@ export default function CoursePage() {
           {activeTab === "content" ? (
             <div className="max-w-4xl mx-auto p-6">
               {/* Video section */}
-              {currentLesson.video_url && (
+              {currentLesson.video && (
                 <div className="mb-8">
                   <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
                     <iframe
-                      src={currentLesson.video_url}
+                      src={currentLesson.video}
                       className="w-full h-full"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -522,7 +517,7 @@ export default function CoursePage() {
               )}
               
               {/* Text content */}
-              {currentLesson.content && (
+              {currentLesson.contenu && (
                 <div className="prose prose-invert prose-lg max-w-none">
                   <div className="bg-[#0D1B2A] rounded-xl p-8 border border-[#1a2942]">
                     <ReactMarkdown 
@@ -553,7 +548,7 @@ export default function CoursePage() {
                         code: ({children}) => <code className="bg-[#1a2942] px-2 py-1 rounded text-[#C9A227] text-sm">{children}</code>,
                       }}
                     >
-                      {currentLesson.content}
+                      {currentLesson.contenu}
                     </ReactMarkdown>
                   </div>
                 </div>
@@ -573,7 +568,7 @@ export default function CoursePage() {
                   {exercises.map((exercise, index) => (
                     <Link
                       key={exercise.id}
-                      href={`/cours/${params.formationSlug}/${currentLesson.id}/exercice/${exercise.id}`}
+                      href={`/cours/${params.formationId}/${currentLesson.id}/exercice/${exercise.id}`}
                       className="block bg-[#0D1B2A] rounded-xl p-6 border border-[#1a2942] hover:border-[#C9A227]/50 transition-all group"
                     >
                       <div className="flex items-center justify-between">

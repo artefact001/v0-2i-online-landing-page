@@ -20,7 +20,7 @@ export default function ProfessorDashboard() {
       try {
         // ATTENTION: pas d'équivalent Laravel de "professor_formations". On
         // suppose que /v1/formations accepte un filtre ?formateur_id=...
-        const formationsRes = await apiClient<any[]>(`/formations?formateur_id=${user.id}`)
+        const formationsRes = await apiClient<any[]>(`/formations?user_id=${user.id}`)
         const formations = formationsRes.data || []
 
         const modulesResults = await Promise.all(

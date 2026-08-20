@@ -90,7 +90,7 @@ function QuestionMedia({ question }: { question: EvalQuestion }) {
 export default function ExercisePage() {
   const params = useParams()
   const { user } = useAuth()
-  const backHref = `/cours/${params.formationSlug}/${params.lessonId}`
+  const backHref = `/cours/${params.formationId}/${params.lessonId}`
 
   const [exercise, setExercise] = useState<ExerciseRow | null>(null)
   const [profile, setProfile] = useState<{ id: string; name: string } | null>(null)

@@ -13,7 +13,7 @@ interface Enrollment {
   id: string
   formation_id: string
   status: string
-  formations?: { id: string; name: string; slug: string }
+  formations?: { id: string; titre: string }
 }
 
 interface LiveSession {
@@ -137,8 +137,7 @@ export default function StudentDashboard() {
                   <CardContent className="space-y-4">
                     {enrollments.map((enrollment) => {
                       const progress = progressByFormation[enrollment.formation_id] ?? 0
-                      const formationName = enrollment.formations?.name || 'Formation'
-                      const formationSlug = enrollment.formations?.slug
+                      const formationName = enrollment.formations?.titre || 'Formation'
 
                       return (
                         <div
@@ -157,13 +156,11 @@ export default function StudentDashboard() {
                               <span className="text-[#C9A227] text-xs">{progress}%</span>
                             </div>
                           </div>
-                          {formationSlug && (
-                            <Link href={`/cours/${formationSlug}`}>
-                              <Button size="sm" className="bg-[#C9A227] hover:bg-[#B8860B]">
-                                {progress > 0 ? 'Continuer' : 'Commencer'}
-                              </Button>
-                            </Link>
-                          )}
+                          <Link href={`/cours/${enrollment.formation_id}`}>
+                            <Button size="sm" className="bg-[#C9A227] hover:bg-[#B8860B]">
+                              {progress > 0 ? 'Continuer' : 'Commencer'}
+                            </Button>
+                          </Link>
                         </div>
                       )
                     })}

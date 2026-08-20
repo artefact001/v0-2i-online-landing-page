@@ -8,13 +8,9 @@ import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/auth-context"
 import { 
   ChevronLeft,
-  Clock,
   BookOpen,
-  Video,
-  Users,
   Award,
   Play,
-  CheckCircle,
   Lock,
   Radio,
   Calendar
@@ -29,28 +25,34 @@ interface LiveSession {
   status: 'scheduled' | 'live' | 'completed' | 'cancelled'
 }
 
-interface Module {
+// Schéma Laravel réel (lecons) : titre, contenu, video, document, ordre
+interface Lesson {
   id: string
-  title: string
-  description: string
-  order_index: number
-  lessons: {
-    id: string
-    title: string
-    duration_minutes: number
-    is_published: boolean
-  }[]
+  titre: string
+  ordre: number
 }
 
+// Schéma Laravel réel (modules) : titre, description, ordre
+interface Module {
+  id: string
+  titre: string
+  description?: string
+  ordre: number
+  lecons: Lesson[]
+}
+
+// Schéma Laravel réel (formations) : titre, description, image, niveau,
+// duree, prix, statut, nb_inscrit
 interface Formation {
   id: string
-  name: string
-  slug: string
+  titre: string
   description: string
-  image_url: string
-  duration_weeks: number
-  level: string
-  category: string
+  image?: string
+  niveau?: string
+  duree?: string
+  prix: number
+  statut: string
+  nb_inscrit?: number
 }
 
 export default function FormationOverviewPage() {
@@ -84,27 +86,26 @@ export default function FormationOverviewPage() {
       setLoading(true)
 
       try {
-        // GET /v1/formations?slug=... — À VÉRIFIER: FormationController::index
-        // accepte-t-il ce filtre, ou faut-il itérer sur toute la liste ?
-        const formationRes = await apiClient<Formation[]>(`/formations?slug=${params.formationSlug}`)
-        const formationData = Array.isArray(formationRes.data) ? formationRes.data[0] : null
+        // GET /v1/formations/{id} — récupération directe par ID (le schéma
+        // réel n'a pas de champ "slug").
+        const formationRes = await apiClient<Formation>(`/formations/${params.formationId}`)
+        const formationData = formationRes.data
 
         if (formationData) {
           setFormation(formationData)
 
-          const modulesRes = await apiClient<Module[]>(
-            `/modules?formation_id=${formationData.id}&is_published=1`,
-          )
+          const modulesRes = await apiClient<Module[]>(`/modules?formation_id=${formationData.id}`)
           const modulesData = modulesRes.data || []
 
           // Récupère les leçons de chaque module — route réelle: /v1/lecons
           const modulesWithLessons = await Promise.all(
             modulesData.map(async (m: any) => {
-              const leconsRes = await apiClient(`/lecons?module_id=${m.id}&is_published=1`)
-              return { ...m, lessons: leconsRes.data || [] }
+              const leconsRes = await apiClient(`/lecons?module_id=${m.id}`)
+              const lecons = (leconsRes.data || []).sort((a: Lesson, b: Lesson) => a.ordre - b.ordre)
+              return { ...m, lecons }
             }),
           )
-          setModules(modulesWithLessons)
+          setModules(modulesWithLessons.sort((a, b) => a.ordre - b.ordre))
 
           if (user) {
             const enrollRes = await apiClient(
@@ -126,7 +127,7 @@ export default function FormationOverviewPage() {
     }
 
     fetchData()
-  }, [params.formationSlug, user])
+  }, [params.formationId, user])
 
   // Route Laravel réelle: /v1/directs?formation_id=...
   useEffect(() => {
@@ -143,14 +144,11 @@ export default function FormationOverviewPage() {
     loadLiveSessions()
   }, [formation])
 
-  const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0)
-  const totalDuration = modules.reduce((acc, m) => 
-    acc + m.lessons.reduce((a, l) => a + l.duration_minutes, 0), 0
-  )
+  const totalLessons = modules.reduce((acc, m) => acc + m.lecons.length, 0)
 
   const getFirstLessonId = () => {
-    if (modules.length > 0 && modules[0].lessons.length > 0) {
-      return modules[0].lessons[0].id
+    if (modules.length > 0 && modules[0].lecons.length > 0) {
+      return modules[0].lecons[0].id
     }
     return null
   }
@@ -166,18 +164,9 @@ export default function FormationOverviewPage() {
   if (!formation) {
     return (
       <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
-        <p>Formation non trouvee</p>
+        <p>Formation non trouvée</p>
       </div>
     )
-  }
-
-  const courseImages: Record<string, string> = {
-    "cap-cuisine": "/images/course-cuisine.jpg",
-    "cap-service": "/images/course-service.jpg",
-    "cap-patisserie": "/images/course-patisserie.jpg",
-    "haccp-hygiene": "/images/course-haccp.jpg",
-    "cs-sommellerie": "/images/course-sommelier.jpg",
-    "management-restaurant": "/images/course-management.jpg",
   }
 
   return (
@@ -197,28 +186,24 @@ export default function FormationOverviewPage() {
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
-              <span className="inline-block px-3 py-1 bg-[#C9A227]/20 text-[#C9A227] text-sm rounded-full mb-4">
-                {formation.category}
-              </span>
-              <h1 className="text-4xl font-bold mb-4 font-serif">{formation.name}</h1>
+              {formation.niveau && (
+                <span className="inline-block px-3 py-1 bg-[#C9A227]/20 text-[#C9A227] text-sm rounded-full mb-4">
+                  {formation.niveau}
+                </span>
+              )}
+              <h1 className="text-4xl font-bold mb-4 font-serif">{formation.titre}</h1>
               <p className="text-gray-400 text-lg mb-6">{formation.description}</p>
 
               <div className="flex flex-wrap gap-6 mb-8">
-                <div className="flex items-center gap-2 text-gray-300">
-                  <Clock className="w-5 h-5 text-[#C9A227]" />
-                  <span>{formation.duration_weeks} semaines</span>
-                </div>
+                {formation.duree && (
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Award className="w-5 h-5 text-[#C9A227]" />
+                    <span>{formation.duree}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-gray-300">
                   <BookOpen className="w-5 h-5 text-[#C9A227]" />
-                  <span>{totalLessons} lecons</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-300">
-                  <Video className="w-5 h-5 text-[#C9A227]" />
-                  <span>{Math.round(totalDuration / 60)}h de video</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-300">
-                  <Award className="w-5 h-5 text-[#C9A227]" />
-                  <span>{formation.level}</span>
+                  <span>{totalLessons} leçons</span>
                 </div>
               </div>
 
@@ -231,17 +216,19 @@ export default function FormationOverviewPage() {
                     </div>
                     <Progress value={progress} className="h-3 bg-[#1a2942]" />
                   </div>
-                  <Link href={`/cours/${formation.slug}/${getFirstLessonId()}`}>
-                    <Button className="w-full bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050] text-lg py-6">
-                      <Play className="w-5 h-5 mr-2" />
-                      {progress > 0 ? 'Continuer le cours' : 'Commencer le cours'}
-                    </Button>
-                  </Link>
+                  {getFirstLessonId() && (
+                    <Link href={`/cours/${formation.id}/${getFirstLessonId()}`}>
+                      <Button className="w-full bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050] text-lg py-6">
+                        <Play className="w-5 h-5 mr-2" />
+                        {progress > 0 ? 'Continuer le cours' : 'Commencer le cours'}
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               ) : (
-                <Link href={`/payment?formation=${formation.slug}`}>
+                <Link href={`/inscription?formation_id=${formation.id}`}>
                   <Button className="w-full bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050] text-lg py-6">
-                    S&apos;inscrire a cette formation
+                    S&apos;inscrire à cette formation
                   </Button>
                 </Link>
               )}
@@ -250,18 +237,12 @@ export default function FormationOverviewPage() {
             <div className="relative">
               <div className="relative rounded-2xl overflow-hidden aspect-video">
                 <Image
-                  src={courseImages[formation.slug] || "/images/course-cuisine.jpg"}
-                  alt={formation.name}
+                  src={formation.image || "/images/course-cuisine.jpg"}
+                  alt={formation.titre}
                   fill
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                {enrolled && (
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-green-500 text-white text-sm rounded-full flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" />
-                    Inscrit
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -276,7 +257,7 @@ export default function FormationOverviewPage() {
             {liveSessions.map((session) => (
               <Link
                 key={session.id}
-                href={`/cours/${params.formationSlug}/direct/${session.id}`}
+                href={`/cours/${formation.id}/direct/${session.id}`}
                 className="flex items-center justify-between bg-[#0D1B2A] rounded-xl border border-[#1a2942] hover:border-[#C9A227] transition-colors p-5"
               >
                 <div className="flex items-center gap-4">
@@ -320,8 +301,8 @@ export default function FormationOverviewPage() {
                     {moduleIndex + 1}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">{module.title}</h3>
-                    <p className="text-gray-400 text-sm">{module.lessons.length} lecons</p>
+                    <h3 className="font-semibold text-lg">{module.titre}</h3>
+                    <p className="text-gray-400 text-sm">{module.lecons.length} leçons</p>
                   </div>
                 </div>
                 {module.description && (
@@ -331,8 +312,8 @@ export default function FormationOverviewPage() {
 
               <div className="divide-y divide-[#1a2942]">
                 {(expandedLessonModules.has(module.id)
-                  ? module.lessons
-                  : module.lessons.slice(0, LESSONS_PREVIEW_COUNT)
+                  ? module.lecons
+                  : module.lecons.slice(0, LESSONS_PREVIEW_COUNT)
                 ).map((lesson, lessonIndex) => (
                   <div key={lesson.id} className="px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -341,16 +322,13 @@ export default function FormationOverviewPage() {
                       ) : (
                         <Lock className="w-5 h-5 text-gray-500" />
                       )}
-                      <div>
-                        <p className={`${enrolled ? 'text-white' : 'text-gray-400'}`}>
-                          {moduleIndex + 1}.{lessonIndex + 1} {lesson.title}
-                        </p>
-                        <p className="text-gray-500 text-sm">{lesson.duration_minutes} min</p>
-                      </div>
+                      <p className={`${enrolled ? 'text-white' : 'text-gray-400'}`}>
+                        {moduleIndex + 1}.{lessonIndex + 1} {lesson.titre}
+                      </p>
                     </div>
                     
                     {enrolled && (
-                      <Link href={`/cours/${formation.slug}/${lesson.id}`}>
+                      <Link href={`/cours/${formation.id}/${lesson.id}`}>
                         <Button variant="ghost" size="sm" className="text-[#C9A227] hover:bg-[#C9A227]/10">
                           Voir
                         </Button>
@@ -360,7 +338,7 @@ export default function FormationOverviewPage() {
                 ))}
               </div>
 
-              {module.lessons.length > LESSONS_PREVIEW_COUNT && (
+              {module.lecons.length > LESSONS_PREVIEW_COUNT && (
                 <div className="border-t border-[#1a2942] px-6 py-3">
                   <button
                     onClick={() => toggleModuleExpanded(module.id)}
@@ -368,7 +346,7 @@ export default function FormationOverviewPage() {
                   >
                     {expandedLessonModules.has(module.id)
                       ? 'Voir moins'
-                      : `Voir les ${module.lessons.length - LESSONS_PREVIEW_COUNT} leçons restantes`}
+                      : `Voir les ${module.lecons.length - LESSONS_PREVIEW_COUNT} leçons restantes`}
                   </button>
                 </div>
               )}
@@ -379,7 +357,7 @@ export default function FormationOverviewPage() {
         {modules.length === 0 && (
           <div className="bg-[#0D1B2A] rounded-xl p-8 border border-[#1a2942] text-center">
             <BookOpen className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400">Le contenu de cette formation sera bientot disponible.</p>
+            <p className="text-gray-400">Le contenu de cette formation sera bientôt disponible.</p>
           </div>
         )}
       </section>

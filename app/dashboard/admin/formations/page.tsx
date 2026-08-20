@@ -8,30 +8,47 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Edit, Trash2, Plus, GraduationCap } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Edit, Trash2, Plus, GraduationCap, Users } from 'lucide-react'
 
+// Schéma Laravel réel (table formations) :
+// id, titre, description, image, niveau, duree, prix (decimal), statut
+// (enum: 'en ligne' | 'presentiel' | 'hybride'), nb_inscrit (auto, lecture
+// seule), user_id, categorie_id (obligatoire).
 interface Formation {
   id: string
-  name: string
-  slug?: string
+  titre: string
   description?: string
-  short_description?: string
-  duration?: string
-  price?: number
-  is_active?: boolean
+  image?: string
+  niveau?: string
+  duree?: string
+  prix: number
+  statut: 'en ligne' | 'presentiel' | 'hybride'
+  nb_inscrit?: number
+  categorie_id?: string
+}
+
+interface Categorie {
+  id: string
+  nom?: string
+  titre?: string
+  name?: string
 }
 
 const emptyForm = {
-  name: '',
-  slug: '',
-  short_description: '',
+  titre: '',
   description: '',
-  duration: '',
-  price: '',
+  image: '',
+  niveau: '',
+  duree: '',
+  prix: '',
+  statut: 'en ligne' as Formation['statut'],
+  categorie_id: '',
 }
 
 export default function AdminFormationsPage() {
   const [formations, setFormations] = useState<Formation[]>([])
+  const [categories, setCategories] = useState<Categorie[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -41,6 +58,7 @@ export default function AdminFormationsPage() {
 
   useEffect(() => {
     loadFormations()
+    loadCategories()
   }, [])
 
   const loadFormations = async () => {
@@ -54,6 +72,17 @@ export default function AdminFormationsPage() {
     setLoading(false)
   }
 
+  const loadCategories = async () => {
+    try {
+      const res = await apiClient<Categorie[]>('/categories')
+      setCategories(res.data || [])
+    } catch (err) {
+      console.error('[admin/formations] Erreur de chargement des catégories:', err)
+    }
+  }
+
+  const categoryLabel = (c: Categorie) => c.nom || c.titre || c.name || `Catégorie #${c.id}`
+
   const resetForm = () => {
     setFormData(emptyForm)
     setEditingId(null)
@@ -63,12 +92,14 @@ export default function AdminFormationsPage() {
 
   const handleEdit = (f: Formation) => {
     setFormData({
-      name: f.name || '',
-      slug: f.slug || '',
-      short_description: f.short_description || '',
+      titre: f.titre || '',
       description: f.description || '',
-      duration: f.duration || '',
-      price: f.price != null ? String(f.price) : '',
+      image: f.image || '',
+      niveau: f.niveau || '',
+      duree: f.duree || '',
+      prix: f.prix != null ? String(f.prix) : '',
+      statut: f.statut || 'en ligne',
+      categorie_id: f.categorie_id ? String(f.categorie_id) : '',
     })
     setEditingId(f.id)
     setIsCreating(true)
@@ -79,17 +110,21 @@ export default function AdminFormationsPage() {
     setSaving(true)
     setError('')
 
-    // À VÉRIFIER: noms de champs exacts attendus par FormationController
-    // (store/update) — repris de la structure déjà utilisée ailleurs dans
-    // le projet (formations, is_active, etc.), à ajuster si Laravel
-    // attend d'autres noms.
+    if (!formData.categorie_id) {
+      setError('La catégorie est obligatoire')
+      setSaving(false)
+      return
+    }
+
     const payload = {
-      name: formData.name,
-      slug: formData.slug || undefined,
-      short_description: formData.short_description,
+      titre: formData.titre,
       description: formData.description,
-      duration: formData.duration,
-      price: formData.price ? Number(formData.price) : undefined,
+      image: formData.image || undefined,
+      niveau: formData.niveau,
+      duree: formData.duree,
+      prix: formData.prix ? Number(formData.prix) : 0,
+      statut: formData.statut,
+      categorie_id: formData.categorie_id,
     }
 
     try {
@@ -149,58 +184,98 @@ export default function AdminFormationsPage() {
                       {error}
                     </div>
                   )}
+                  <div className="space-y-2">
+                    <Label className="text-[rgba(255,255,255,0.8)]">Titre de la formation</Label>
+                    <Input
+                      value={formData.titre}
+                      onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+                      placeholder="Ex: CAP Cuisinier"
+                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                      required
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Nom de la formation</Label>
-                      <Input
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Ex: CAP Cuisinier"
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                        required
-                      />
+                      <Label className="text-[rgba(255,255,255,0.8)]">Catégorie *</Label>
+                      <Select
+                        value={formData.categorie_id}
+                        onValueChange={(v) => setFormData({ ...formData, categorie_id: v })}
+                      >
+                        <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                          <SelectValue placeholder="Choisir une catégorie" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={String(c.id)} className="text-white">
+                              {categoryLabel(c)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Slug (URL)</Label>
-                      <Input
-                        value={formData.slug}
-                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        placeholder="Ex: CAP-cuisinier"
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                      />
+                      <Label className="text-[rgba(255,255,255,0.8)]">Statut</Label>
+                      <Select
+                        value={formData.statut}
+                        onValueChange={(v) => setFormData({ ...formData, statut: v as Formation['statut'] })}
+                      >
+                        <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                          <SelectItem value="en ligne" className="text-white">En ligne</SelectItem>
+                          <SelectItem value="presentiel" className="text-white">Présentiel</SelectItem>
+                          <SelectItem value="hybride" className="text-white">Hybride</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[rgba(255,255,255,0.8)]">Niveau</Label>
+                      <Input
+                        value={formData.niveau}
+                        onChange={(e) => setFormData({ ...formData, niveau: e.target.value })}
+                        placeholder="Ex: Débutant"
+                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label className="text-[rgba(255,255,255,0.8)]">Durée</Label>
                       <Input
-                        value={formData.duration}
-                        onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                        placeholder="Ex: 3 ans / 36 mois"
+                        value={formData.duree}
+                        onChange={(e) => setFormData({ ...formData, duree: e.target.value })}
+                        placeholder="Ex: 3 ans"
                         className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Prix d'inscription (FCFA)</Label>
+                      <Label className="text-[rgba(255,255,255,0.8)]">Prix (FCFA)</Label>
                       <Input
                         type="number"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        step="0.01"
+                        value={formData.prix}
+                        onChange={(e) => setFormData({ ...formData, prix: e.target.value })}
                         placeholder="Ex: 60000"
                         className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                       />
                     </div>
                   </div>
+
                   <div className="space-y-2">
-                    <Label className="text-[rgba(255,255,255,0.8)]">Description courte</Label>
+                    <Label className="text-[rgba(255,255,255,0.8)]">Image (URL)</Label>
                     <Input
-                      value={formData.short_description}
-                      onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                      value={formData.image}
+                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      placeholder="/images/course-cuisine.jpg"
                       className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                     />
                   </div>
+
                   <div className="space-y-2">
-                    <Label className="text-[rgba(255,255,255,0.8)]">Description complète</Label>
+                    <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
                     <Textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -208,20 +283,12 @@ export default function AdminFormationsPage() {
                       rows={4}
                     />
                   </div>
+
                   <div className="flex gap-3">
-                    <Button
-                      type="submit"
-                      disabled={saving}
-                      className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white"
-                    >
+                    <Button type="submit" disabled={saving} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white">
                       {saving ? 'Enregistrement...' : editingId ? 'Modifier' : 'Créer'}
                     </Button>
-                    <Button
-                      type="button"
-                      onClick={resetForm}
-                      variant="outline"
-                      className="flex-1 border-[rgba(255,255,255,0.2)] text-white"
-                    >
+                    <Button type="button" onClick={resetForm} variant="outline" className="flex-1 border-[rgba(255,255,255,0.2)] text-white">
                       Annuler
                     </Button>
                   </div>
@@ -244,9 +311,13 @@ export default function AdminFormationsPage() {
                         <GraduationCap className="w-5 h-5 text-[#C9A227]" />
                       </div>
                       <div>
-                        <h3 className="text-white font-medium">{f.name}</h3>
-                        <p className="text-[rgba(255,255,255,0.4)] text-xs">
-                          {f.duration} {f.price ? `· ${Number(f.price).toLocaleString()} FCFA` : ''}
+                        <h3 className="text-white font-medium">{f.titre}</h3>
+                        <p className="text-[rgba(255,255,255,0.4)] text-xs flex items-center gap-3">
+                          <span>{f.duree}</span>
+                          <span>{Number(f.prix).toLocaleString()} FCFA</span>
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" /> {f.nb_inscrit ?? 0}
+                          </span>
                         </p>
                       </div>
                     </div>

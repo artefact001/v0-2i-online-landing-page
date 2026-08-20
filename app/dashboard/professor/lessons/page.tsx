@@ -4,45 +4,39 @@ import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, Play, Eye, Upload, FileText, BookOpen } from 'lucide-react'
+import { Edit, Trash2, Plus, Play, FileText, BookOpen } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { ContentSidebar } from '@/components/professor/content-sidebar'
 import { TablePagination } from '@/components/admin/table-pagination'
 
 const LESSONS_PAGE_SIZE = 8
 
+// Schéma Laravel réel (table lecons) : id, titre, contenu (obligatoire),
+// video (nullable), document (nullable), ordre, module_id.
 interface Lesson {
   id: string
-  title: string
-  description: string
-  video_url: string | null
-  content: string | null
-  content_type: string | null
-  duration_minutes: number
-  order_index: number
-  is_published: boolean
-  is_free_preview: boolean
+  titre: string
+  contenu: string
+  video?: string | null
+  document?: string | null
+  ordre: number
   module_id: string
-  modules?: {
-    title: string
-    formation_id: string
-  }
 }
 
 interface Module {
   id: string
-  title: string
+  titre: string
   formation_id: string
 }
 
 interface Formation {
   id: string
-  name: string
+  titre: string
 }
 
 export default function LessonsPage() {
@@ -58,18 +52,12 @@ export default function LessonsPage() {
   const [formError, setFormError] = useState('')
 
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    video_url: '',
-    content: '',
-    content_type: 'video',
-    duration_minutes: 0,
-    order_index: 0,
-    is_published: false,
-    is_free_preview: false,
+    titre: '',
+    contenu: '',
+    video: '',
+    document: '',
+    ordre: 0,
   })
-  const [pdfName, setPdfName] = useState('')
-  const [pdfUploading, setPdfUploading] = useState(false)
 
   const { user } = useAuth()
 
@@ -92,10 +80,9 @@ export default function LessonsPage() {
   const loadFormations = async () => {
     try {
       if (!user) return
-
-      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
-      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
-      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      // Le propriétaire d'une formation est identifié par "user_id" dans le
+      // schéma réel (pas "formateur_id").
+      const res = await apiClient<Formation[]>(`/formations?user_id=${user.id}`)
       const uniqueFormations = res.data || []
       setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {
@@ -121,7 +108,6 @@ export default function LessonsPage() {
 
   const loadLessons = async () => {
     try {
-      // Route Laravel réelle: /v1/lecons (et non /v1/lessons)
       const res = await apiClient<Lesson[]>(`/lecons?module_id=${selectedModule}`)
       setLessons(res.data || [])
       setCurrentPage(1)
@@ -132,12 +118,14 @@ export default function LessonsPage() {
 
   const validateForm = () => {
     if (!selectedModule) return 'Veuillez sélectionner un module.'
-    if (!formData.title.trim()) return 'Le titre de la leçon est obligatoire.'
-    if (formData.title.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
-    if (formData.duration_minutes < 0) return 'La durée ne peut pas être négative.'
-    if (formData.order_index < 0) return "L'ordre ne peut pas être négatif."
-    const url = formData.video_url.trim()
-    if (url && !/^https?:\/\//i.test(url)) return "L'URL de la vidéo doit commencer par http:// ou https://."
+    if (!formData.titre.trim()) return 'Le titre de la leçon est obligatoire.'
+    if (formData.titre.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
+    if (!formData.contenu.trim()) return 'Le contenu de la leçon est obligatoire.'
+    if (formData.ordre < 0) return "L'ordre ne peut pas être négatif."
+    const video = formData.video.trim()
+    if (video && !/^https?:\/\//i.test(video)) return "L'URL de la vidéo doit commencer par http:// ou https://."
+    const doc = formData.document.trim()
+    if (doc && !/^https?:\/\//i.test(doc)) return "L'URL du document doit commencer par http:// ou https://."
     return ''
   }
 
@@ -155,10 +143,11 @@ export default function LessonsPage() {
     setIsLoading(true)
     try {
       const payload = {
-        ...formData,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        video_url: formData.video_url.trim() || null,
+        titre: formData.titre.trim(),
+        contenu: formData.contenu.trim(),
+        video: formData.video.trim() || undefined,
+        document: formData.document.trim() || undefined,
+        ordre: formData.ordre,
       }
       if (editingId) {
         await apiClient(`/lecons/${editingId}`, {
@@ -197,70 +186,26 @@ export default function LessonsPage() {
   }
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      video_url: '',
-      content: '',
-      content_type: 'video',
-      duration_minutes: 0,
-      order_index: 0,
-      is_published: false,
-      is_free_preview: false,
-    })
-    setPdfName('')
+    setFormData({ titre: '', contenu: '', video: '', document: '', ordre: 0 })
     setFormError('')
     setEditingId(null)
     setIsCreating(false)
   }
 
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.type !== 'application/pdf') {
-      alert('Veuillez sélectionner un fichier PDF.')
-      return
-    }
-    if (file.size > 4 * 1024 * 1024) {
-      alert('Le PDF doit faire moins de 4 Mo. Pour des fichiers plus volumineux, collez une URL publique du PDF.')
-      return
-    }
-    setPdfUploading(true)
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-      })
-      setFormData((prev) => ({ ...prev, content: dataUrl, content_type: 'pdf' }))
-      setPdfName(file.name)
-    } catch {
-      alert('Échec du chargement du PDF.')
-    } finally {
-      setPdfUploading(false)
-    }
-  }
-
   const handleEdit = (lesson: Lesson) => {
     setFormData({
-      title: lesson.title,
-      description: lesson.description,
-      video_url: lesson.video_url || '',
-      content: lesson.content || '',
-      content_type: lesson.content_type || 'video',
-      duration_minutes: lesson.duration_minutes,
-      order_index: lesson.order_index,
-      is_published: lesson.is_published,
-      is_free_preview: lesson.is_free_preview,
+      titre: lesson.titre,
+      contenu: lesson.contenu,
+      video: lesson.video || '',
+      document: lesson.document || '',
+      ordre: lesson.ordre,
     })
-    setPdfName(lesson.content_type === 'pdf' && lesson.content ? 'Document PDF joint' : '')
     setEditingId(lesson.id)
     setIsCreating(true)
   }
 
-  const publishedLessons = lessons.filter((l) => l.is_published).length
-  const pdfLessons = lessons.filter((l) => l.content_type === 'pdf' && l.content).length
+  const withVideo = lessons.filter((l) => l.video).length
+  const withDocument = lessons.filter((l) => l.document).length
 
   return (
     <div className="flex gap-6 items-start">
@@ -269,7 +214,7 @@ export default function LessonsPage() {
       <SectionHeader
         icon={<BookOpen className="h-7 w-7" />}
         title="Gestion des leçons"
-        description="Créez vos leçons avec vidéos et supports PDF. Sélectionnez une formation et un module pour commencer."
+        description="Créez vos leçons avec vidéos et documents. Sélectionnez une formation et un module pour commencer."
         action={
           <Button onClick={() => setIsCreating(!isCreating)} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
             <Plus className="mr-2 h-4 w-4" />
@@ -280,15 +225,19 @@ export default function LessonsPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Leçons" value={lessons.length} icon={<BookOpen className="h-5 w-5" />} />
-        <StatCard label="Publiées" value={publishedLessons} icon={<Eye className="h-5 w-5" />} />
-        <StatCard label="Avec PDF" value={pdfLessons} icon={<FileText className="h-5 w-5" />} />
+        <StatCard label="Avec vidéo" value={withVideo} icon={<Play className="h-5 w-5" />} />
+        <StatCard label="Avec document" value={withDocument} icon={<FileText className="h-5 w-5" />} />
       </div>
 
       {/* Selectors */}
       <div className="space-y-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5">
         <div className="space-y-3">
           <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Formation</p>
-          <FormationPills formations={formations} selected={selectedFormation} onSelect={setSelectedFormation} />
+          <FormationPills
+            formations={formations.map((f) => ({ id: f.id, name: f.titre }))}
+            selected={selectedFormation}
+            onSelect={setSelectedFormation}
+          />
         </div>
         <div className="space-y-2">
           <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Module</p>
@@ -299,7 +248,7 @@ export default function LessonsPage() {
             <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
               {modules.map((m) => (
                 <SelectItem key={m.id} value={m.id} className="text-white">
-                  {m.title}
+                  {m.titre}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -316,17 +265,17 @@ export default function LessonsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                {formError && (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
-                    {formError}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              {formError && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
+                  {formError}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
                 <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  value={formData.titre}
+                  onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                   placeholder="Titre de la leçon"
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                   required
@@ -334,138 +283,55 @@ export default function LessonsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
+                <Label className="text-[rgba(255,255,255,0.8)]">Contenu</Label>
                 <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Description de la leçon"
+                  value={formData.contenu}
+                  onChange={(e) => setFormData({ ...formData, contenu: e.target.value })}
+                  placeholder="Contenu texte de la leçon"
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  rows={3}
+                  rows={5}
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">URL Vidéo</Label>
+                <Label className="text-[rgba(255,255,255,0.8)]">URL Vidéo (optionnel)</Label>
                 <Input
-                  value={formData.video_url}
-                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                  placeholder="https://example.com/video.mp4"
+                  value={formData.video}
+                  onChange={(e) => setFormData({ ...formData, video: e.target.value })}
+                  placeholder="https://exemple.com/video.mp4"
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                 />
-                <p className="text-xs text-[rgba(255,255,255,0.5)]">
-                  <Upload className="w-3 h-3 inline mr-1" />
-                  Support des formats MP4, HLS, WebM
-                </p>
               </div>
 
-              {/* PDF support */}
-              <div className="space-y-2 rounded-lg border border-dashed border-[rgba(201,162,39,0.3)] p-4">
+              <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.8)] flex items-center gap-2">
                   <FileText className="w-4 h-4 text-[#C9A227]" />
-                  Support de cours (PDF)
+                  URL Document (optionnel)
                 </Label>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-[rgba(255,255,255,0.05)] px-4 py-2 text-sm text-white transition-colors hover:bg-[rgba(255,255,255,0.1)]">
-                    <Upload className="h-4 w-4" />
-                    {pdfUploading ? 'Chargement...' : 'Choisir un PDF'}
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handlePdfUpload}
-                      className="hidden"
-                      disabled={pdfUploading}
-                    />
-                  </label>
-                  {(pdfName || (formData.content_type === 'pdf' && formData.content)) && (
-                    <div className="flex items-center gap-2 text-sm text-[#C9A227]">
-                      <FileText className="h-4 w-4" />
-                      <span className="truncate max-w-[200px]">{pdfName || 'Document PDF joint'}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, content: '', content_type: formData.video_url ? 'video' : 'text' })
-                          setPdfName('')
-                        }}
-                        className="text-[rgba(255,255,255,0.5)] hover:text-red-400"
-                        aria-label="Retirer le PDF"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-[rgba(255,255,255,0.5)]">
-                  Téléversez un PDF (max 4 Mo) ou collez une URL publique ci-dessous.
-                </p>
                 <Input
-                  value={formData.content_type === 'pdf' && !formData.content?.startsWith('data:') ? formData.content : ''}
-                  onChange={(e) => {
-                    setFormData({ ...formData, content: e.target.value, content_type: 'pdf' })
-                    setPdfName(e.target.value ? 'Lien PDF externe' : '')
-                  }}
+                  value={formData.document}
+                  onChange={(e) => setFormData({ ...formData, document: e.target.value })}
                   placeholder="https://exemple.com/support-de-cours.pdf"
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Durée (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={formData.duration_minutes}
-                    onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Ordre</Label>
-                  <Input
-                    type="number"
-                    value={formData.order_index}
-                    onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) })}
-                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_published}
-                    onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-[rgba(255,255,255,0.7)]">Publier cette leçon</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_free_preview}
-                    onChange={(e) => setFormData({ ...formData, is_free_preview: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-[rgba(255,255,255,0.7)]">Accès gratuit (aperçu)</span>
-                </label>
+              <div className="space-y-2">
+                <Label className="text-[rgba(255,255,255,0.8)]">Ordre</Label>
+                <Input
+                  type="number"
+                  value={formData.ordre}
+                  onChange={(e) => setFormData({ ...formData, ordre: parseInt(e.target.value) || 0 })}
+                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                />
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white"
-                >
+                <Button type="submit" disabled={isLoading} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white">
                   {isLoading ? 'Enregistrement...' : editingId ? 'Modifier' : 'Créer'}
                 </Button>
-                <Button
-                  type="button"
-                  onClick={resetForm}
-                  variant="outline"
-                  className="flex-1 border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
-                >
+                <Button type="button" onClick={resetForm} variant="outline" className="flex-1 border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]">
                   Annuler
                 </Button>
               </div>
@@ -482,31 +348,20 @@ export default function LessonsPage() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    {lesson.video_url ? (
+                    {lesson.video ? (
                       <Play className="w-5 h-5 text-[#C9A227]" />
                     ) : (
-                      <Eye className="w-5 h-5 text-[rgba(255,255,255,0.4)]" />
+                      <BookOpen className="w-5 h-5 text-[rgba(255,255,255,0.4)]" />
                     )}
-                    <h3 className="text-lg font-semibold text-white">{lesson.title}</h3>
-                    {lesson.is_free_preview && (
-                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">
-                        Aperçu gratuit
-                      </span>
-                    )}
-                    {lesson.is_published && (
-                      <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">
-                        Publié
-                      </span>
-                    )}
+                    <h3 className="text-lg font-semibold text-white">{lesson.titre}</h3>
                   </div>
-                  <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2">{lesson.description}</p>
+                  <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2 line-clamp-2">{lesson.contenu}</p>
                   <div className="flex items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
-                    <span>Durée: {lesson.duration_minutes} min</span>
-                    <span>Ordre: {lesson.order_index}</span>
-                    {lesson.video_url && <span className="text-[#C9A227]">✓ Vidéo jointe</span>}
-                    {lesson.content_type === 'pdf' && lesson.content && (
+                    <span>Ordre: {lesson.ordre}</span>
+                    {lesson.video && <span className="text-[#C9A227]">✓ Vidéo jointe</span>}
+                    {lesson.document && (
                       <span className="text-[#C9A227] flex items-center gap-1">
-                        <FileText className="w-3 h-3" /> PDF joint
+                        <FileText className="w-3 h-3" /> Document joint
                       </span>
                     )}
                   </div>

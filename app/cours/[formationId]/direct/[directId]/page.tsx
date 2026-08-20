@@ -67,7 +67,7 @@ export default function WatchLivePage() {
       <div className="max-w-6xl mx-auto">
         <Button
           variant="ghost"
-          onClick={() => router.push(`/cours/${params.formationSlug}`)}
+          onClick={() => router.push(`/cours/${params.formationId}`)}
           className="text-white mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

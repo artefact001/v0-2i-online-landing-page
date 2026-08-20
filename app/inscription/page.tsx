@@ -14,9 +14,8 @@ import { CheckCircle, Eye, EyeOff } from 'lucide-react'
 
 interface Formation {
   id: string
-  name: string
-  price: number
-  slug: string
+  titre: string
+  prix: number
 }
 
 export default function InscriptionPage() {
@@ -387,7 +386,7 @@ export default function InscriptionPage() {
                           value={formation.id}
                           className="text-white hover:bg-[rgba(255,255,255,0.1)] focus:bg-[rgba(255,255,255,0.1)]"
                         >
-                          {formation.name} - {formation.price.toLocaleString()} FCFA
+                          {formation.titre} - {Number(formation.prix).toLocaleString()} FCFA
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -399,9 +398,9 @@ export default function InscriptionPage() {
 
                 {selectedFormation && (
                   <div className="p-4 bg-[rgba(201,162,39,0.1)] border border-[rgba(201,162,39,0.3)] rounded-lg">
-                    <h3 className="text-[#C9A227] font-semibold mb-2">{selectedFormation.name}</h3>
+                    <h3 className="text-[#C9A227] font-semibold mb-2">{selectedFormation.titre}</h3>
                     <p className="text-2xl font-bold text-white">
-                      {selectedFormation.price.toLocaleString()} <span className="text-sm font-normal text-[rgba(255,255,255,0.6)]">FCFA</span>
+                      {Number(selectedFormation.prix).toLocaleString()} <span className="text-sm font-normal text-[rgba(255,255,255,0.6)]">FCFA</span>
                     </p>
                     <p className="text-[rgba(255,255,255,0.6)] text-sm mt-2">
                       Le paiement sera effectué après validation de votre compte

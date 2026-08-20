@@ -4,30 +4,28 @@ import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Edit, Trash2, Plus, Book, Layers, CheckCircle2, FileText } from 'lucide-react'
+import { Edit, Trash2, Plus, Book, Layers, FileText } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { ContentSidebar } from '@/components/professor/content-sidebar'
 
+// Schéma Laravel réel (table modules) : id, titre, description (nullable),
+// ordre, formation_id. Pas de is_published dans ce schéma.
 interface Module {
   id: string
-  title: string
-  description: string
-  order_index: number
-  is_published: boolean
+  titre: string
+  description?: string
+  ordre: number
   formation_id: string
-  formations: {
-    name: string
-  }
-  lessons?: any[]
+  lecons?: any[]
 }
 
 interface Formation {
   id: string
-  name: string
+  titre: string
 }
 
 export default function ModulesPage() {
@@ -40,10 +38,9 @@ export default function ModulesPage() {
   const [formError, setFormError] = useState('')
 
   const [formData, setFormData] = useState({
-    title: '',
+    titre: '',
     description: '',
-    order_index: 0,
-    is_published: false,
+    ordre: 0,
   })
 
   const { user } = useAuth()
@@ -61,10 +58,9 @@ export default function ModulesPage() {
   const loadFormations = async () => {
     try {
       if (!user) return
-
-      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
-      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
-      const res = await apiClient<Formation[]>(`/formations?formateur_id=${user.id}`)
+      // Le propriétaire d'une formation est identifié par "user_id" dans le
+      // schéma réel (pas "formateur_id").
+      const res = await apiClient<Formation[]>(`/formations?user_id=${user.id}`)
       const uniqueFormations = res.data || []
       setFormations(uniqueFormations)
       if (uniqueFormations.length > 0) {
@@ -86,9 +82,9 @@ export default function ModulesPage() {
 
   const validateForm = () => {
     if (!selectedFormation) return 'Veuillez sélectionner une formation.'
-    if (!formData.title.trim()) return 'Le titre du module est obligatoire.'
-    if (formData.title.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
-    if (formData.order_index < 0) return "L'ordre ne peut pas être négatif."
+    if (!formData.titre.trim()) return 'Le titre du module est obligatoire.'
+    if (formData.titre.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
+    if (formData.ordre < 0) return "L'ordre ne peut pas être négatif."
     return ''
   }
 
@@ -106,9 +102,9 @@ export default function ModulesPage() {
     setIsLoading(true)
     try {
       const payload = {
-        ...formData,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
+        titre: formData.titre.trim(),
+        description: formData.description.trim() || undefined,
+        ordre: formData.ordre,
       }
       if (editingId) {
         await apiClient(`/modules/${editingId}`, {
@@ -147,12 +143,7 @@ export default function ModulesPage() {
   }
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      order_index: 0,
-      is_published: false,
-    })
+    setFormData({ titre: '', description: '', ordre: 0 })
     setFormError('')
     setEditingId(null)
     setIsCreating(false)
@@ -160,17 +151,15 @@ export default function ModulesPage() {
 
   const handleEdit = (module: Module) => {
     setFormData({
-      title: module.title,
-      description: module.description,
-      order_index: module.order_index,
-      is_published: module.is_published,
+      titre: module.titre,
+      description: module.description || '',
+      ordre: module.ordre,
     })
     setEditingId(module.id)
     setIsCreating(true)
   }
 
-  const publishedCount = modules.filter((m) => m.is_published).length
-  const totalLessons = modules.reduce((sum, m) => sum + (m.lessons?.length || 0), 0)
+  const totalLessons = modules.reduce((sum, m) => sum + (m.lecons?.length || 0), 0)
 
   return (
     <div className="flex gap-6 items-start">
@@ -179,7 +168,7 @@ export default function ModulesPage() {
       <SectionHeader
         icon={<Layers className="h-7 w-7" />}
         title="Gestion des modules"
-        description="Organisez votre formation en modules thématiques. Chaque module regroupe plusieurs leçons et exercices."
+        description="Organisez votre formation en modules thématiques. Chaque module regroupe plusieurs leçons."
         action={
           <Button onClick={() => setIsCreating(!isCreating)} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
             <Plus className="mr-2 h-4 w-4" />
@@ -188,16 +177,19 @@ export default function ModulesPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatCard label="Modules" value={modules.length} icon={<Book className="h-5 w-5" />} />
-        <StatCard label="Publiés" value={publishedCount} icon={<CheckCircle2 className="h-5 w-5" />} />
         <StatCard label="Leçons totales" value={totalLessons} icon={<FileText className="h-5 w-5" />} />
       </div>
 
       {formations.length > 0 && (
         <div className="space-y-3">
           <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Formation</p>
-          <FormationPills formations={formations} selected={selectedFormation} onSelect={setSelectedFormation} />
+          <FormationPills
+            formations={formations.map((f) => ({ id: f.id, name: f.titre }))}
+            selected={selectedFormation}
+            onSelect={setSelectedFormation}
+          />
         </div>
       )}
 
@@ -219,8 +211,8 @@ export default function ModulesPage() {
               <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
                 <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  value={formData.titre}
+                  onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                   placeholder="Titre du module"
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                   required
@@ -238,45 +230,21 @@ export default function ModulesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Ordre</Label>
-                  <Input
-                    type="number"
-                    value={formData.order_index}
-                    onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) })}
-                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Publié</Label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_published}
-                      onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-[rgba(255,255,255,0.7)]">Publier ce module</span>
-                  </label>
-                </div>
+              <div className="space-y-2">
+                <Label className="text-[rgba(255,255,255,0.8)]">Ordre</Label>
+                <Input
+                  type="number"
+                  value={formData.ordre}
+                  onChange={(e) => setFormData({ ...formData, ordre: parseInt(e.target.value) || 0 })}
+                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                />
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white"
-                >
+                <Button type="submit" disabled={isLoading} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white">
                   {isLoading ? 'Enregistrement...' : editingId ? 'Modifier' : 'Créer'}
                 </Button>
-                <Button
-                  type="button"
-                  onClick={resetForm}
-                  variant="outline"
-                  className="flex-1 border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
-                >
+                <Button type="button" onClick={resetForm} variant="outline" className="flex-1 border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]">
                   Annuler
                 </Button>
               </div>
@@ -293,25 +261,14 @@ export default function ModulesPage() {
             className="group flex items-start gap-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5 transition-all hover:border-[rgba(201,162,39,0.4)] hover:bg-[#1d1d33]"
           >
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#C9A227]/10 text-lg font-bold text-[#C9A227]">
-              {module.order_index || '–'}
+              {module.ordre || '–'}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex flex-wrap items-center gap-3">
-                <h3 className="text-lg font-semibold text-white">{module.title}</h3>
-                {module.is_published ? (
-                  <span className="rounded-full bg-green-500/15 px-2.5 py-0.5 text-xs font-medium text-green-400">
-                    Publié
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2.5 py-0.5 text-xs font-medium text-[rgba(255,255,255,0.5)]">
-                    Brouillon
-                  </span>
-                )}
-              </div>
+              <h3 className="mb-1 text-lg font-semibold text-white">{module.titre}</h3>
               <p className="mb-3 line-clamp-2 text-sm text-[rgba(255,255,255,0.55)]">{module.description}</p>
               <div className="flex items-center gap-2 text-xs text-[rgba(255,255,255,0.5)]">
                 <FileText className="h-3.5 w-3.5 text-[#C9A227]" />
-                <span>{module.lessons?.length || 0} leçon(s)</span>
+                <span>{module.lecons?.length || 0} leçon(s)</span>
               </div>
             </div>
             <div className="flex shrink-0 gap-2">
