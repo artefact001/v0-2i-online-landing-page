@@ -88,6 +88,11 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
       await apiClient("/me", {
         method: "PUT",
         body: JSON.stringify({
+          name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+          prenom: firstName.trim(),
+          nom: lastName.trim(),
+          telephone: phone.trim() || null,
+          photo: avatarUrl.trim() || null,
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           phone: phone.trim() || null,

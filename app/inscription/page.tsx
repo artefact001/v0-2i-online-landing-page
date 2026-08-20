@@ -95,9 +95,14 @@ export default function InscriptionPage() {
     setIsLoading(true)
 
     try {
-      // NOTE: noms de champs (first_name/last_name/phone) supposés d'après
-      // RegisterRequest — à vérifier côté Laravel si l'inscription échoue.
+      // Schéma Laravel réel (table users) : prenom, nom, telephone, name
+      // (nom complet). On envoie aussi first_name/last_name/phone en alias,
+      // au cas où RegisterRequest accepterait les deux conventions.
       const result = await register({
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        prenom: formData.firstName,
+        nom: formData.lastName,
+        telephone: formData.phone,
         first_name: formData.firstName,
         last_name: formData.lastName,
         email: formData.email,

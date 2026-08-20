@@ -64,16 +64,16 @@ function normalizeRole(rawRole: unknown): UserRole {
 }
 
 function buildUser(raw: any): User {
-  // Tolère plusieurs conventions de nommage possibles côté Laravel
-  // (anglais first_name/last_name, français prenom/nom, ou un champ "name"
-  // unique déjà combiné) — évite un nom vide si le UserResource réel
-  // n'utilise pas exactement les noms de champs supposés.
-  const firstName = raw.first_name ?? raw.firstName ?? raw.prenom ?? ''
-  const lastName = raw.last_name ?? raw.lastName ?? raw.nom ?? ''
+  // Schéma Laravel réel (table users) confirmé : name, prenom, nom,
+  // telephone, photo, role. On les priorise, avec les anciens alias
+  // (first_name/last_name/phone/avatar_url) gardés en repli au cas où un
+  // autre endpoint (formateurs/etudiants) renvoie une forme différente.
+  const firstName = raw.prenom ?? raw.first_name ?? raw.firstName ?? ''
+  const lastName = raw.nom ?? raw.last_name ?? raw.lastName ?? ''
   const role = normalizeRole(raw.role)
-  const avatarUrl = raw.avatar_url ?? raw.avatarUrl ?? raw.photo ?? null
+  const avatarUrl = raw.photo ?? raw.avatar_url ?? raw.avatarUrl ?? null
   const combinedName = [firstName, lastName].filter(Boolean).join(' ')
-  const name = combinedName || raw.name || raw.full_name || raw.email || 'Utilisateur'
+  const name = raw.name || combinedName || raw.full_name || raw.email || 'Utilisateur'
 
   return {
     id: String(raw.id),
@@ -84,7 +84,7 @@ function buildUser(raw: any): User {
     role,
     avatar: avatarUrl ?? undefined,
     avatar_url: avatarUrl,
-    phone: raw.phone ?? raw.telephone ?? null,
+    phone: raw.telephone ?? raw.phone ?? null,
     formation: raw.formation ?? undefined,
     createdAt: raw.created_at ?? raw.createdAt ?? new Date().toISOString(),
   }

@@ -44,10 +44,10 @@ function mapUser(raw: any, role: "professor" | "student"): ManagedUser {
   return {
     id: String(raw.id),
     email: raw.email ?? "",
-    firstName: raw.first_name ?? "",
-    lastName: raw.last_name ?? "",
+    firstName: raw.prenom ?? raw.first_name ?? "",
+    lastName: raw.nom ?? raw.last_name ?? "",
     role,
-    phone: raw.phone ?? null,
+    phone: raw.telephone ?? raw.phone ?? null,
     isActive: raw.is_active ?? true,
     createdAt: raw.created_at ?? "",
     emailConfirmed: true, // pas de notion de confirmation email visible côté Laravel
@@ -94,8 +94,12 @@ export async function createUser(input: {
     await apiServer(endpoint, {
       method: "POST",
       body: JSON.stringify({
+        name: `${input.firstName} ${input.lastName}`.trim(),
         email: input.email.trim().toLowerCase(),
         password: input.password,
+        prenom: input.firstName,
+        nom: input.lastName,
+        telephone: input.phone ?? null,
         first_name: input.firstName,
         last_name: input.lastName,
         phone: input.phone ?? null,
@@ -130,6 +134,10 @@ export async function updateUser(
     await apiServer(endpoint, {
       method: "PUT",
       body: JSON.stringify({
+        name: `${input.firstName} ${input.lastName}`.trim(),
+        prenom: input.firstName,
+        nom: input.lastName,
+        telephone: input.phone ?? null,
         first_name: input.firstName,
         last_name: input.lastName,
         phone: input.phone ?? null,
