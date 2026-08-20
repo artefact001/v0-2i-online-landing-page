@@ -37,7 +37,7 @@ export default function ProfessorStudentsPage() {
           const enrollments = inscriptionsRes.data || []
 
           for (const enrollment of enrollments) {
-            const studentId = enrollment.student_id
+            const studentId = enrollment.user_id
             const studentName =
               enrollment.student?.first_name || enrollment.student?.name || `Élève #${studentId}`
             const progress = await progressService.getFormationProgress(studentId, formation.id)

@@ -81,7 +81,7 @@ export default function AdminFormationsPage() {
     }
   }
 
-  const categoryLabel = (c: Categorie) => c.nom || c.titre || c.name || `Catégorie #${c.id}`
+  const categoryLabel = (c: Categorie) => c.titre || c.nom || c.name || `Catégorie #${c.id}`
 
   const resetForm = () => {
     setFormData(emptyForm)

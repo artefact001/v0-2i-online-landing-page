@@ -34,8 +34,8 @@ export default function StudentDashboard() {
       if (!user) return
       setLoading(true)
       try {
-        // Route Laravel réelle: /v1/inscriptions?student_id=...&status=active
-        const res = await apiClient<Enrollment[]>(`/inscriptions?student_id=${user.id}&status=active`)
+        // Route Laravel réelle: /v1/inscriptions?user_id=...&status=active
+        const res = await apiClient<Enrollment[]>(`/inscriptions?user_id=${user.id}&status=active`)
         const list = res.data || []
         setEnrollments(list)
 

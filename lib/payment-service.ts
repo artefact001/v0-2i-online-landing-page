@@ -35,7 +35,7 @@ export class PaymentService {
       const createRes = await apiClient<{ id: string }>('/paiements', {
         method: 'POST',
         body: JSON.stringify({
-          student_id: input.studentId,
+          user_id: input.studentId,
           enrollment_id: input.enrollmentId,
           amount: input.amount,
           payment_method: 'Bictorys',
@@ -81,10 +81,10 @@ export class PaymentService {
     }
   }
 
-  // GET /v1/paiements?student_id=...
+  // GET /v1/paiements?user_id= (schéma paiements non confirmé, mais user_id est la convention constante de toutes les autres tables)...
   async getPaymentHistory(studentId: string) {
     try {
-      const res = await apiClient(`/paiements?student_id=${studentId}`)
+      const res = await apiClient(`/paiements?user_id=${studentId}`)
       return res.data
     } catch (error) {
       console.error('Error fetching payment history:', error)

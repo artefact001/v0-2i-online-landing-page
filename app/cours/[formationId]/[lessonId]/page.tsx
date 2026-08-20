@@ -54,8 +54,7 @@ interface Formation {
 }
 
 interface LessonProgress {
-  is_completed: boolean
-  watch_time_seconds: number
+  statut: 'commencer' | 'en cours' | 'termine'
 }
 
 interface Exercise {
@@ -120,7 +119,7 @@ export default function CoursePage() {
           // contrôle (ils gèrent le contenu, pas besoin d'être "inscrits").
           if (user.role === 'student') {
             const enrollRes = await apiClient(
-              `/inscriptions?formation_id=${formationData.id}&student_id=${user.id}&status=active`,
+              `/inscriptions?formation_id=${formationData.id}&user_id=${user.id}&status=active`,
             )
             const enrollments = Array.isArray(enrollRes.data) ? enrollRes.data : []
             if (enrollments.length === 0) {
@@ -206,11 +205,16 @@ export default function CoursePage() {
       if (allLessons.length === 0) return
 
       try {
-        const res = await apiClient(
-          `/progressions?student_id=${user.id}&is_completed=1&lesson_id=${allLessons.map(l => l.id).join(',')}`,
+        const results = await Promise.all(
+          allLessons.map((l) =>
+            apiClient(`/progressions?user_id=${user.id}&lecon_id=${l.id}`).catch(() => null),
+          ),
         )
-        const data = Array.isArray(res.data) ? res.data : []
-        setTotalProgress(Math.round((data.length / allLessons.length) * 100))
+        const completed = results.filter((r) => {
+          const list = Array.isArray(r?.data) ? r!.data : []
+          return (list[0] as any)?.statut === 'termine'
+        }).length
+        setTotalProgress(Math.round((completed / allLessons.length) * 100))
       } catch (error) {
         console.error('Error calculating progress:', error)
       }
@@ -225,7 +229,7 @@ export default function CoursePage() {
 
     const ok = await progressService.markLessonAsCompleted(user.id, currentLesson.id)
     if (ok) {
-      setProgress(prev => prev ? { ...prev, is_completed: true } : { is_completed: true, watch_time_seconds: 0 } as any)
+      setProgress({ statut: 'termine' })
     }
   }, [currentLesson, user])
 
@@ -446,7 +450,7 @@ export default function CoursePage() {
           </div>
           
           <div className="flex items-center gap-3">
-            {!progress?.is_completed && (
+            {progress?.statut !== 'termine' && (
               <Button
                 onClick={markAsComplete}
                 variant="outline"
@@ -456,7 +460,7 @@ export default function CoursePage() {
                 Marquer comme terminé
               </Button>
             )}
-            {progress?.is_completed && (
+            {progress?.statut === 'termine' && (
               <span className="flex items-center gap-2 text-green-500 text-sm">
                 <CheckCircle className="w-4 h-4" />
                 Terminé

@@ -1,19 +1,24 @@
 import { apiClient } from '@/lib/api/client'
 
+/**
+ * Schéma Laravel réel (table progressions) :
+ * id, statut (enum: 'commencer' | 'en cours' | 'termine'), user_id, lecon_id.
+ * Pas de watch_time_seconds/last_position_seconds/is_completed — juste un
+ * statut discret par leçon.
+ */
+export type ProgressionStatut = 'commencer' | 'en cours' | 'termine'
+
 export interface LessonProgress {
   id: string
-  student_id: string
-  lesson_id: string
-  is_completed: boolean
-  watch_time_seconds: number
-  last_position_seconds: number
-  completed_at: string | null
-  updated_at: string
+  user_id: string
+  lecon_id: string
+  statut: ProgressionStatut
+  updated_at?: string
 }
 
 export interface FormationProgress {
   formation_id: string
-  student_id: string
+  user_id: string
   total_lessons: number
   completed_lessons: number
   completion_percentage: number
@@ -21,11 +26,10 @@ export interface FormationProgress {
 }
 
 export class ProgressService {
-  // GET /v1/progressions?student_id=...&lesson_id=...
-  // À VÉRIFIER: ProgressionController::index accepte-t-il ces filtres en query params ?
-  async getLessonProgress(studentId: string, lessonId: string): Promise<LessonProgress | null> {
+  // GET /v1/progressions?user_id=...&lecon_id=...
+  async getLessonProgress(userId: string, leconId: string): Promise<LessonProgress | null> {
     try {
-      const res = await apiClient(`/progressions?student_id=${studentId}&lesson_id=${lessonId}`)
+      const res = await apiClient(`/progressions?user_id=${userId}&lecon_id=${leconId}`)
       const list = Array.isArray(res.data) ? res.data : []
       return (list[0] as LessonProgress) ?? null
     } catch (error) {
@@ -34,23 +38,10 @@ export class ProgressService {
     }
   }
 
-  async updateLessonProgress(
-    studentId: string,
-    lessonId: string,
-    watchTimeSeconds: number,
-    lastPositionSeconds: number,
-    isCompleted = false,
-  ): Promise<boolean> {
+  async updateLessonProgress(userId: string, leconId: string, statut: ProgressionStatut): Promise<boolean> {
     try {
-      const existing = await this.getLessonProgress(studentId, lessonId)
-      const payload = {
-        student_id: studentId,
-        lesson_id: lessonId,
-        watch_time_seconds: watchTimeSeconds,
-        last_position_seconds: lastPositionSeconds,
-        is_completed: isCompleted,
-        completed_at: isCompleted ? new Date().toISOString() : null,
-      }
+      const existing = await this.getLessonProgress(userId, leconId)
+      const payload = { user_id: userId, lecon_id: leconId, statut }
 
       if (existing) {
         await apiClient(`/progressions/${existing.id}`, {
@@ -70,32 +61,37 @@ export class ProgressService {
     }
   }
 
-  // Reconstitue la progression d'une formation à partir de /v1/modules, /v1/lecons, /v1/progressions
-  // (aucune route dédiée "progression par formation" n'existe côté Laravel — calcul fait ici).
-  // À VÉRIFIER: ModuleController::index et LeconController::index acceptent-ils un filtre
-  // ?formation_id=... / ?module_id=... comme supposé ci-dessous.
-  async getFormationProgress(studentId: string, formationId: string): Promise<FormationProgress | null> {
+  // Reconstitue la progression d'une formation à partir de /v1/modules,
+  // /v1/lecons, /v1/progressions (aucune route dédiée n'existe).
+  async getFormationProgress(userId: string, formationId: string): Promise<FormationProgress | null> {
     try {
       const modulesRes = await apiClient(`/modules?formation_id=${formationId}`)
       const modules = Array.isArray(modulesRes.data) ? modulesRes.data : []
       const moduleIds = modules.map((m: any) => m.id)
       if (moduleIds.length === 0) return null
 
-      const leconsRes = await apiClient(`/lecons?module_id=${moduleIds.join(',')}`)
-      const lecons = Array.isArray(leconsRes.data) ? leconsRes.data : []
+      const leconsLists = await Promise.all(
+        moduleIds.map((id: string) => apiClient(`/lecons?module_id=${id}`).catch(() => null)),
+      )
+      const lecons = leconsLists.flatMap((r) => (r?.data as any[]) || [])
       const totalLessons = lecons.length
       if (totalLessons === 0) return null
 
-      const progressRes = await apiClient(
-        `/progressions?student_id=${studentId}&is_completed=1&lesson_id=${lecons.map((l: any) => l.id).join(',')}`,
+      const progressLists = await Promise.all(
+        lecons.map((l: any) =>
+          apiClient(`/progressions?user_id=${userId}&lecon_id=${l.id}`).catch(() => null),
+        ),
       )
-      const completedList = Array.isArray(progressRes.data) ? progressRes.data : []
-      const completedLessons = completedList.length
+      const completedLessons = progressLists.filter((r) => {
+        const list = (r?.data as any[]) || []
+        return list[0]?.statut === 'termine'
+      }).length
+
       const completionPercentage = Math.round((completedLessons / totalLessons) * 100)
 
       return {
         formation_id: formationId,
-        student_id: studentId,
+        user_id: userId,
         total_lessons: totalLessons,
         completed_lessons: completedLessons,
         completion_percentage: completionPercentage,
@@ -107,14 +103,15 @@ export class ProgressService {
     }
   }
 
-  async getStudentAllProgress(studentId: string) {
+  async getStudentAllProgress(userId: string) {
     try {
-      const res = await apiClient(`/inscriptions?student_id=${studentId}&status=active`)
+      // Contrainte unique confirmée: inscriptions(user_id, formation_id).
+      const res = await apiClient(`/inscriptions?user_id=${userId}&status=active`)
       const enrollments = Array.isArray(res.data) ? res.data : []
 
       const progressData = []
       for (const enrollment of enrollments) {
-        const progress = await this.getFormationProgress(studentId, enrollment.formation_id)
+        const progress = await this.getFormationProgress(userId, enrollment.formation_id)
         if (progress) progressData.push(progress)
       }
       return progressData
@@ -124,10 +121,10 @@ export class ProgressService {
     }
   }
 
-  // AUCUN équivalent Laravel de la table "professor_formations" n'apparaît dans les routes.
-  // À confirmer: comment un formateur est-il lié à ses formations côté Laravel
-  // (champ formateur_id direct sur "formations" ? table pivot dédiée ?).
-  async getProfessorStudentProgress(professorId: string, studentId: string) {
+  // AUCUN équivalent Laravel de "professor_formations" — on suppose que
+  // /v1/formations accepte un filtre ?user_id=... (le propriétaire de la
+  // formation, confirmé par le schéma réel de la table formations).
+  async getProfessorStudentProgress(professorId: string, userId: string) {
     try {
       const formationsRes = await apiClient(`/formations?user_id=${professorId}`)
       const formations = Array.isArray(formationsRes.data) ? formationsRes.data : []
@@ -135,13 +132,13 @@ export class ProgressService {
       if (formationIds.length === 0) return []
 
       const enrollmentsRes = await apiClient(
-        `/inscriptions?student_id=${studentId}&formation_id=${formationIds.join(',')}`,
+        `/inscriptions?user_id=${userId}&formation_id=${formationIds.join(',')}`,
       )
       const enrollments = Array.isArray(enrollmentsRes.data) ? enrollmentsRes.data : []
 
       const progressData = []
       for (const enrollment of enrollments) {
-        const progress = await this.getFormationProgress(studentId, enrollment.formation_id)
+        const progress = await this.getFormationProgress(userId, enrollment.formation_id)
         if (progress) progressData.push(progress)
       }
       return progressData
@@ -158,11 +155,11 @@ export class ProgressService {
 
       const progressData = []
       for (const enrollment of enrollments) {
-        const progress = await this.getFormationProgress(enrollment.student_id, formationId)
+        const progress = await this.getFormationProgress(enrollment.user_id, formationId)
         if (progress) {
           progressData.push({
             ...progress,
-            student_name: `${enrollment.student?.first_name ?? ''} ${enrollment.student?.last_name ?? ''}`.trim(),
+            student_name: `${enrollment.student?.prenom ?? ''} ${enrollment.student?.nom ?? ''}`.trim(),
           })
         }
       }
@@ -173,8 +170,8 @@ export class ProgressService {
     }
   }
 
-  async markLessonAsCompleted(studentId: string, lessonId: string): Promise<boolean> {
-    return this.updateLessonProgress(studentId, lessonId, 0, 0, true)
+  async markLessonAsCompleted(userId: string, leconId: string): Promise<boolean> {
+    return this.updateLessonProgress(userId, leconId, 'termine')
   }
 }
 

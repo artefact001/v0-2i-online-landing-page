@@ -128,7 +128,7 @@ export default function InscriptionPage() {
           const enrollRes = await apiClient<{ id: string }>('/inscriptions', {
             method: 'POST',
             body: JSON.stringify({
-              student_id: result.user.id,
+              user_id: result.user.id,
               formation_id: formData.formationId,
               status: 'pending',
               payment_status: 'pending',

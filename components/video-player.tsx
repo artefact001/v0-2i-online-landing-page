@@ -43,16 +43,11 @@ export function VideoPlayer({
     const handleTimeUpdate = async () => {
       setCurrentTime(video.currentTime)
 
-      // Save progress periodically (every 30 seconds)
-      if (studentId && Math.floor(video.currentTime) % 30 === 0) {
+      // Marque la leçon "en cours" dès le début du visionnage (une seule
+      // fois suffit ; le schéma réel ne suit pas de temps de lecture précis).
+      if (studentId && Math.floor(video.currentTime) === 5) {
         try {
-          await progressService.updateLessonProgress(
-            studentId,
-            lessonId,
-            Math.floor(video.currentTime),
-            Math.floor(video.currentTime),
-            false,
-          )
+          await progressService.updateLessonProgress(studentId, lessonId, 'en cours')
         } catch (error) {
           console.error('Error saving progress:', error)
         }
@@ -66,16 +61,10 @@ export function VideoPlayer({
     const handleEnded = async () => {
       setIsPlaying(false)
       
-      // Mark as completed if student watched 90% or more
+      // Marque comme terminée si l'étudiant a regardé 90% ou plus
       if (studentId && video.currentTime / video.duration >= 0.9) {
         try {
-          await progressService.updateLessonProgress(
-            studentId,
-            lessonId,
-            Math.floor(video.duration),
-            Math.floor(video.duration),
-            true,
-          )
+          await progressService.updateLessonProgress(studentId, lessonId, 'termine')
         } catch (error) {
           console.error('Error marking as completed:', error)
         }

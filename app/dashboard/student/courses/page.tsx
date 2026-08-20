@@ -25,7 +25,7 @@ export default function StudentCoursesPage() {
     async function load() {
       if (!user) return
       try {
-        const res = await apiClient<Enrollment[]>(`/inscriptions?student_id=${user.id}&status=active`)
+        const res = await apiClient<Enrollment[]>(`/inscriptions?user_id=${user.id}&status=active`)
         const list = res.data || []
         setEnrollments(list)
 

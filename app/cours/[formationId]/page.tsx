@@ -109,7 +109,7 @@ export default function FormationOverviewPage() {
 
           if (user) {
             const enrollRes = await apiClient(
-              `/inscriptions?formation_id=${formationData.id}&student_id=${user.id}&status=active`,
+              `/inscriptions?formation_id=${formationData.id}&user_id=${user.id}&status=active`,
             )
             const enrollments = Array.isArray(enrollRes.data) ? enrollRes.data : []
             const enrollment = enrollments[0]

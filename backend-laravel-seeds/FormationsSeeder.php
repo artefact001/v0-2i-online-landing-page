@@ -18,12 +18,10 @@ use Illuminate\Support\Facades\DB;
  *    diffère.
  *
  * 2. categorie_id (obligatoire, FK vers categories) : ce seeder cherche une
- *    catégorie existante nommée "Hôtellerie & Restauration" et la CRÉE si
- *    elle n'existe pas encore, en supposant que la table categories a un
- *    champ 'nom' (convention française comme le reste du schéma). Si ta
- *    table categories utilise un autre nom de champ (ex: 'titre', 'name'),
- *    adapte la ligne $categorie = ... ci-dessous. Si tu as déjà des
- *    catégories plus fines (Cuisine, Pâtisserie, Service...), tu peux
+ *    catégorie existante avec le titre "Hôtellerie & Restauration" et la
+ *    CRÉE si elle n'existe pas encore. Champ confirmé: 'titre' (schéma
+ *    réel de la table categories: id, titre, description). Si tu as déjà
+ *    des catégories plus fines (Cuisine, Pâtisserie, Service...), tu peux
  *    remplacer ce bloc par une répartition par formation.
  *
  * 3. user_id (obligatoire, FK vers users — le "propriétaire" de la
@@ -40,12 +38,13 @@ class FormationsSeeder extends Seeder
 {
     public function run(): void
     {
-        // --- 1. Catégorie par défaut (adapte le nom de champ si besoin) ---
-        $categorieId = DB::table('categories')->where('nom', 'Hôtellerie & Restauration')->value('id');
+        // --- 1. Catégorie par défaut (champ 'titre' confirmé) ---
+        $categorieId = DB::table('categories')->where('titre', 'Hôtellerie & Restauration')->value('id');
 
         if (!$categorieId) {
             $categorieId = DB::table('categories')->insertGetId([
-                'nom' => 'Hôtellerie & Restauration',
+                'titre' => 'Hôtellerie & Restauration',
+                'description' => 'Formations aux métiers de l\'hôtellerie et de la restauration',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
