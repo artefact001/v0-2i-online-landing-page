@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 
 const waOptions = [
@@ -36,56 +36,13 @@ const waOptions = [
 
 export function WhatsAppWidget() {
   const [isOpen, setIsOpen] = useState(false)
-  const [showBubble, setShowBubble] = useState(false)
-  const [bubbleDismissed, setBubbleDismissed] = useState(false)
-
-  useEffect(() => {
-    // Show bubble after 3 seconds
-    const timer = setTimeout(() => {
-      if (!bubbleDismissed) {
-        setShowBubble(true)
-      }
-    }, 3000)
-
-    return () => clearTimeout(timer)
-  }, [bubbleDismissed])
 
   const handleButtonClick = () => {
     setIsOpen(!isOpen)
-    setShowBubble(false)
-  }
-
-  const dismissBubble = () => {
-    setShowBubble(false)
-    setBubbleDismissed(true)
   }
 
   return (
     <div className="fixed bottom-8 right-8 z-[1000] flex flex-col items-end gap-3">
-      {/* Welcome Bubble */}
-      <div
-        className={`flex items-center gap-3 transition-all duration-300 ${
-          showBubble && !isOpen
-            ? "opacity-100 translate-x-0 pointer-events-auto"
-            : "opacity-0 translate-x-5 pointer-events-none"
-        }`}
-      >
-        <div className="bg-[#0D2545] border border-[rgba(201,162,39,0.3)] rounded-xl px-[18px] py-3.5 max-w-[240px] relative">
-          <button
-            onClick={dismissBubble}
-            className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[rgba(255,255,255,0.1)] border-none text-white text-[11px] cursor-pointer flex items-center justify-center transition-colors duration-200 hover:bg-[rgba(255,255,255,0.25)]"
-          >
-            ×
-          </button>
-          <div className="text-[13px] font-semibold text-white mb-1">Besoin d&apos;aide ?</div>
-          <div className="text-[11px] text-[#d0daf0] leading-normal">
-            Contactez-nous sur WhatsApp — reponse sous 1h !
-          </div>
-          {/* Arrow */}
-          <div className="absolute right-[-8px] top-1/2 -translate-y-1/2 border-[6px] border-transparent border-l-[rgba(201,162,39,0.3)]" />
-        </div>
-      </div>
-
       {/* Menu */}
       <div
         className={`bg-[#0D2545] border border-[rgba(201,162,39,0.2)] rounded-2xl p-5 w-[280px] origin-bottom-right transition-all duration-300 ${
@@ -118,7 +75,7 @@ export function WhatsAppWidget() {
         ))}
         
         <div className="mt-3.5 pt-3 border-t border-[rgba(255,255,255,0.06)] text-[10px] text-[rgba(255,255,255,0.2)] text-center tracking-[1px]">
-          Reponse garantie sous 1h
+          Réponse garantie sous 2 min
         </div>
       </div>
 
