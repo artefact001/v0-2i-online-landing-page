@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { apiClient } from '@/lib/api/client'
+import { apiClient, apiClientUpload } from '@/lib/api/client'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -38,7 +39,6 @@ interface Categorie {
 const emptyForm = {
   titre: '',
   description: '',
-  image: '',
   niveau: '',
   duree: '',
   prix: '',
@@ -53,6 +53,8 @@ export default function AdminFormationsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -85,6 +87,8 @@ export default function AdminFormationsPage() {
 
   const resetForm = () => {
     setFormData(emptyForm)
+    setImageFile(null)
+    setExistingImageUrl(null)
     setEditingId(null)
     setIsCreating(false)
     setError('')
@@ -94,13 +98,14 @@ export default function AdminFormationsPage() {
     setFormData({
       titre: f.titre || '',
       description: f.description || '',
-      image: f.image || '',
       niveau: f.niveau || '',
       duree: f.duree || '',
       prix: f.prix != null ? String(f.prix) : '',
       statut: f.statut || 'en ligne',
       categorie_id: f.categorie_id ? String(f.categorie_id) : '',
     })
+    setImageFile(null)
+    setExistingImageUrl(f.image || null)
     setEditingId(f.id)
     setIsCreating(true)
   }
@@ -116,28 +121,23 @@ export default function AdminFormationsPage() {
       return
     }
 
-    const payload = {
-      titre: formData.titre,
-      description: formData.description,
-      image: formData.image || undefined,
-      niveau: formData.niveau,
-      duree: formData.duree,
-      prix: formData.prix ? Number(formData.prix) : 0,
-      statut: formData.statut,
-      categorie_id: formData.categorie_id,
+    const body = new FormData()
+    body.append('titre', formData.titre)
+    body.append('description', formData.description)
+    body.append('niveau', formData.niveau)
+    body.append('duree', formData.duree)
+    body.append('prix', String(formData.prix ? Number(formData.prix) : 0))
+    body.append('statut', formData.statut)
+    body.append('categorie_id', formData.categorie_id)
+    if (imageFile) {
+      body.append('image', imageFile)
     }
 
     try {
       if (editingId) {
-        await apiClient(`/formations/${editingId}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        })
+        await apiClientUpload(`/formations/${editingId}`, body, 'PUT')
       } else {
-        await apiClient('/formations', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        })
+        await apiClientUpload('/formations', body, 'POST')
       }
       await loadFormations()
       resetForm()
@@ -264,15 +264,12 @@ export default function AdminFormationsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[rgba(255,255,255,0.8)]">Image (URL)</Label>
-                    <Input
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      placeholder="/images/course-cuisine.jpg"
-                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                    />
-                  </div>
+                  <ImageUpload
+                    label="Image de la formation"
+                    value={existingImageUrl}
+                    onFileSelected={setImageFile}
+                    disabled={saving}
+                  />
 
                   <div className="space-y-2">
                     <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
