@@ -1,90 +1,58 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/auth-context"
-import {
-  ChevronLeft,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Award,
-  ArrowRight,
-  RotateCcw,
-  Download,
-  Camera,
-  Upload,
-} from "lucide-react"
+import { ChevronLeft, CheckCircle, XCircle, Clock, Award, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  type EvaluationContent,
-  type EvalQuestion,
-  gradeEvaluation,
-  type GradeResult,
-} from "@/lib/evaluation-types"
-import {
-  downloadCertificate,
-  generateCertificateNumber,
-} from "@/lib/certificate-pdf"
 
-interface LegacyTask {
-  id: number
-  task: string
-  points: number
+/**
+ * Schéma Laravel réel :
+ * - exercices: id, lecon_id, titre, description, type ('qcm'|'ouvert'|'mixte'),
+ *   duree (minutes), note_max
+ * - questions: id, exercice_id, contenu, type ('qcm'|'ouvert'), points, ordre
+ * - choix: id, question_id, contenu, est_correct, ordre (options QCM)
+ * - reponses: id, exercice_id, user_id, question_id, choix_id (QCM),
+ *   reponse_texte (ouvert), score, statut ('en_attente'|'corrige'),
+ *   commentaire_formateur — unique par (exercice_id, user_id, question_id)
+ */
+
+interface Choix {
+  id: string
+  contenu: string
+  est_correct: boolean
+  ordre: number
 }
 
-interface ExerciseRow {
+interface Question {
   id: string
-  title: string
-  description: string
-  exercise_type: string
-  content: any
+  contenu: string
+  type: "qcm" | "ouvert"
   points: number
-  time_limit_minutes: number | null
+  ordre: number
+  choix?: Choix[]
 }
 
-interface Submission {
+interface Exercice {
   id: string
-  answers: Record<string, any>
+  titre: string
+  description?: string
+  type: "qcm" | "ouvert" | "mixte"
+  duree: number | null
+  note_max: number
+}
+
+interface Reponse {
+  id: string
+  question_id: string
+  choix_id?: string | null
+  reponse_texte?: string | null
   score: number | null
-  max_score: number | null
-  is_passed: boolean | null
-  feedback: string | null
-}
-
-// Detect the new interactive evaluation format
-function isEvaluationContent(content: any): content is EvaluationContent {
-  return (
-    content &&
-    Array.isArray(content.questions) &&
-    content.questions.length > 0 &&
-    typeof content.questions[0]?.type === "string"
-  )
-}
-
-function QuestionMedia({ question }: { question: EvalQuestion }) {
-  if (!question.media?.url) return null
-  if (question.media.type === "image") {
-    // eslint-disable-next-line @next/next/no-img-element
-    return (
-      <img
-        src={question.media.url || "/placeholder.svg"}
-        alt="Illustration de la question"
-        className="mb-4 max-h-72 w-full rounded-lg object-contain bg-[#0a0f1a]"
-      />
-    )
-  }
-  return (
-    <video
-      src={question.media.url}
-      controls
-      className="mb-4 max-h-72 w-full rounded-lg bg-[#0a0f1a]"
-    />
-  )
+  statut: "en_attente" | "corrige"
 }
 
 export default function ExercisePage() {
@@ -92,57 +60,64 @@ export default function ExercisePage() {
   const { user } = useAuth()
   const backHref = `/cours/${params.formationId}/${params.lessonId}`
 
-  const [exercise, setExercise] = useState<ExerciseRow | null>(null)
-  const [profile, setProfile] = useState<{ id: string; name: string } | null>(null)
-  const [answers, setAnswers] = useState<Record<string, any>>({})
+  const [exercice, setExercice] = useState<Exercice | null>(null)
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [answers, setAnswers] = useState<Record<string, { choix_id?: string; reponse_texte?: string }>>({})
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [showResults, setShowResults] = useState(false)
+  const [existingReponses, setExistingReponses] = useState<Reponse[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [timeLeft, setTimeLeft] = useState<number | null>(null)
-  const [result, setResult] = useState<GradeResult | null>(null)
-  const submittedRef = useRef(false)
 
-  // Bootstrap: exercice + résultat existant éventuel (routes Laravel dédiées).
   useEffect(() => {
     let active = true
     async function bootstrap() {
       setLoading(true)
-
       if (!user) {
         if (active) setLoading(false)
         return
       }
 
       try {
-        const [exerciseRes, resultatsRes] = await Promise.all([
-          apiClient(`/exercices/${params.exerciseId}`),
-          apiClient(`/exercices/${params.exerciseId}/resultats`).catch(() => ({ data: null })),
-        ])
+        const exerciceRes = await apiClient<Exercice>(`/exercices/${params.exerciseId}`)
+        const questionsRes = await apiClient<Question[]>(`/questions?exercice_id=${params.exerciseId}`)
+        const questionsList = (questionsRes.data || []).sort((a, b) => a.ordre - b.ordre)
+
+        // Charge les choix (options QCM) de chaque question
+        const withChoix = await Promise.all(
+          questionsList.map(async (q) => {
+            if (q.type !== 'qcm') return q
+            const choixRes = await apiClient<Choix[]>(`/choix?question_id=${q.id}`)
+            const choix = (choixRes.data || []).sort((a, b) => a.ordre - b.ordre)
+            return { ...q, choix }
+          }),
+        )
 
         if (!active) return
 
-        const exerciseData = exerciseRes.data as any
-        if (exerciseData) {
-          const parsed =
-            typeof exerciseData.content === "string" ? JSON.parse(exerciseData.content) : exerciseData.content
-          setExercise({ ...exerciseData, content: parsed })
-          if (exerciseData.time_limit_minutes) {
-            setTimeLeft(exerciseData.time_limit_minutes * 60)
+        if (exerciceRes.data) {
+          setExercice(exerciceRes.data)
+          if (exerciceRes.data.duree) {
+            setTimeLeft(exerciceRes.data.duree * 60)
           }
         }
+        setQuestions(withChoix)
 
-        setProfile({
-          id: user.id,
-          name: user.name || `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || "Étudiant",
-        })
-
-        const submissionData = resultatsRes.data as any
-        if (submissionData) {
-          setAnswers(submissionData.answers || {})
-          if (submissionData.score !== null && submissionData.score !== undefined) {
-            setShowResults(true)
-          }
+        // Vérifie si l'étudiant a déjà répondu (contrainte unique
+        // exercice_id+user_id+question_id côté Laravel)
+        const reponsesRes = await apiClient<Reponse[]>(
+          `/reponses?exercice_id=${params.exerciseId}&user_id=${user.id}`,
+        )
+        const reponses = reponsesRes.data || []
+        if (reponses.length > 0) {
+          setExistingReponses(reponses)
+          const prefilled: Record<string, { choix_id?: string; reponse_texte?: string }> = {}
+          reponses.forEach((r) => {
+            prefilled[r.question_id] = { choix_id: r.choix_id ?? undefined, reponse_texte: r.reponse_texte ?? undefined }
+          })
+          setAnswers(prefilled)
+          setShowResults(true)
         }
       } catch (error) {
         console.error("Error loading exercise:", error)
@@ -156,81 +131,81 @@ export default function ExercisePage() {
     }
   }, [params.exerciseId, user])
 
-  const evalContent: EvaluationContent | null =
-    exercise && isEvaluationContent(exercise.content) ? exercise.content : null
-
-  const handleSubmit = useCallback(async () => {
-    if (!exercise || !profile) return
-    if (submittedRef.current) return // guard against double submit / timer race
-    submittedRef.current = true
-    setSubmitting(true)
-
-    try {
-      let score: number | null = null
-      let maxScore: number = exercise.points
-      let isPassed: boolean | null = null
-      let graded: GradeResult | null = null
-
-      if (evalContent) {
-        graded = gradeEvaluation(evalContent, answers)
-        score = graded.score
-        maxScore = graded.maxScore
-        isPassed = graded.passed
-        setResult(graded)
-      }
-
-      // Route Laravel réelle: POST /v1/exercices/{id}/soumettre
-      try {
-        await apiClient(`/exercices/${exercise.id}/soumettre`, {
-          method: "POST",
-          body: JSON.stringify({
-            answers,
-            score,
-            max_score: maxScore,
-            is_passed: isPassed,
-          }),
-        })
-      } catch (error) {
-        console.error("[submission error]:", error)
-      }
-      setShowResults(true)
-    } finally {
-      setSubmitting(false)
-    }
-  }, [exercise, profile, evalContent, answers])
-
-  // Timer
+  // Minuteur
   useEffect(() => {
     if (timeLeft === null || showResults) return
     if (timeLeft <= 0) {
       handleSubmit()
       return
     }
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev === null ? null : prev - 1))
-    }, 1000)
+    const timer = setInterval(() => setTimeLeft((prev) => (prev ? prev - 1 : 0)), 1000)
     return () => clearInterval(timer)
-  }, [timeLeft, showResults, handleSubmit])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, showResults])
+
+  const handleChoixAnswer = (questionId: string, choixId: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: { choix_id: choixId } }))
+  }
+
+  const handleTextAnswer = (questionId: string, text: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: { reponse_texte: text } }))
+  }
+
+  const handleSubmit = useCallback(async () => {
+    if (!exercice || !user || submitting || showResults) return
+    setSubmitting(true)
+
+    try {
+      // Une entrée "reponses" par question, chacune notée automatiquement
+      // pour les QCM (comparaison au choix marqué est_correct côté client,
+      // le score définitif reste géré côté Laravel) et laissée "en_attente"
+      // pour les questions ouvertes (correction manuelle par le formateur).
+      const submissions = await Promise.all(
+        questions.map(async (q) => {
+          const answer = answers[q.id]
+          let score: number | null = null
+          let statut: "en_attente" | "corrige" = "en_attente"
+
+          if (q.type === "qcm" && answer?.choix_id) {
+            const chosen = q.choix?.find((c) => c.id === answer.choix_id)
+            score = chosen?.est_correct ? q.points : 0
+            statut = "corrige"
+          }
+
+          const payload = {
+            exercice_id: exercice.id,
+            user_id: user.id,
+            question_id: q.id,
+            choix_id: answer?.choix_id ?? null,
+            reponse_texte: answer?.reponse_texte ?? null,
+            score,
+            statut,
+          }
+
+          try {
+            const res = await apiClient<Reponse>("/reponses", {
+              method: "POST",
+              body: JSON.stringify(payload),
+            })
+            return res.data as Reponse
+          } catch (err) {
+            console.error("[reponse submission error]:", err)
+            return null
+          }
+        }),
+      )
+
+      setExistingReponses(submissions.filter((r): r is Reponse => r !== null))
+      setShowResults(true)
+    } finally {
+      setSubmitting(false)
+    }
+  }, [exercice, user, questions, answers, submitting, showResults])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const handleAnswerChange = (questionId: string, answer: any) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }))
-  }
-
-  const handleRetry = () => {
-    setAnswers({})
-    setCurrentQuestion(0)
-    setShowResults(false)
-    setResult(null)
-    submittedRef.current = false
-    if (exercise?.time_limit_minutes) {
-      setTimeLeft(exercise.time_limit_minutes * 60)
-    }
   }
 
   if (loading) {
@@ -241,402 +216,141 @@ export default function ExercisePage() {
     )
   }
 
-  if (!exercise) {
+  if (!exercice || questions.length === 0) {
     return (
       <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
-        <p>Exercice non trouvé</p>
+        <div className="text-center">
+          <p className="mb-4">Exercice non trouvé ou sans questions.</p>
+          <Link href={backHref} className="text-[#C9A227] hover:underline">
+            Retour à la leçon
+          </Link>
+        </div>
       </div>
     )
   }
 
-  // ---- New interactive evaluation (QCM + open + media + points + exam) ----
-  if (evalContent) {
-    const questions = evalContent.questions
-    const isExam = evalContent.is_exam
-
-    // Results view
-    if (showResults) {
-      const graded = result ?? gradeEvaluation(evalContent, answers)
-      const passed = graded.passed
-      const canCertify = isExam && passed
-
-      return (
-        <div className="min-h-screen bg-[#0a0f1a] text-white">
-          <header className="bg-[#0D1B2A] border-b border-[#1a2942] px-6 py-4">
-            <Link href={backHref} className="text-[#C9A227] hover:underline flex items-center gap-2 text-sm">
-              <ChevronLeft className="w-4 h-4" />
-              Retour au cours
-            </Link>
-          </header>
-
-          <main className="max-w-2xl mx-auto p-6">
-            <div className="bg-[#0D1B2A] rounded-xl p-8 border border-[#1a2942] text-center">
-              <div
-                className={`w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center ${
-                  passed ? "bg-green-500/20" : "bg-red-500/20"
-                }`}
-              >
-                {passed ? (
-                  <CheckCircle className="w-10 h-10 text-green-500" />
-                ) : (
-                  <XCircle className="w-10 h-10 text-red-500" />
-                )}
-              </div>
-
-              <h1 className="text-2xl font-bold mb-2">
-                {passed ? "Félicitations !" : "Continuez vos efforts"}
-              </h1>
-              <p className="text-gray-400 mb-6">
-                {isExam
-                  ? passed
-                    ? "Vous avez réussi l'examen. Téléchargez votre certificat ci-dessous."
-                    : "Vous n'avez pas atteint la note minimale pour cet examen."
-                  : passed
-                    ? "Vous avez réussi cet exercice"
-                    : "Vous pouvez réessayer pour améliorer votre score"}
-              </p>
-
-              <div className="mb-6">
-                <div className="text-5xl font-bold text-[#C9A227] mb-2">{graded.percentage}%</div>
-                <p className="text-gray-400">
-                  {graded.score} / {graded.maxScore} points (seuil : {evalContent.pass_score}%)
-                </p>
-              </div>
-
-              {canCertify && (
-                <div className="mb-8">
-                  <Button
-                    onClick={() =>
-                      downloadCertificate({
-                        studentName: profile?.name || "Étudiant",
-                        title: exercise.title,
-                        score: graded.score,
-                        maxScore: graded.maxScore,
-                        percentage: graded.percentage,
-                        certificateNumber: generateCertificateNumber(),
-                      })
-                    }
-                    className="bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050]"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Télécharger le certificat (PDF)
-                  </Button>
-                </div>
-              )}
-
-              {/* Per-question review */}
-              <div className="text-left space-y-4 mb-8">
-                <h3 className="font-semibold text-lg border-b border-[#1a2942] pb-2">Révision des réponses</h3>
-                {questions.map((q, idx) => {
-                  const pq = graded.perQuestion.find((p) => p.id === q.id)
-                  const isCorrect = pq?.correct ?? false
-                  const studentAnswer = answers[q.id]
-                  return (
-                    <div
-                      key={q.id}
-                      className={`p-4 rounded-lg border ${
-                        isCorrect ? "border-green-500/50 bg-green-500/10" : "border-red-500/50 bg-red-500/10"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {isCorrect ? (
-                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-                        ) : (
-                          <XCircle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="font-medium">
-                              Q{idx + 1}: {q.question}
-                            </p>
-                            <span className="text-xs text-[#C9A227] shrink-0">
-                              {pq?.earned ?? 0}/{q.points} pts
-                            </span>
-                          </div>
-                          {q.type === "qcm" ? (
-                            <>
-                              <p className="text-sm text-gray-400 mt-2">
-                                Votre réponse:{" "}
-                                <span className={isCorrect ? "text-green-400" : "text-red-400"}>
-                                  {typeof studentAnswer === "number" ? q.options[studentAnswer] : "Non répondu"}
-                                </span>
-                              </p>
-                              {!isCorrect && (
-                                <p className="text-sm text-green-400 mt-1">Bonne réponse: {q.options[q.correct]}</p>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm text-gray-400 mt-2">
-                                Votre réponse:{" "}
-                                <span className={isCorrect ? "text-green-400" : "text-red-400"}>
-                                  {studentAnswer || "Non répondu"}
-                                </span>
-                              </p>
-                              {q.answerKey && (
-                                <p className="text-sm text-green-400 mt-1">Réponse attendue: {q.answerKey}</p>
-                              )}
-                            </>
-                          )}
-                          {q.explanation && (
-                            <p className="text-xs text-gray-500 mt-2 italic">{q.explanation}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div className="flex gap-4 justify-center">
-                {!isExam && (
-                  <Button onClick={handleRetry} variant="outline" className="border-[#1a2942] text-white hover:bg-[#1a2942]">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Réessayer
-                  </Button>
-                )}
-                <Link href={backHref}>
-                  <Button className="bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050]">
-                    Continuer le cours
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </main>
-        </div>
-      )
-    }
-
-    // Quiz-taking view
-    const question = questions[currentQuestion]
-    const totalQuestions = questions.length
-    const answeredCount = questions.filter((q) => answers[q.id] !== undefined && answers[q.id] !== "").length
-    const totalPoints = questions.reduce((s, q) => s + (q.points || 0), 0)
+  if (showResults) {
+    const totalPoints = questions.reduce((sum, q) => sum + q.points, 0)
+    const gradedPoints = existingReponses.reduce((sum, r) => sum + (r.score ?? 0), 0)
+    const pendingCount = existingReponses.filter((r) => r.statut === "en_attente").length
+    const percentage = totalPoints > 0 ? Math.round((gradedPoints / totalPoints) * 100) : 0
 
     return (
-      <div className="min-h-screen bg-[#0a0f1a] text-white">
-        <header className="bg-[#0D1B2A] border-b border-[#1a2942] px-6 py-4">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <Link href={backHref} className="text-[#C9A227] hover:underline flex items-center gap-2 text-sm">
-              <ChevronLeft className="w-4 h-4" />
-              Quitter
-            </Link>
-            <div className="flex items-center gap-2">
-              {isExam && (
-                <span className="rounded-full bg-[#C9A227]/20 px-2.5 py-0.5 text-xs font-medium text-[#C9A227]">
-                  Examen
-                </span>
-              )}
-              <h1 className="font-semibold">{exercise.title}</h1>
-            </div>
-            {timeLeft !== null ? (
-              <div className={`flex items-center gap-2 ${timeLeft < 60 ? "text-red-500" : "text-gray-400"}`}>
-                <Clock className="w-4 h-4" />
-                <span className="font-mono">{formatTime(timeLeft)}</span>
-              </div>
-            ) : (
-              <span className="text-xs text-gray-500">{totalPoints} points</span>
-            )}
-          </div>
-        </header>
-
-        <div className="bg-[#0D1B2A] px-6 py-2 border-b border-[#1a2942]">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>
-                Question {currentQuestion + 1} sur {totalQuestions}
-              </span>
-              <span>{answeredCount} répondu(s)</span>
-            </div>
-            <Progress value={((currentQuestion + 1) / totalQuestions) * 100} className="h-2 bg-[#1a2942]" />
-          </div>
+      <div className="min-h-screen bg-gradient-to-b from-[#0D2545] to-[#1a3a5c] p-8 flex items-center justify-center">
+        <div className="w-full max-w-2xl bg-white rounded-2xl p-8 text-center">
+          <Award className="w-16 h-16 text-[#C9A227] mx-auto mb-4" />
+          <h1 className="text-3xl font-bold mb-2 text-[#0D2545]">Réponses enregistrées</h1>
+          <div className="text-6xl font-bold text-[#C9A227] my-6">{percentage}%</div>
+          <p className="text-lg text-gray-600 mb-2">
+            {gradedPoints} / {totalPoints} points (questions déjà corrigées)
+          </p>
+          {pendingCount > 0 && (
+            <p className="text-sm text-amber-600 bg-amber-50 rounded-lg p-3 mb-4">
+              {pendingCount} question{pendingCount > 1 ? "s" : ""} ouverte{pendingCount > 1 ? "s" : ""} en attente de
+              correction par ton formateur — le score final peut encore évoluer.
+            </p>
+          )}
+          <Link href={backHref}>
+            <Button className="bg-[#0D2545] hover:bg-[#0a1d2e]">Retour au cours</Button>
+          </Link>
         </div>
-
-        <main className="max-w-3xl mx-auto p-6">
-          {question && (
-            <div className="bg-[#0D1B2A] rounded-xl p-8 border border-[#1a2942]">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-xs uppercase tracking-wide text-gray-500">
-                  {question.type === "qcm" ? "Choix multiple" : "Question ouverte"}
-                </span>
-                <span className="text-xs text-[#C9A227]">{question.points} pts</span>
-              </div>
-              <QuestionMedia question={question} />
-              <h2 className="text-xl font-semibold mb-6">{question.question}</h2>
-
-              {question.type === "qcm" ? (
-                <div className="space-y-3">
-                  {question.options.map((option, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleAnswerChange(question.id, idx)}
-                      className={`w-full text-left p-4 rounded-lg border transition-all ${
-                        answers[question.id] === idx
-                          ? "border-[#C9A227] bg-[#C9A227]/20"
-                          : "border-[#1a2942] hover:border-[#C9A227]/50 hover:bg-[#1a2942]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                            answers[question.id] === idx ? "bg-[#C9A227] text-[#0D1B2A]" : "bg-[#1a2942] text-gray-400"
-                          }`}
-                        >
-                          {String.fromCharCode(65 + idx)}
-                        </span>
-                        <span>{option}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <Textarea
-                  placeholder="Saisissez votre réponse..."
-                  value={answers[question.id] || ""}
-                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                  className="bg-[#1a2942] border-[#1a2942] text-white"
-                  rows={5}
-                />
-              )}
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-2 mt-6 justify-center">
-            {questions.map((q, idx) => {
-              const answered = answers[q.id] !== undefined && answers[q.id] !== ""
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => setCurrentQuestion(idx)}
-                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
-                    idx === currentQuestion
-                      ? "bg-[#C9A227] text-[#0D1B2A]"
-                      : answered
-                        ? "bg-green-500/20 text-green-500 border border-green-500/50"
-                        : "bg-[#1a2942] text-gray-400 hover:bg-[#1a2942]/80"
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="flex justify-between mt-8">
-            <Button
-              onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
-              disabled={currentQuestion === 0}
-              variant="outline"
-              className="border-[#1a2942] text-white hover:bg-[#1a2942]"
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Précédent
-            </Button>
-
-            {currentQuestion === totalQuestions - 1 ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050]"
-              >
-                {submitting ? "Envoi..." : "Terminer"}
-                <CheckCircle className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setCurrentQuestion((prev) => Math.min(totalQuestions - 1, prev + 1))}
-                className="bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050]"
-              >
-                Suivant
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            )}
-          </div>
-        </main>
       </div>
     )
   }
 
-  // ---- Legacy practical / TD exercise (kept for backward compatibility) ----
-  if (exercise.exercise_type === "practical") {
-    const tasks: LegacyTask[] = exercise.content?.tasks || []
-    return (
-      <div className="min-h-screen bg-[#0a0f1a] text-white">
-        <header className="bg-[#0D1B2A] border-b border-[#1a2942] px-6 py-4">
-          <div className="max-w-3xl mx-auto">
-            <Link href={backHref} className="text-[#C9A227] hover:underline flex items-center gap-2 text-sm mb-4">
-              <ChevronLeft className="w-4 h-4" />
-              Retour au cours
-            </Link>
-            <h1 className="text-xl font-bold">{exercise.title}</h1>
-            <p className="text-gray-400 text-sm mt-1">Travaux Dirigés - {exercise.points} points</p>
-          </div>
-        </header>
-
-        <main className="max-w-3xl mx-auto p-6">
-          <div className="bg-[#0D1B2A] rounded-xl p-6 border border-[#1a2942] mb-6">
-            <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#C9A227]" />
-              Instructions
-            </h2>
-            <p className="text-gray-300">{exercise.content?.instructions}</p>
-          </div>
-
-          <div className="space-y-4 mb-8">
-            {tasks.map((task, idx) => (
-              <div key={task.id} className="bg-[#0D1B2A] rounded-xl p-6 border border-[#1a2942]">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-[#C9A227]/20 text-[#C9A227] flex items-center justify-center font-bold flex-shrink-0">
-                    {idx + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="font-medium">{task.task}</p>
-                      <span className="text-sm text-[#C9A227]">{task.points} pts</span>
-                    </div>
-                    <Textarea
-                      placeholder="Décrivez votre réalisation..."
-                      value={answers[task.id]?.text || ""}
-                      onChange={(e) => handleAnswerChange(String(task.id), { ...answers[task.id], text: e.target.value })}
-                      className="bg-[#1a2942] border-[#1a2942] text-white mb-3"
-                      rows={3}
-                    />
-                    {exercise.content?.submission_type === "photo" && (
-                      <div className="border-2 border-dashed border-[#1a2942] rounded-lg p-6 text-center hover:border-[#C9A227]/50 transition-colors cursor-pointer">
-                        <Camera className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">Cliquez pour ajouter une photo de votre réalisation</p>
-                        <input type="file" accept="image/*" className="hidden" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleSubmit} disabled={submitting} className="bg-[#C9A227] text-[#0D1B2A] hover:bg-[#E8C050]">
-              {submitting ? "Envoi..." : "Soumettre le TD"}
-              <Upload className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-
-          {showResults && (
-            <div className="mt-6 bg-green-500/20 border border-green-500/50 rounded-xl p-6 text-center">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <h3 className="font-semibold text-lg mb-2">TD soumis avec succès !</h3>
-              <p className="text-gray-400 text-sm">Votre professeur évaluera votre travail prochainement.</p>
-            </div>
-          )}
-        </main>
-      </div>
-    )
-  }
+  const question = questions[currentQuestion]
+  const progress = ((currentQuestion + 1) / questions.length) * 100
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
-      <p>Format d&apos;exercice non pris en charge</p>
+    <div className="min-h-screen bg-gradient-to-b from-[#0D2545] to-[#1a3a5c] p-8">
+      <div className="max-w-3xl mx-auto">
+        <Link href={backHref} className="inline-flex items-center gap-2 text-white/70 hover:text-white mb-4 text-sm">
+          <ChevronLeft className="w-4 h-4" />
+          Retour à la leçon
+        </Link>
+
+        <div className="mb-6 flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-white">{exercice.titre}</h1>
+          {timeLeft !== null && (
+            <div className="text-white text-2xl font-bold flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              {formatTime(timeLeft)}
+            </div>
+          )}
+        </div>
+
+        {exercice.description && <p className="text-white/70 mb-6">{exercice.description}</p>}
+
+        <div className="mb-6 bg-white rounded-lg overflow-hidden">
+          <div className="h-2 bg-[#C9A227] transition-all duration-300" style={{ width: `${progress}%` }} />
+        </div>
+
+        <div className="bg-white rounded-2xl p-8 mb-6">
+          <div className="mb-6">
+            <p className="text-sm text-gray-500 mb-2">
+              Question {currentQuestion + 1} de {questions.length} — {question.points} point
+              {question.points > 1 ? "s" : ""}
+            </p>
+            <h2 className="text-2xl font-bold text-[#0D2545] mb-4">{question.contenu}</h2>
+          </div>
+
+          {question.type === "qcm" ? (
+            <div className="space-y-3">
+              {question.choix?.map((choix) => (
+                <label
+                  key={choix.id}
+                  className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                >
+                  <input
+                    type="radio"
+                    name={`question-${question.id}`}
+                    checked={answers[question.id]?.choix_id === choix.id}
+                    onChange={() => handleChoixAnswer(question.id, choix.id)}
+                    className="mr-3"
+                  />
+                  <span>{choix.contenu}</span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <Textarea
+              value={answers[question.id]?.reponse_texte || ""}
+              onChange={(e) => handleTextAnswer(question.id, e.target.value)}
+              placeholder="Ta réponse..."
+              className="w-full"
+              rows={5}
+            />
+          )}
+        </div>
+
+        <div className="flex justify-between gap-4">
+          <Button
+            onClick={() => setCurrentQuestion((p) => Math.max(0, p - 1))}
+            disabled={currentQuestion === 0}
+            variant="outline"
+            className="bg-white"
+          >
+            Précédent
+          </Button>
+
+          {currentQuestion === questions.length - 1 ? (
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="bg-[#C9A227] hover:bg-[#E8C050] text-[#0D2545]"
+            >
+              {submitting ? "Envoi..." : "Soumettre"}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setCurrentQuestion((p) => Math.min(questions.length - 1, p + 1))}
+              className="bg-[#0D2545] hover:bg-[#0a1d2e]"
+            >
+              Suivant
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

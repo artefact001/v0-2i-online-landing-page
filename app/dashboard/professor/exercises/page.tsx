@@ -4,46 +4,49 @@ import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  Edit,
-  Trash2,
-  Plus,
-  CheckCircle2,
-  Circle,
-  ListChecks,
-  X,
-  GraduationCap,
-  ImageIcon,
-  Video,
-  Upload,
-  FileQuestion,
-  Award,
-} from 'lucide-react'
+import { Edit, Trash2, Plus, ListChecks, X, GraduationCap, Award } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { ContentSidebar } from '@/components/professor/content-sidebar'
-import {
-  type EvalQuestion,
-  type EvaluationContent,
-  type QuestionType,
-  emptyQuestion,
-} from '@/lib/evaluation-types'
+
+/**
+ * Schéma Laravel réel :
+ * - exercices: id, lecon_id, titre, description, type ('qcm'|'ouvert'|'mixte'),
+ *   duree (minutes), note_max
+ * - questions: id, exercice_id, contenu, type ('qcm'|'ouvert'), points, ordre
+ * - choix: id, question_id, contenu, est_correct, ordre
+ * Créer un exercice avec ses questions nécessite plusieurs appels
+ * successifs (pas de blob JSON unique côté backend).
+ */
+
+interface Choix {
+  id?: string
+  contenu: string
+  est_correct: boolean
+  ordre: number
+}
+
+interface QuestionForm {
+  id?: string
+  contenu: string
+  type: 'qcm' | 'ouvert'
+  points: number
+  ordre: number
+  choix: Choix[]
+}
 
 interface Exercise {
   id: string
-  lesson_id: string
-  title: string
-  description: string | null
-  exercise_type: string
-  content: EvaluationContent
-  points: number
-  time_limit_minutes: number | null
-  order_index: number
-  is_required: boolean
-  lessons?: { title: string; module_id: string }
+  lecon_id: string
+  titre: string
+  description?: string
+  type: 'qcm' | 'ouvert' | 'mixte'
+  duree: number | null
+  note_max: number
 }
 
 interface Formation {
@@ -63,29 +66,41 @@ interface Lesson {
   module_id: string
 }
 
+function emptyQuestion(ordre: number): QuestionForm {
+  return {
+    contenu: '',
+    type: 'qcm',
+    points: 1,
+    ordre,
+    choix: [
+      { contenu: '', est_correct: true, ordre: 0 },
+      { contenu: '', est_correct: false, ordre: 1 },
+    ],
+  }
+}
+
 export default function ExercisesPage() {
   const { user } = useAuth()
 
   const [formations, setFormations] = useState<Formation[]>([])
   const [modules, setModules] = useState<Module[]>([])
   const [lessons, setLessons] = useState<Lesson[]>([])
-  const [exercises, setExercises] = useState<Exercise[]>([])
-
   const [selectedFormation, setSelectedFormation] = useState('')
   const [selectedModule, setSelectedModule] = useState('')
   const [selectedLesson, setSelectedLesson] = useState('')
 
+  const [exercises, setExercises] = useState<Exercise[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
 
-  const [title, setTitle] = useState('')
+  const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
-  const [isExam, setIsExam] = useState(false)
-  const [passScore, setPassScore] = useState(60)
-  const [timeLimit, setTimeLimit] = useState(0)
-  const [isRequired, setIsRequired] = useState(false)
-  const [questions, setQuestions] = useState<EvalQuestion[]>([emptyQuestion()])
+  const [type, setType] = useState<'qcm' | 'ouvert' | 'mixte'>('qcm')
+  const [duree, setDuree] = useState<number | ''>('')
+  const [noteMax, setNoteMax] = useState(20)
+  const [questions, setQuestions] = useState<QuestionForm[]>([emptyQuestion(0)])
 
   useEffect(() => {
     loadFormations()
@@ -106,8 +121,6 @@ export default function ExercisesPage() {
   const loadFormations = async () => {
     try {
       if (!user) return
-      // ATTENTION: pas d'équivalent Laravel de "professor_formations". On suppose
-      // que /v1/formations accepte un filtre ?formateur_id=... À vérifier.
       const res = await apiClient<Formation[]>(`/formations?user_id=${user.id}`)
       const list = res.data || []
       setFormations(list)
@@ -130,7 +143,6 @@ export default function ExercisesPage() {
 
   const loadLessons = async () => {
     try {
-      // Route Laravel réelle: /v1/lecons (et non /v1/lessons)
       const res = await apiClient<Lesson[]>(`/lecons?module_id=${selectedModule}`)
       const data = res.data || []
       setLessons(data)
@@ -142,175 +154,178 @@ export default function ExercisesPage() {
 
   const loadExercises = async () => {
     try {
-      // Route Laravel réelle: /v1/exercices
-      const res = await apiClient<Exercise[]>(`/exercices?lesson_id=${selectedLesson}`)
+      const res = await apiClient<Exercise[]>(`/exercices?lecon_id=${selectedLesson}`)
       setExercises(res.data || [])
     } catch (error) {
       console.error('Error loading exercises:', error)
     }
   }
 
-  // ---- Question builder helpers ----
-  const addQuestion = (type: QuestionType = 'qcm') =>
-    setQuestions((qs) => [...qs, emptyQuestion(type)])
-  const removeQuestion = (qid: string) =>
-    setQuestions((qs) => (qs.length > 1 ? qs.filter((q) => q.id !== qid) : qs))
-  const updateQuestion = (qid: string, patch: Partial<EvalQuestion>) =>
-    setQuestions((qs) => qs.map((q) => (q.id === qid ? { ...q, ...patch } : q)))
-  const changeType = (qid: string, type: QuestionType) =>
-    setQuestions((qs) =>
-      qs.map((q) =>
-        q.id === qid
-          ? { ...q, type, options: type === 'qcm' ? (q.options.length ? q.options : ['', '']) : [] }
+  const resetForm = () => {
+    setTitre('')
+    setDescription('')
+    setType('qcm')
+    setDuree('')
+    setNoteMax(20)
+    setQuestions([emptyQuestion(0)])
+    setEditingId(null)
+    setIsCreating(false)
+    setFormError('')
+  }
+
+  const handleEdit = async (ex: Exercise) => {
+    setTitre(ex.titre)
+    setDescription(ex.description || '')
+    setType(ex.type)
+    setDuree(ex.duree ?? '')
+    setNoteMax(ex.note_max)
+    setEditingId(ex.id)
+    setIsCreating(true)
+
+    try {
+      const qRes = await apiClient<any[]>(`/questions?exercice_id=${ex.id}`)
+      const qList = (qRes.data || []).sort((a, b) => a.ordre - b.ordre)
+      const withChoix = await Promise.all(
+        qList.map(async (q) => {
+          if (q.type !== 'qcm') return { ...q, choix: [] }
+          const cRes = await apiClient<Choix[]>(`/choix?question_id=${q.id}`)
+          return { ...q, choix: (cRes.data || []).sort((a, b) => a.ordre - b.ordre) }
+        }),
+      )
+      setQuestions(withChoix.length > 0 ? withChoix : [emptyQuestion(0)])
+    } catch (error) {
+      console.error('Error loading questions for edit:', error)
+    }
+  }
+
+  const addQuestion = () => {
+    setQuestions((prev) => [...prev, emptyQuestion(prev.length)])
+  }
+
+  const removeQuestion = (index: number) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const updateQuestion = (index: number, patch: Partial<QuestionForm>) => {
+    setQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, ...patch } : q)))
+  }
+
+  const addChoix = (qIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex ? { ...q, choix: [...q.choix, { contenu: '', est_correct: false, ordre: q.choix.length }] } : q,
+      ),
+    )
+  }
+
+  const updateChoix = (qIndex: number, cIndex: number, patch: Partial<Choix>) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex
+          ? {
+              ...q,
+              choix: q.choix.map((c, ci) => {
+                if (ci !== cIndex) {
+                  // Un seul bon choix par question QCM
+                  return patch.est_correct ? { ...c, est_correct: false } : c
+                }
+                return { ...c, ...patch }
+              }),
+            }
           : q,
       ),
     )
-  const addOption = (qid: string) =>
-    setQuestions((qs) => qs.map((q) => (q.id === qid ? { ...q, options: [...q.options, ''] } : q)))
-  const updateOption = (qid: string, idx: number, value: string) =>
-    setQuestions((qs) =>
-      qs.map((q) =>
-        q.id === qid ? { ...q, options: q.options.map((o, i) => (i === idx ? value : o)) } : q,
-      ),
-    )
-  const removeOption = (qid: string, idx: number) =>
-    setQuestions((qs) =>
-      qs.map((q) => {
-        if (q.id !== qid || q.options.length <= 2) return q
-        const options = q.options.filter((_, i) => i !== idx)
-        let correct = q.correct
-        if (idx === q.correct) correct = 0
-        else if (idx < q.correct) correct = q.correct - 1
-        return { ...q, options, correct }
-      }),
-    )
+  }
 
-  const setMediaType = (qid: string, type: 'none' | 'image' | 'video') =>
-    updateQuestion(qid, { media: type === 'none' ? null : { type, url: '' } })
-  const setMediaUrl = (qid: string, url: string) =>
-    setQuestions((qs) =>
-      qs.map((q) => (q.id === qid && q.media ? { ...q, media: { ...q.media, url } } : q)),
-    )
-
-  const handleImageUpload = async (qid: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      alert('Veuillez sélectionner une image.')
-      return
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image trop volumineuse (max 2 Mo). Utilisez plutôt une URL.')
-      return
-    }
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-    setQuestions((qs) =>
-      qs.map((q) => (q.id === qid ? { ...q, media: { type: 'image', url: dataUrl } } : q)),
+  const removeChoix = (qIndex: number, cIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => (i === qIndex ? { ...q, choix: q.choix.filter((_, ci) => ci !== cIndex) } : q)),
     )
   }
 
-  const resetForm = () => {
-    setTitle('')
-    setDescription('')
-    setIsExam(false)
-    setPassScore(60)
-    setTimeLimit(0)
-    setIsRequired(false)
-    setQuestions([emptyQuestion()])
-    setEditingId(null)
-    setIsCreating(false)
-  }
-
-  const handleEdit = (exercise: Exercise) => {
-    setTitle(exercise.title)
-    setDescription(exercise.description || '')
-    const content = exercise.content || ({} as EvaluationContent)
-    setIsExam(content.is_exam ?? exercise.exercise_type === 'exam')
-    setPassScore(content.pass_score ?? 60)
-    setTimeLimit(exercise.time_limit_minutes || 0)
-    setIsRequired(exercise.is_required)
-    const qs = content.questions
-    setQuestions(
-      qs && qs.length > 0
-        ? qs.map((q) => ({
-            ...emptyQuestion(q.type || 'qcm'),
-            ...q,
-            id: q.id || crypto.randomUUID(),
-          }))
-        : [emptyQuestion()],
-    )
-    setEditingId(exercise.id)
-    setIsCreating(true)
-  }
-
-  const validate = (): string | null => {
-    if (!title.trim()) return 'Le titre est requis.'
+  const validate = () => {
     if (!selectedLesson) return 'Veuillez sélectionner une leçon.'
+    if (!titre.trim()) return "Le titre de l'exercice est obligatoire."
+    if (questions.length === 0) return 'Ajoutez au moins une question.'
     for (const [i, q] of questions.entries()) {
-      if (!q.question.trim()) return `La question ${i + 1} est vide.`
-      if (q.points <= 0) return `La question ${i + 1} doit valoir au moins 1 point.`
-      if (q.type === 'qcm' && q.options.some((o) => !o.trim()))
-        return `Toutes les options de la question ${i + 1} doivent être remplies.`
-      if (q.type === 'open' && !(q.answerKey || '').trim())
-        return `Indiquez la réponse attendue (mots-clés) pour la question ${i + 1}.`
+      if (!q.contenu.trim()) return `La question ${i + 1} ne peut pas être vide.`
+      if (q.type === 'qcm') {
+        if (q.choix.length < 2) return `La question ${i + 1} doit avoir au moins 2 choix.`
+        if (!q.choix.some((c) => c.est_correct)) return `La question ${i + 1} doit avoir une bonne réponse.`
+        if (q.choix.some((c) => !c.contenu.trim())) return `Tous les choix de la question ${i + 1} doivent être remplis.`
+      }
     }
-    return null
+    return ''
   }
-
-  const totalPoints = questions.reduce((sum, q) => sum + (q.points || 0), 0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const err = validate()
     if (err) {
-      alert(err)
+      setFormError(err)
       return
     }
-    setIsLoading(true)
+    setFormError('')
+    setSaving(true)
+
     try {
-      const content: EvaluationContent = {
-        is_exam: isExam,
-        pass_score: passScore,
-        questions: questions.map((q) => ({ ...q, question: q.question.trim() })),
+      const exercicePayload = {
+        titre: titre.trim(),
+        description: description.trim() || undefined,
+        type,
+        duree: duree === '' ? null : Number(duree),
+        note_max: noteMax,
+        lecon_id: selectedLesson,
       }
-      const payload = {
-        title: title.trim(),
-        description: description.trim() || null,
-        exercise_type: isExam ? 'exam' : 'qcm',
-        content,
-        points: totalPoints,
-        time_limit_minutes: timeLimit > 0 ? timeLimit : null,
-        is_required: isRequired,
-        lesson_id: selectedLesson,
-      }
+
+      let exerciceId = editingId
       if (editingId) {
-        await apiClient(`/exercices/${editingId}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        })
+        await apiClient(`/exercices/${editingId}`, { method: 'PUT', body: JSON.stringify(exercicePayload) })
       } else {
-        await apiClient('/exercices', {
-          method: 'POST',
-          body: JSON.stringify({ ...payload, order_index: exercises.length }),
-        })
+        const res = await apiClient<Exercise>('/exercices', { method: 'POST', body: JSON.stringify(exercicePayload) })
+        exerciceId = (res.data as any)?.id
       }
+
+      if (!exerciceId) throw new Error("Impossible de créer l'exercice")
+
+      // Création des questions + choix (pas de gestion de suppression des
+      // anciennes questions en édition ici — à faire manuellement pour
+      // l'instant si des questions ont été retirées).
+      for (const [i, q] of questions.entries()) {
+        let questionId = q.id
+        const qPayload = { exercice_id: exerciceId, contenu: q.contenu.trim(), type: q.type, points: q.points, ordre: i }
+
+        if (questionId) {
+          await apiClient(`/questions/${questionId}`, { method: 'PUT', body: JSON.stringify(qPayload) })
+        } else {
+          const qRes = await apiClient<any>('/questions', { method: 'POST', body: JSON.stringify(qPayload) })
+          questionId = qRes.data?.id
+        }
+
+        if (q.type === 'qcm' && questionId) {
+          for (const [ci, c] of q.choix.entries()) {
+            const cPayload = { question_id: questionId, contenu: c.contenu.trim(), est_correct: c.est_correct, ordre: ci }
+            if (c.id) {
+              await apiClient(`/choix/${c.id}`, { method: 'PUT', body: JSON.stringify(cPayload) })
+            } else {
+              await apiClient('/choix', { method: 'POST', body: JSON.stringify(cPayload) })
+            }
+          }
+        }
+      }
+
       await loadExercises()
       resetForm()
     } catch (error) {
-      console.error('Error saving exercise:', error)
-      alert("Échec de l'enregistrement de l'évaluation.")
+      console.error('[v0] Error saving exercise:', error)
+      setFormError("Une erreur est survenue lors de l'enregistrement.")
     } finally {
-      setIsLoading(false)
+      setSaving(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette évaluation ?')) return
+    if (!confirm('Supprimer cet exercice ?')) return
     try {
       await apiClient(`/exercices/${id}`, { method: 'DELETE' })
       loadExercises()
@@ -319,510 +334,225 @@ export default function ExercisesPage() {
     }
   }
 
-  const examCount = exercises.filter((ex) => (ex.content?.is_exam ?? ex.exercise_type === 'exam')).length
-
   return (
     <div className="flex gap-6 items-start">
       <ContentSidebar role="professor" />
       <div className="min-w-0 flex-1 space-y-6">
-      <SectionHeader
-        icon={<ListChecks className="h-7 w-7" />}
-        title="Évaluations interactives"
-        description="Créez des exercices et examens avec QCM, questions ouvertes, images et vidéos. Les examens réussis génèrent un certificat téléchargeable."
-        action={
-          <Button
-            onClick={() => (isCreating ? resetForm() : setIsCreating(true))}
-            disabled={!selectedLesson}
-            className="bg-[#C9A227] hover:bg-[#B8860B] text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle évaluation
-          </Button>
-        }
-      />
+        <SectionHeader
+          icon={<ListChecks className="h-7 w-7" />}
+          title="Gestion des exercices"
+          description="Créez des exercices QCM ou à questions ouvertes pour vos leçons."
+          action={
+            <Button onClick={() => (isCreating ? resetForm() : setIsCreating(true))} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              {isCreating ? 'Annuler' : 'Nouvel exercice'}
+            </Button>
+          }
+        />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Évaluations" value={exercises.length} icon={<FileQuestion className="h-5 w-5" />} />
-        <StatCard label="Examens" value={examCount} icon={<GraduationCap className="h-5 w-5" />} />
-        <StatCard label="Exercices" value={exercises.length - examCount} icon={<ListChecks className="h-5 w-5" />} />
-      </div>
-
-      {/* Selectors */}
-      <div className="space-y-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5">
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Classe / Formation</p>
-          <FormationPills formations={formations.map((f) => ({ id: f.id, name: f.titre }))} selected={selectedFormation} onSelect={setSelectedFormation} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <StatCard label="Exercices" value={exercises.length} icon={<GraduationCap className="h-5 w-5" />} />
+          <StatCard label="Note max moyenne" value={exercises.length ? Math.round(exercises.reduce((s, e) => s + e.note_max, 0) / exercises.length) : 0} icon={<Award className="h-5 w-5" />} />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Module</p>
-            <Select value={selectedModule} onValueChange={setSelectedModule}>
-              <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                <SelectValue placeholder="Choisir" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                {modules.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="text-white">
-                    {m.titre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+        <div className="space-y-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5">
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Formation</p>
+            <FormationPills formations={formations.map((f) => ({ id: f.id, name: f.titre }))} selected={selectedFormation} onSelect={setSelectedFormation} />
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Leçon</p>
-            <Select value={selectedLesson} onValueChange={setSelectedLesson}>
-              <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                <SelectValue placeholder="Choisir" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                {lessons.map((l) => (
-                  <SelectItem key={l.id} value={l.id} className="text-white">
-                    {l.titre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Module</p>
+              <Select value={selectedModule} onValueChange={setSelectedModule}>
+                <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                  <SelectValue placeholder="Module" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                  {modules.map((m) => (
+                    <SelectItem key={m.id} value={m.id} className="text-white">{m.titre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Leçon</p>
+              <Select value={selectedLesson} onValueChange={setSelectedLesson}>
+                <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                  <SelectValue placeholder="Leçon" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                  {lessons.map((l) => (
+                    <SelectItem key={l.id} value={l.id} className="text-white">{l.titre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Builder */}
-      {isCreating && (
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6 rounded-xl border border-[rgba(201,162,39,0.25)] bg-[#1a1a2e] p-6"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">
-              {editingId ? 'Modifier l\u2019évaluation' : 'Créer une évaluation'}
-            </h2>
-            <div className="flex items-center gap-1 rounded-lg bg-[rgba(255,255,255,0.05)] p-1">
-              <button
-                type="button"
-                onClick={() => setIsExam(false)}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                  !isExam ? 'bg-[#C9A227] text-[#0a0a1a]' : 'text-[rgba(255,255,255,0.6)]'
-                }`}
-              >
-                Exercice
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsExam(true)}
-                className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                  isExam ? 'bg-[#C9A227] text-[#0a0a1a]' : 'text-[rgba(255,255,255,0.6)]'
-                }`}
-              >
-                <Award className="h-4 w-4" />
-                Examen
-              </button>
-            </div>
-          </div>
+        {isCreating && (
+          <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
+            <CardHeader>
+              <CardTitle className="text-white">{editingId ? "Modifier l'exercice" : 'Créer un exercice'}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                {formError && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{formError}</div>
+                )}
 
-          {isExam && (
-            <div className="flex items-start gap-3 rounded-lg border border-[rgba(201,162,39,0.3)] bg-[#C9A227]/5 p-3 text-sm text-[rgba(255,255,255,0.8)]">
-              <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#C9A227]" />
-              <p>
-                En mode examen, l&apos;élève qui atteint le score de réussite recevra automatiquement un
-                <span className="text-[#C9A227]"> certificat PDF</span> aux couleurs de 2I Online.
-              </p>
-            </div>
-          )}
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
+                  <Input value={titre} onChange={(e) => setTitre(e.target.value)} className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" required />
+                </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={isExam ? 'Ex: Examen final - Techniques de cuisson' : 'Ex: Quiz sur les sauces'}
-                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[rgba(255,255,255,0.8)]">Description (optionnelle)</Label>
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Consignes pour l'élève"
-                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-              />
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" rows={3} />
+                </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label className="text-[rgba(255,255,255,0.8)]">Score de réussite (%)</Label>
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={passScore}
-                onChange={(e) => setPassScore(parseInt(e.target.value) || 0)}
-                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[rgba(255,255,255,0.8)]">Temps limite (min, 0 = aucun)</Label>
-              <Input
-                type="number"
-                min={0}
-                value={timeLimit}
-                onChange={(e) => setTimeLimit(parseInt(e.target.value) || 0)}
-                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-              />
-            </div>
-            <div className="flex items-end">
-              <label className="flex cursor-pointer items-center gap-2 pb-2">
-                <input
-                  type="checkbox"
-                  checked={isRequired}
-                  onChange={(e) => setIsRequired(e.target.checked)}
-                  className="h-4 w-4 accent-[#C9A227]"
-                />
-                <span className="text-sm text-[rgba(255,255,255,0.7)]">Obligatoire</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Questions */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white">
-                <ListChecks className="h-5 w-5 text-[#C9A227]" />
-                <span className="font-semibold">Questions ({questions.length})</span>
-              </div>
-              <span className="rounded-full bg-[#C9A227]/10 px-3 py-1 text-sm font-medium text-[#C9A227]">
-                Total : {totalPoints} pts
-              </span>
-            </div>
-
-            {questions.map((q, qIndex) => (
-              <div
-                key={q.id}
-                className="space-y-4 rounded-lg border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)] p-4"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#C9A227] text-sm font-bold text-[#0a0a1a]">
-                    {qIndex + 1}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[rgba(255,255,255,0.8)]">Type</Label>
+                    <Select value={type} onValueChange={(v) => setType(v as any)}>
+                      <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                        <SelectItem value="qcm" className="text-white">QCM</SelectItem>
+                        <SelectItem value="ouvert" className="text-white">Ouvert</SelectItem>
+                        <SelectItem value="mixte" className="text-white">Mixte</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex-1 space-y-3">
-                    {/* type + points row */}
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Select value={q.type} onValueChange={(v) => changeType(q.id, v as QuestionType)}>
-                        <SelectTrigger className="h-9 w-44 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                          <SelectItem value="qcm" className="text-white">QCM (choix multiple)</SelectItem>
-                          <SelectItem value="open" className="text-white">Question ouverte</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-[rgba(255,255,255,0.6)]">Points</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={q.points}
-                          onChange={(e) => updateQuestion(q.id, { points: parseInt(e.target.value) || 1 })}
-                          className="h-9 w-20 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                  <div className="space-y-2">
+                    <Label className="text-[rgba(255,255,255,0.8)]">Durée (min)</Label>
+                    <Input type="number" value={duree} onChange={(e) => setDuree(e.target.value ? parseInt(e.target.value) : '')} className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[rgba(255,255,255,0.8)]">Note max</Label>
+                    <Input type="number" value={noteMax} onChange={(e) => setNoteMax(parseInt(e.target.value) || 20)} className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[rgba(255,255,255,0.8)]">Questions</Label>
+                    <Button type="button" onClick={addQuestion} size="sm" variant="outline" className="border-[#C9A227]/40 text-[#C9A227]">
+                      <Plus className="h-4 w-4 mr-1" /> Ajouter une question
+                    </Button>
+                  </div>
+
+                  {questions.map((q, qIndex) => (
+                    <div key={qIndex} className="rounded-lg border border-[rgba(255,255,255,0.1)] p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <Textarea
+                          value={q.contenu}
+                          onChange={(e) => updateQuestion(qIndex, { contenu: e.target.value })}
+                          placeholder={`Question ${qIndex + 1}`}
+                          className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white flex-1"
+                          rows={2}
                         />
-                      </div>
-                      {/* media type */}
-                      <div className="flex items-center gap-1 rounded-md bg-[rgba(255,255,255,0.05)] p-0.5">
-                        <button
-                          type="button"
-                          onClick={() => setMediaType(q.id, 'none')}
-                          className={`rounded px-2 py-1 text-xs ${!q.media ? 'bg-[#C9A227] text-[#0a0a1a]' : 'text-[rgba(255,255,255,0.6)]'}`}
-                        >
-                          Aucun
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMediaType(q.id, 'image')}
-                          className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${q.media?.type === 'image' ? 'bg-[#C9A227] text-[#0a0a1a]' : 'text-[rgba(255,255,255,0.6)]'}`}
-                        >
-                          <ImageIcon className="h-3 w-3" /> Image
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMediaType(q.id, 'video')}
-                          className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${q.media?.type === 'video' ? 'bg-[#C9A227] text-[#0a0a1a]' : 'text-[rgba(255,255,255,0.6)]'}`}
-                        >
-                          <Video className="h-3 w-3" /> Vidéo
-                        </button>
-                      </div>
-                    </div>
-
-                    <Textarea
-                      value={q.question}
-                      onChange={(e) => updateQuestion(q.id, { question: e.target.value })}
-                      placeholder="Saisissez l'énoncé de la question..."
-                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                      rows={2}
-                    />
-
-                    {/* media inputs */}
-                    {q.media && (
-                      <div className="space-y-2 rounded-md border border-dashed border-[rgba(255,255,255,0.15)] p-3">
-                        <Input
-                          value={q.media.url.startsWith('data:') ? '' : q.media.url}
-                          onChange={(e) => setMediaUrl(q.id, e.target.value)}
-                          placeholder={
-                            q.media.type === 'image'
-                              ? 'URL de l\u2019image (https://...)'
-                              : 'URL de la vidéo (YouTube, MP4, ...)'
-                          }
-                          className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                        />
-                        {q.media.type === 'image' && (
-                          <div className="flex items-center gap-3">
-                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-[rgba(255,255,255,0.05)] px-3 py-1.5 text-xs text-white hover:bg-[rgba(255,255,255,0.1)]">
-                              <Upload className="h-3.5 w-3.5" />
-                              Téléverser une image
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(q.id, e)}
-                                className="hidden"
-                              />
-                            </label>
-                            {q.media.url && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={q.media.url || '/placeholder.svg'}
-                                alt="Aperçu"
-                                className="h-12 w-12 rounded object-cover"
-                              />
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* QCM options */}
-                    {q.type === 'qcm' && (
-                      <div className="space-y-2">
-                        <Label className="text-xs text-[rgba(255,255,255,0.6)]">
-                          Cliquez sur le cercle pour marquer la bonne réponse
-                        </Label>
-                        {q.options.map((opt, oIndex) => (
-                          <div key={oIndex} className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => updateQuestion(q.id, { correct: oIndex })}
-                              className="shrink-0"
-                              aria-label={`Marquer l'option ${oIndex + 1} comme correcte`}
-                            >
-                              {q.correct === oIndex ? (
-                                <CheckCircle2 className="h-5 w-5 text-green-400" />
-                              ) : (
-                                <Circle className="h-5 w-5 text-[rgba(255,255,255,0.3)]" />
-                              )}
-                            </button>
-                            <Input
-                              value={opt}
-                              onChange={(e) => updateOption(q.id, oIndex, e.target.value)}
-                              placeholder={`Option ${oIndex + 1}`}
-                              className={`bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white ${
-                                q.correct === oIndex ? 'border-green-400/50' : ''
-                              }`}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeOption(q.id, oIndex)}
-                              disabled={q.options.length <= 2}
-                              className="shrink-0 text-[rgba(255,255,255,0.4)] hover:text-red-400 disabled:opacity-30"
-                              aria-label="Supprimer l'option"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => addOption(q.id)}
-                          className="text-[#C9A227] hover:bg-[#C9A227]/10"
-                        >
-                          <Plus className="mr-1 h-3 w-3" /> Ajouter une option
+                        <Button type="button" onClick={() => removeQuestion(qIndex)} size="sm" variant="outline" className="border-red-500/20 text-red-400">
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    )}
 
-                    {/* Open answer key */}
-                    {q.type === 'open' && (
-                      <div className="space-y-1">
-                        <Label className="text-xs text-[rgba(255,255,255,0.6)]">
-                          Réponse attendue / mots-clés (séparés par des virgules)
-                        </Label>
+                      <div className="flex gap-3">
+                        <Select value={q.type} onValueChange={(v) => updateQuestion(qIndex, { type: v as any })}>
+                          <SelectTrigger className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                            <SelectItem value="qcm" className="text-white">QCM</SelectItem>
+                            <SelectItem value="ouvert" className="text-white">Ouvert</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <Input
-                          value={q.answerKey || ''}
-                          onChange={(e) => updateQuestion(q.id, { answerKey: e.target.value })}
-                          placeholder="Ex: béchamel, roux, lait"
-                          className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                          type="number"
+                          value={q.points}
+                          onChange={(e) => updateQuestion(qIndex, { points: parseInt(e.target.value) || 1 })}
+                          placeholder="Points"
+                          className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white w-28"
                         />
-                        <p className="text-[11px] text-[rgba(255,255,255,0.4)]">
-                          L&apos;élève obtient les points si sa réponse contient tous les mots-clés.
-                        </p>
                       </div>
-                    )}
 
-                    {/* Explanation */}
-                    <div className="space-y-1">
-                      <Label className="text-xs text-[rgba(255,255,255,0.6)]">
-                        Explication (affichée après correction, optionnelle)
-                      </Label>
-                      <Input
-                        value={q.explanation || ''}
-                        onChange={(e) => updateQuestion(q.id, { explanation: e.target.value })}
-                        placeholder="Pourquoi cette réponse est correcte..."
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                      />
+                      {q.type === 'qcm' && (
+                        <div className="space-y-2 pl-4 border-l-2 border-[rgba(201,162,39,0.3)]">
+                          {q.choix.map((c, cIndex) => (
+                            <div key={cIndex} className="flex items-center gap-2">
+                              <input
+                                type="radio"
+                                checked={c.est_correct}
+                                onChange={() => updateChoix(qIndex, cIndex, { est_correct: true })}
+                              />
+                              <Input
+                                value={c.contenu}
+                                onChange={(e) => updateChoix(qIndex, cIndex, { contenu: e.target.value })}
+                                placeholder={`Choix ${cIndex + 1}`}
+                                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white flex-1"
+                              />
+                              <Button type="button" onClick={() => removeChoix(qIndex, cIndex)} size="sm" variant="ghost" className="text-red-400">
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button type="button" onClick={() => addChoix(qIndex)} size="sm" variant="ghost" className="text-[#C9A227]">
+                            <Plus className="h-3.5 w-3.5 mr-1" /> Ajouter un choix
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeQuestion(q.id)}
-                    disabled={questions.length <= 1}
-                    className="mt-1 text-[rgba(255,255,255,0.4)] hover:text-red-400 disabled:opacity-30"
-                    aria-label="Supprimer la question"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  ))}
                 </div>
-              </div>
-            ))}
 
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => addQuestion('qcm')}
-                className="border-[rgba(255,255,255,0.15)] text-white hover:border-[#C9A227]/50 hover:bg-[#C9A227]/10"
-              >
-                <Plus className="mr-2 h-4 w-4" /> Question QCM
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => addQuestion('open')}
-                className="border-[rgba(255,255,255,0.15)] text-white hover:border-[#C9A227]/50 hover:bg-[#C9A227]/10"
-              >
-                <Plus className="mr-2 h-4 w-4" /> Question ouverte
-              </Button>
-            </div>
-          </div>
+                <div className="flex gap-3">
+                  <Button type="submit" disabled={saving} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white">
+                    {saving ? 'Enregistrement...' : editingId ? 'Modifier' : 'Créer'}
+                  </Button>
+                  <Button type="button" onClick={resetForm} variant="outline" className="flex-1 border-[rgba(255,255,255,0.2)] text-white">
+                    Annuler
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
-          <div className="flex justify-end gap-3 border-t border-[rgba(255,255,255,0.08)] pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={resetForm}
-              className="text-[rgba(255,255,255,0.7)]"
-            >
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isLoading} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
-              {isLoading ? 'Enregistrement...' : editingId ? 'Mettre à jour' : 'Créer l\u2019évaluation'}
-            </Button>
-          </div>
-        </form>
-      )}
-
-      {/* Exercises list */}
-      {!isCreating && (
         <div className="space-y-3">
-          {exercises.map((ex) => {
-            const exam = ex.content?.is_exam ?? ex.exercise_type === 'exam'
-            const qCount = ex.content?.questions?.length || 0
-            return (
-              <div
-                key={ex.id}
-                className="group flex items-start gap-4 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1a1a2e] p-5 transition-all hover:border-[rgba(201,162,39,0.4)] hover:bg-[#1d1d33]"
-              >
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${
-                    exam ? 'bg-[#C9A227]/15 text-[#C9A227]' : 'bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.7)]'
-                  }`}
-                >
-                  {exam ? <Award className="h-6 w-6" /> : <ListChecks className="h-6 w-6" />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-semibold text-white">{ex.title}</h3>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        exam ? 'bg-[#C9A227]/20 text-[#C9A227]' : 'bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.6)]'
-                      }`}
-                    >
-                      {exam ? 'Examen' : 'Exercice'}
-                    </span>
-                    {ex.is_required && (
-                      <span className="rounded-full bg-red-500/15 px-2.5 py-0.5 text-xs font-medium text-red-400">
-                        Obligatoire
-                      </span>
-                    )}
-                  </div>
-                  {ex.description && (
-                    <p className="mb-2 line-clamp-1 text-sm text-[rgba(255,255,255,0.55)]">{ex.description}</p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
-                    <span>{qCount} question(s)</span>
-                    <span>{ex.points} points</span>
-                    {ex.time_limit_minutes ? <span>{ex.time_limit_minutes} min</span> : null}
-                    <span>Réussite : {ex.content?.pass_score ?? 60}%</span>
+          {exercises.map((ex) => (
+            <Card key={ex.id} className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
+              <CardContent className="pt-6 flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white mb-1">{ex.titre}</h3>
+                  {ex.description && <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2">{ex.description}</p>}
+                  <div className="flex items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
+                    <span>{ex.type}</span>
+                    <span>{ex.note_max} points</span>
+                    {ex.duree ? <span>{ex.duree} min</span> : null}
                   </div>
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  <Button
-                    onClick={() => handleEdit(ex)}
-                    variant="outline"
-                    size="sm"
-                    className="border-[rgba(255,255,255,0.15)] text-white hover:border-[#C9A227]/50 hover:bg-[#C9A227]/10"
-                  >
-                    <Edit className="h-4 w-4" />
+                <div className="flex gap-2">
+                  <Button onClick={() => handleEdit(ex)} variant="outline" size="sm" className="border-[rgba(255,255,255,0.2)] text-white">
+                    <Edit className="w-4 h-4" />
                   </Button>
-                  <Button
-                    onClick={() => handleDelete(ex.id)}
-                    variant="outline"
-                    size="sm"
-                    className="border-red-500/20 text-red-400 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
+                  <Button onClick={() => handleDelete(ex.id)} variant="outline" size="sm" className="border-red-500/20 text-red-400 hover:bg-red-500/10">
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-            )
-          })}
+              </CardContent>
+            </Card>
+          ))}
 
-          {selectedLesson && exercises.length === 0 && (
-            <div className="rounded-xl border border-dashed border-[rgba(255,255,255,0.15)] bg-[#1a1a2e] py-16 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(255,255,255,0.04)]">
-                <FileQuestion className="h-8 w-8 text-[rgba(255,255,255,0.25)]" />
-              </div>
-              <p className="text-[rgba(255,255,255,0.6)]">Aucune évaluation pour cette leçon</p>
-              <Button
-                onClick={() => setIsCreating(true)}
-                variant="outline"
-                className="mt-4 border-[#C9A227]/40 text-[#C9A227] hover:bg-[#C9A227]/10"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Créer la première évaluation
-              </Button>
-            </div>
-          )}
-
-          {!selectedLesson && (
-            <div className="rounded-xl border border-dashed border-[rgba(255,255,255,0.15)] bg-[#1a1a2e] py-16 text-center text-[rgba(255,255,255,0.5)]">
-              Sélectionnez une formation, un module et une leçon pour gérer les évaluations.
-            </div>
+          {exercises.length === 0 && !isCreating && (
+            <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
+              <CardContent className="pt-12 text-center">
+                <ListChecks className="w-12 h-12 text-[rgba(255,255,255,0.2)] mx-auto mb-4" />
+                <p className="text-[rgba(255,255,255,0.6)]">Aucun exercice créé</p>
+              </CardContent>
+            </Card>
           )}
         </div>
-      )}
       </div>
     </div>
   )
