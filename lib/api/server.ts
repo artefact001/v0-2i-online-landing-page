@@ -35,6 +35,15 @@ export async function apiServer<T = any>(
   }
 
   if (!res.ok) throw new Error(json?.message || `Erreur API (${res.status})`)
+
+  // Même normalisation que apiClient (voir lib/api/client.ts) : tableau
+  // brut ou { data: [...] } sans "success" -> { success: true, data }.
+  if (Array.isArray(json)) {
+    return { success: true, data: json as unknown as T }
+  }
+  if (json && typeof json === 'object' && 'data' in json && !('success' in json)) {
+    return { success: true, data: json.data as T, message: json.message }
+  }
   return json
 }
 

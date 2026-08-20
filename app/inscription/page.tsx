@@ -36,18 +36,45 @@ export default function InscriptionPage() {
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [formationsLoading, setFormationsLoading] = useState(true)
+  const [formationsError, setFormationsError] = useState('')
   const router = useRouter()
 
   useEffect(() => {
     async function loadFormations() {
+      setFormationsLoading(true)
+      setFormationsError('')
       try {
-        const res = await apiClient<Formation[]>('/formations?is_active=1')
-        if (res.data) {
-          setFormations(res.data)
+        // Pas de filtre ?is_active côté requête : on ne sait pas si
+        // FormationController::index le supporte, et le pire cas (afficher
+        // une formation inactive) est bien moins grave que le pire cas
+        // actuel (liste vide silencieuse).
+        const res = await apiClient<Formation[]>('/formations')
+
+        // Tolère plusieurs formes de réponse possibles côté Laravel :
+        // { success: true, data: [...] }, { data: [...] } (wrapping par
+        // défaut d'un ResourceCollection Laravel), ou un tableau brut.
+        const raw: unknown = res
+        let list: Formation[] = []
+        if (Array.isArray((res as any)?.data)) {
+          list = (res as any).data
+        } else if (Array.isArray(raw)) {
+          list = raw as Formation[]
+        } else {
+          console.error('[inscription] Forme de réponse /formations inattendue:', res)
         }
+
+        if (list.length === 0) {
+          setFormationsError(
+            "Aucune formation disponible pour le moment. Si tu es admin, vérifie que la table formations n'est pas vide côté Laravel.",
+          )
+        }
+        setFormations(list)
       } catch (err) {
         console.error('Error loading formations:', err)
+        setFormationsError('Impossible de charger les formations. Réessaie dans quelques instants.')
       }
+      setFormationsLoading(false)
     }
     loadFormations()
   }, [])
@@ -344,9 +371,14 @@ export default function InscriptionPage() {
                   <Select
                     value={formData.formationId}
                     onValueChange={(value) => setFormData({ ...formData, formationId: value })}
+                    disabled={formationsLoading || formations.length === 0}
                   >
                     <SelectTrigger className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                      <SelectValue placeholder="Sélectionnez une formation" />
+                      <SelectValue
+                        placeholder={
+                          formationsLoading ? 'Chargement des formations...' : 'Sélectionnez une formation'
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
                       {formations.map((formation) => (
@@ -360,6 +392,9 @@ export default function InscriptionPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formationsError && (
+                    <p className="text-amber-400 text-xs mt-1">{formationsError}</p>
+                  )}
                 </div>
 
                 {selectedFormation && (
