@@ -6,10 +6,12 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, Calendar, Radio, Youtube } from 'lucide-react'
+import { combine, required, minLength } from '@/lib/validators'
 
 interface LiveSession {
   id: string
@@ -236,16 +238,15 @@ export default function LiveSessionsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Titre du cours"
-                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  required
-                />
-              </div>
+              <ValidatedInput
+                label="Titre"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Titre du cours"
+                validator={combine(required("Le titre est obligatoire"), minLength(3))}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                required
+              />
 
               <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
@@ -284,10 +285,11 @@ export default function LiveSessionsPage() {
                   <Youtube className="w-4 h-4 text-red-500" />
                   Lien YouTube Live (non répertorié)
                 </Label>
-                <Input
+                <ValidatedInput
                   value={formData.youtube_link}
                   onChange={(e) => setFormData({ ...formData, youtube_link: e.target.value })}
                   placeholder="https://youtube.com/watch?v=... ou juste l'ID de la vidéo"
+                  validator={required("Le lien YouTube est obligatoire")}
                   className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                   required
                 />
