@@ -5,8 +5,10 @@ import { apiClientUpload } from "@/lib/api/client"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ValidatedInput } from "@/components/ui/validated-input"
 import { Label } from "@/components/ui/label"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { combine, required, minLength, phone as phoneValidator } from "@/lib/validators"
 import {
   Dialog,
   DialogContent,
@@ -120,26 +122,24 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Prénom</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                placeholder="Prénom"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Nom</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                placeholder="Nom"
-              />
-            </div>
+            <ValidatedInput
+              label="Prénom"
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              placeholder="Prénom"
+              validator={combine(required("Le prénom est obligatoire"), minLength(2))}
+            />
+            <ValidatedInput
+              label="Nom"
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              placeholder="Nom"
+              validator={combine(required("Le nom est obligatoire"), minLength(2))}
+            />
           </div>
 
           <div className="space-y-2">
@@ -153,16 +153,15 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             <p className="text-xs text-[rgba(255,255,255,0.35)]">L&apos;email ne peut pas être modifié ici.</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone</Label>
-            <Input
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-              placeholder="+221 77 000 00 00"
-            />
-          </div>
+          <ValidatedInput
+            label="Téléphone"
+            id="phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+            placeholder="+221 77 000 00 00"
+            validator={phoneValidator}
+          />
 
           {feedback && (
             <p

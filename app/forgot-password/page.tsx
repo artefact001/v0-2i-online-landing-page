@@ -7,7 +7,9 @@ import Image from 'next/image'
 import { forgotPassword, resetPassword } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
+import { combine, required, email as emailValidator, matches } from '@/lib/validators'
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<'email' | 'reset'>('email')
@@ -16,6 +18,7 @@ export default function ForgotPasswordPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [passwordTouched, setPasswordTouched] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -122,20 +125,17 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-[rgba(255,255,255,0.8)]">
-                  Adresse email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="votre@email.com"
-                  className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
-                  required
-                />
-              </div>
+              <ValidatedInput
+                label="Adresse email"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="votre@email.com"
+                validator={combine(required("L'email est obligatoire"), emailValidator)}
+                className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
+                required
+              />
 
               <Button
                 type="submit"
@@ -168,20 +168,17 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="code" className="text-[rgba(255,255,255,0.8)]">
-                  Code de réinitialisation
-                </Label>
-                <Input
-                  id="code"
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Code reçu par email"
-                  className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
-                  required
-                />
-              </div>
+              <ValidatedInput
+                label="Code de réinitialisation"
+                id="code"
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Code reçu par email"
+                validator={required("Le code est obligatoire")}
+                className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
+                required
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-[rgba(255,255,255,0.8)]">
@@ -193,8 +190,15 @@ export default function ForgotPasswordPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => setPasswordTouched(true)}
                     placeholder="••••••••"
-                    className="h-12 pr-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
+                    className={`h-12 pr-12 bg-[rgba(255,255,255,0.05)] text-white placeholder:text-[rgba(255,255,255,0.3)] ${
+                      passwordTouched && password && password.length < 6
+                        ? 'border-red-500'
+                        : password.length >= 6
+                          ? 'border-green-500'
+                          : 'border-[rgba(255,255,255,0.1)]'
+                    }`}
                     required
                   />
                   <button
@@ -215,22 +219,22 @@ export default function ForgotPasswordPage() {
                     )}
                   </button>
                 </div>
+                {passwordTouched && password && password.length < 6 && (
+                  <p className="text-xs text-red-400">Le mot de passe doit contenir au moins 6 caractères</p>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-[rgba(255,255,255,0.8)]">
-                  Confirmer le mot de passe
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
-                  required
-                />
-              </div>
+              <ValidatedInput
+                label="Confirmer le mot de passe"
+                id="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                validator={combine(required("La confirmation est obligatoire"), matches(password, "Les mots de passe ne correspondent pas"))}
+                className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
+                required
+              />
 
               <Button
                 type="submit"
