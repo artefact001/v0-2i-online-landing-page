@@ -91,6 +91,20 @@ html {
   body {
     @apply bg-dark text-foreground;
   }
+
+  /* Corrige les bugs tactiles fréquents sur mobile (Safari iOS surtout) :
+     - touch-action: manipulation supprime le délai de ~300ms avant qu'un
+       tap ne déclenche le clic (et évite le double-tap-pour-zoomer qui
+       fait parfois "rater" le premier tap sur un lien/bouton)
+     - -webkit-tap-highlight-color: transparent retire le flash gris par
+       défaut d'iOS/Android au tap, qui donne parfois l'impression que le
+       bouton "bug" alors qu'il a bien été cliqué */
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Custom Animations */

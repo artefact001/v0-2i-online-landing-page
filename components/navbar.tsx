@@ -65,7 +65,7 @@ export function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="text-[11px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.6)] no-underline transition-all duration-300 relative py-2 hover:text-[#C9A227] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C9A227] after:scale-x-0 after:origin-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-left flex items-center gap-2"
+                className="touch-manipulation text-[11px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.6)] no-underline transition-all duration-300 relative py-2 hover:text-[#C9A227] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#C9A227] after:scale-x-0 after:origin-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-left flex items-center gap-2"
               >
                 {link.isLive && (
                   <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -80,7 +80,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-[10px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] px-4 py-2.5 rounded-lg no-underline transition-all duration-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
+            className="touch-manipulation text-[10px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] px-4 py-2.5 rounded-lg no-underline transition-all duration-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
           >
             Connexion
           </Link>
@@ -88,9 +88,10 @@ export function Navbar() {
 
         {/* Mobile Menu Button */}
         <button
-          className="lg:hidden relative w-10 h-10 flex items-center justify-center"
+          className="lg:hidden relative w-11 h-11 flex items-center justify-center touch-manipulation"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
+          type="button"
         >
           <div className="relative w-6 h-5 flex flex-col justify-between">
             <span
@@ -117,7 +118,7 @@ export function Navbar() {
       {/* Mobile Menu */}
       <div
         className={`lg:hidden absolute top-full left-0 right-0 bg-[rgba(8,15,30,0.98)] backdrop-blur-[20px] border-b border-[rgba(201,162,39,0.15)] transition-all duration-300 overflow-hidden ${
-          mobileMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+          mobileMenuOpen ? "max-h-[500px] opacity-100 pointer-events-auto" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
         <ul className="flex flex-col p-6 gap-1 list-none">
@@ -137,7 +138,7 @@ export function Navbar() {
             >
               <Link
                 href={link.href}
-                className="flex items-center gap-2 py-3 text-base font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] no-underline transition-colors hover:text-[#C9A227]"
+                className="touch-manipulation flex items-center gap-2 py-3 text-base font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] no-underline transition-colors hover:text-[#C9A227]"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.isLive && (
@@ -163,7 +164,7 @@ export function Navbar() {
           >
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 bg-[#C9A227] text-[#0D2545] text-sm font-bold tracking-[2px] uppercase px-6 py-4 rounded-lg no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105"
+              className="touch-manipulation inline-flex items-center justify-center gap-2 bg-[#C9A227] text-[#0D2545] text-sm font-bold tracking-[2px] uppercase px-6 py-4 rounded-lg no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105"
               onClick={() => setMobileMenuOpen(false)}
             >
               Connexion

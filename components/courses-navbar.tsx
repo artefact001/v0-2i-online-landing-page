@@ -84,9 +84,10 @@ export function CoursesNavbar({ currentPage }: CoursesNavbarProps) {
 
         {/* Mobile Menu Button */}
         <button
-          className="lg:hidden relative w-10 h-10 flex items-center justify-center"
+          className="lg:hidden relative w-11 h-11 flex items-center justify-center touch-manipulation"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
+          type="button"
         >
           <div className="relative w-6 h-5 flex flex-col justify-between">
             <span 
@@ -111,7 +112,7 @@ export function CoursesNavbar({ currentPage }: CoursesNavbarProps) {
       {/* Mobile Menu */}
       <div 
         className={`lg:hidden absolute top-full left-0 right-0 bg-[rgba(8,15,30,0.98)] backdrop-blur-[20px] border-b border-[rgba(201,162,39,0.15)] transition-all duration-300 overflow-hidden ${
-          mobileMenuOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+          mobileMenuOpen ? 'max-h-[400px] opacity-100 pointer-events-auto' : 'max-h-0 opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex flex-col p-6 gap-3">
