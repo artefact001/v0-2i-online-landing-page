@@ -6,11 +6,13 @@ import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Edit, Trash2, Plus, Book, Layers, FileText } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { ContentSidebar } from '@/components/professor/content-sidebar'
+import { combine, required, minLength } from '@/lib/validators'
 
 // Schéma Laravel réel (table modules) : id, titre, description (nullable),
 // ordre, formation_id. Pas de is_published dans ce schéma.
@@ -208,16 +210,15 @@ export default function ModulesPage() {
                   {formError}
                 </div>
               )}
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
-                <Input
-                  value={formData.titre}
-                  onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                  placeholder="Titre du module"
-                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                  required
-                />
-              </div>
+              <ValidatedInput
+                label="Titre"
+                value={formData.titre}
+                onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+                placeholder="Titre du module"
+                validator={combine(required("Le titre est obligatoire"), minLength(3))}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                required
+              />
 
               <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
