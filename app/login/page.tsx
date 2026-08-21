@@ -7,11 +7,14 @@ import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
+import { combine, required, email as emailValidator } from '@/lib/validators'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordTouched, setPasswordTouched] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -87,20 +90,17 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-[rgba(255,255,255,0.8)]">
-                Adresse email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre@email.com"
-                className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
-                required
-              />
-            </div>
+            <ValidatedInput
+              label="Adresse email"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="votre@email.com"
+              validator={combine(required("L'email est obligatoire"), emailValidator)}
+              className="h-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
+              required
+            />
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -117,8 +117,13 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onBlur={() => setPasswordTouched(true)}
                   placeholder="••••••••"
-                  className="h-12 pr-12 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#C9A227] focus:ring-[#C9A227]/20"
+                  className={`h-12 pr-12 bg-[rgba(255,255,255,0.05)] text-white placeholder:text-[rgba(255,255,255,0.3)] ${
+                    passwordTouched && !password.trim()
+                      ? 'border-red-500 focus-visible:ring-red-500/30'
+                      : 'border-[rgba(255,255,255,0.1)] focus:border-[#C9A227]'
+                  }`}
                   required
                 />
                 <button
@@ -139,6 +144,9 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {passwordTouched && !password.trim() && (
+                <p className="text-xs text-red-400">Le mot de passe est obligatoire</p>
+              )}
             </div>
 
             <Button

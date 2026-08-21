@@ -8,9 +8,11 @@ import { apiClient } from '@/lib/api/client'
 import { register } from '@/app/actions/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CheckCircle, Eye, EyeOff } from 'lucide-react'
+import { combine, required, minLength, email as emailValidator, phone as phoneValidator, passwordStrength } from '@/lib/validators'
 
 interface Formation {
   id: string
@@ -35,6 +37,8 @@ export default function InscriptionPage() {
   const [success, setSuccess] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [passwordTouched, setPasswordTouched] = useState(false)
+  const [confirmTouched, setConfirmTouched] = useState(false)
   const [formationsLoading, setFormationsLoading] = useState(true)
   const [formationsError, setFormationsError] = useState('')
   const router = useRouter()
@@ -235,65 +239,53 @@ export default function InscriptionPage() {
             {step === 1 && (
               <>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-[rgba(255,255,255,0.8)]">
-                      Prénom
-                    </Label>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      placeholder="Jean"
-                      className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-[rgba(255,255,255,0.8)]">
-                      Nom
-                    </Label>
-                    <Input
-                      id="lastName"
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      placeholder="Dupont"
-                      className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-[rgba(255,255,255,0.8)]">
-                    Adresse email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="votre@email.com"
+                  <ValidatedInput
+                    label="Prénom"
+                    id="firstName"
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="Jean"
+                    validator={combine(required("Le prénom est obligatoire"), minLength(2))}
+                    className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
+                    required
+                  />
+                  <ValidatedInput
+                    label="Nom"
+                    id="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    placeholder="Dupont"
+                    validator={combine(required("Le nom est obligatoire"), minLength(2))}
                     className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-[rgba(255,255,255,0.8)]">
-                    Téléphone (WhatsApp)
-                  </Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+221 77 000 00 00"
-                    className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
-                    required
-                  />
-                </div>
+                <ValidatedInput
+                  label="Adresse email"
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="votre@email.com"
+                  validator={combine(required("L'email est obligatoire"), emailValidator)}
+                  className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
+                  required
+                />
+
+                <ValidatedInput
+                  label="Téléphone (WhatsApp)"
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+221 77 000 00 00"
+                  validator={combine(required("Le téléphone est obligatoire"), phoneValidator)}
+                  className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
+                  required
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-[rgba(255,255,255,0.8)]">
@@ -305,8 +297,15 @@ export default function InscriptionPage() {
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onBlur={() => setPasswordTouched(true)}
                       placeholder="Min. 6 caractères"
-                      className="h-11 pr-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
+                      className={`h-11 pr-11 bg-[rgba(255,255,255,0.05)] text-white placeholder:text-[rgba(255,255,255,0.3)] ${
+                        passwordTouched && formData.password && formData.password.length < 6
+                          ? 'border-red-500'
+                          : formData.password.length >= 6
+                            ? 'border-green-500'
+                            : 'border-[rgba(255,255,255,0.1)]'
+                      }`}
                       required
                     />
                     <button
@@ -318,6 +317,45 @@ export default function InscriptionPage() {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+                  {formData.password.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full bg-[rgba(255,255,255,0.1)] overflow-hidden flex gap-0.5">
+                        {[0, 1, 2].map((i) => {
+                          const strength = passwordStrength(formData.password)
+                          const filled =
+                            (strength === 'faible' && i === 0) ||
+                            (strength === 'moyen' && i <= 1) ||
+                            (strength === 'fort' && i <= 2)
+                          const color =
+                            strength === 'faible' ? 'bg-red-500' : strength === 'moyen' ? 'bg-amber-500' : 'bg-green-500'
+                          return (
+                            <div
+                              key={i}
+                              className={`flex-1 h-full rounded-full transition-colors ${filled ? color : 'bg-transparent'}`}
+                            />
+                          )
+                        })}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          passwordStrength(formData.password) === 'faible'
+                            ? 'text-red-400'
+                            : passwordStrength(formData.password) === 'moyen'
+                              ? 'text-amber-400'
+                              : 'text-green-400'
+                        }`}
+                      >
+                        {passwordStrength(formData.password) === 'faible'
+                          ? 'Faible'
+                          : passwordStrength(formData.password) === 'moyen'
+                            ? 'Moyen'
+                            : 'Fort'}
+                      </span>
+                    </div>
+                  )}
+                  {passwordTouched && formData.password && formData.password.length < 6 && (
+                    <p className="text-xs text-red-400">Le mot de passe doit contenir au moins 6 caractères</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -330,8 +368,15 @@ export default function InscriptionPage() {
                       type={showConfirm ? 'text' : 'password'}
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      onBlur={() => setConfirmTouched(true)}
                       placeholder="••••••••"
-                      className="h-11 pr-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)]"
+                      className={`h-11 pr-11 bg-[rgba(255,255,255,0.05)] text-white placeholder:text-[rgba(255,255,255,0.3)] ${
+                        confirmTouched && formData.confirmPassword && formData.confirmPassword !== formData.password
+                          ? 'border-red-500'
+                          : confirmTouched && formData.confirmPassword && formData.confirmPassword === formData.password
+                            ? 'border-green-500'
+                            : 'border-[rgba(255,255,255,0.1)]'
+                      }`}
                       required
                     />
                     <button
@@ -343,21 +388,39 @@ export default function InscriptionPage() {
                       {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+                  {confirmTouched && formData.confirmPassword && formData.confirmPassword !== formData.password && (
+                    <p className="text-xs text-red-400">Les mots de passe ne correspondent pas</p>
+                  )}
                 </div>
 
                 <Button
                   type="button"
                   onClick={() => {
-                    if (formData.firstName && formData.lastName && formData.email && formData.phone && formData.password && formData.confirmPassword) {
-                      if (formData.password !== formData.confirmPassword) {
-                        setError('Les mots de passe ne correspondent pas')
-                        return
-                      }
-                      setError('')
-                      setStep(2)
-                    } else {
+                    setPasswordTouched(true)
+                    setConfirmTouched(true)
+
+                    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
                       setError('Veuillez remplir tous les champs')
+                      return
                     }
+                    if (emailValidator(formData.email)) {
+                      setError('Adresse email invalide')
+                      return
+                    }
+                    if (phoneValidator(formData.phone)) {
+                      setError('Numéro de téléphone invalide')
+                      return
+                    }
+                    if (formData.password.length < 6) {
+                      setError('Le mot de passe doit contenir au moins 6 caractères')
+                      return
+                    }
+                    if (formData.password !== formData.confirmPassword) {
+                      setError('Les mots de passe ne correspondent pas')
+                      return
+                    }
+                    setError('')
+                    setStep(2)
                   }}
                   className="w-full h-11 bg-[#C9A227] hover:bg-[#B8860B] text-white font-semibold"
                 >
