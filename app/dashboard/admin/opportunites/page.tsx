@@ -6,10 +6,12 @@ import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, Briefcase } from 'lucide-react'
+import { combine, required, minLength } from '@/lib/validators'
 
 // Schéma Laravel réel (table opportunites) : id, titre, type
 // ('stage'|'emploi'|'formation'|'bourse'|'partenariat'), description,
@@ -180,15 +182,14 @@ export default function AdminOpportunitesPage() {
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
-                      <Input
-                        value={formData.titre}
-                        onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                        required
-                      />
-                    </div>
+                    <ValidatedInput
+                      label="Titre"
+                      value={formData.titre}
+                      onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+                      validator={combine(required("Le titre est obligatoire"), minLength(3))}
+                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                      required
+                    />
                     <div className="space-y-2">
                       <Label className="text-[rgba(255,255,255,0.8)]">Type</Label>
                       <Select value={formData.type} onValueChange={(v) => setFormData({ ...formData, type: v as Opportunite['type'] })}>
@@ -229,24 +230,22 @@ export default function AdminOpportunitesPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Ville</Label>
-                      <Input
-                        value={formData.ville}
-                        onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Pays</Label>
-                      <Input
-                        value={formData.pays}
-                        onChange={(e) => setFormData({ ...formData, pays: e.target.value })}
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                        required
-                      />
-                    </div>
+                    <ValidatedInput
+                      label="Ville"
+                      value={formData.ville}
+                      onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
+                      validator={required("La ville est obligatoire")}
+                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                      required
+                    />
+                    <ValidatedInput
+                      label="Pays"
+                      value={formData.pays}
+                      onChange={(e) => setFormData({ ...formData, pays: e.target.value })}
+                      validator={required("Le pays est obligatoire")}
+                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                      required
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

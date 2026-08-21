@@ -6,11 +6,13 @@ import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { Edit, Trash2, Plus, Newspaper } from 'lucide-react'
+import { combine, required, minLength } from '@/lib/validators'
 
 // Schéma Laravel réel (table 'actuses', endpoint /actus) : id, titre,
 // description, contenu_html, image, type ('actualite'|'evenement'|
@@ -170,15 +172,14 @@ export default function AdminActusPage() {
                     <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>
                   )}
 
-                  <div className="space-y-2">
-                    <Label className="text-[rgba(255,255,255,0.8)]">Titre</Label>
-                    <Input
-                      value={formData.titre}
-                      onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                      required
-                    />
-                  </div>
+                  <ValidatedInput
+                    label="Titre"
+                    value={formData.titre}
+                    onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+                    validator={combine(required("Le titre est obligatoire"), minLength(3))}
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                    required
+                  />
 
                   <ImageUpload label="Image" value={existingImageUrl} onFileSelected={setImageFile} disabled={saving} />
 
