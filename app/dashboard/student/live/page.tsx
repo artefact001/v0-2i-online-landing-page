@@ -7,7 +7,7 @@ export default function StudentLivePage() {
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title="Cours Live" subtitle="Vos sessions en direct et à venir" />
         <ComingSoon message="Cette vue dédiée arrive bientôt. En attendant, tes sessions live à venir apparaissent sur le tableau de bord." />
       </main>

@@ -7,7 +7,7 @@ export default function AdminLiveSessionsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title="Sessions Live" subtitle="Supervisez toutes les sessions en direct de la plateforme" />
         <ComingSoon message="La supervision globale des cours en direct arrive bientôt." />
       </main>

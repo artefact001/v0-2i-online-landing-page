@@ -161,10 +161,10 @@ export default function AdminFormationsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title="Gestion des Formations" subtitle="Créer et gérer le catalogue de formations" />
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 md:p-8 space-y-6">
           <div className="flex justify-end">
             <Button
               onClick={() => (isCreating ? resetForm() : setIsCreating(true))}
@@ -195,7 +195,7 @@ export default function AdminFormationsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[rgba(255,255,255,0.8)]">Catégorie *</Label>
                       <Select
@@ -232,7 +232,7 @@ export default function AdminFormationsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[rgba(255,255,255,0.8)]">Niveau</Label>
                       <Input

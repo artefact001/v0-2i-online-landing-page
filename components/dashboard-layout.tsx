@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth, UserProfile } from '@/components/auth-guard'
 import { ProfileDialog } from '@/components/profile-dialog'
@@ -14,6 +14,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+
+// Petit store partagé (sans Context/Provider) pour synchroniser l'état
+// ouvert/fermé du tiroir de navigation mobile entre DashboardSidebar et
+// DashboardHeader, qui sont rendus indépendamment côte à côte dans chaque
+// page dashboard (pas de composant parent commun à modifier).
+let mobileSidebarOpen = false
+const sidebarListeners = new Set<() => void>()
+function setMobileSidebarOpen(open: boolean) {
+  mobileSidebarOpen = open
+  sidebarListeners.forEach((listener) => listener())
+}
+function subscribeSidebar(listener: () => void) {
+  sidebarListeners.add(listener)
+  return () => sidebarListeners.delete(listener)
+}
+function useMobileSidebarOpen() {
+  return useSyncExternalStore(subscribeSidebar, () => mobileSidebarOpen, () => false)
+}
 
 interface NavItem {
   href: string
@@ -193,6 +211,7 @@ export function DashboardSidebar() {
   const { profile, signOut } = useAuth()
   const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
+  const isOpen = useMobileSidebarOpen()
 
   if (!profile) return null
 
@@ -213,42 +232,66 @@ export function DashboardSidebar() {
   const displayName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-64 bg-[#0d0d1a] border-r border-[rgba(255,255,255,0.05)] flex flex-col z-40">
-      {/* Logo */}
-      <div className="p-6 border-b border-[rgba(255,255,255,0.05)]">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C9A227] to-[#B8860B] flex items-center justify-center">
-            <span className="text-white font-bold text-lg font-serif">2I</span>
-          </div>
-          <div>
-            <span className="text-white font-serif text-lg font-semibold">2I Online</span>
-          </div>
-        </Link>
-      </div>
+    <>
+      {/* Backdrop mobile — visible seulement quand le tiroir est ouvert */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 overflow-y-auto">
-        <ul className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'bg-[#C9A227]/20 text-[#C9A227]'
-                      : 'text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.05)] hover:text-white'
-                  }`}
-                >
-                  {item.icon}
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+      <aside
+        className={`fixed left-0 top-0 bottom-0 w-64 bg-[#0d0d1a] border-r border-[rgba(255,255,255,0.05)] flex flex-col z-50 transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
+        {/* Logo */}
+        <div className="p-6 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C9A227] to-[#B8860B] flex items-center justify-center">
+              <span className="text-white font-bold text-lg font-serif">2I</span>
+            </div>
+            <div>
+              <span className="text-white font-serif text-lg font-semibold">2I Online</span>
+            </div>
+          </Link>
+          <button
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-label="Fermer le menu"
+            className="lg:hidden w-9 h-9 flex items-center justify-center text-[rgba(255,255,255,0.5)] hover:text-white touch-manipulation"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 touch-manipulation ${
+                      isActive
+                        ? 'bg-[#C9A227]/20 text-[#C9A227]'
+                        : 'text-[rgba(255,255,255,0.6)] hover:bg-[rgba(255,255,255,0.05)] hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
 
       {/* User Profile */}
       <div className="p-4 border-t border-[rgba(255,255,255,0.05)]">
@@ -300,21 +343,33 @@ export function DashboardSidebar() {
       </div>
 
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
-    </aside>
+      </aside>
+    </>
   )
 }
 
 export function DashboardHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <header className="h-16 bg-[#0d0d1a]/80 backdrop-blur-lg border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between px-8 sticky top-0 z-30">
-      <div>
-        <h1 className="text-xl font-serif font-bold text-white">{title}</h1>
-        {subtitle && <p className="text-sm text-[rgba(255,255,255,0.5)]">{subtitle}</p>}
+    <header className="h-16 bg-[#0d0d1a]/80 backdrop-blur-lg border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="Ouvrir le menu"
+          className="lg:hidden w-9 h-9 shrink-0 flex items-center justify-center text-[rgba(255,255,255,0.7)] hover:text-white touch-manipulation"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-base md:text-xl font-serif font-bold text-white truncate">{title}</h1>
+          {subtitle && <p className="hidden sm:block text-sm text-[rgba(255,255,255,0.5)] truncate">{subtitle}</p>}
+        </div>
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="text-[rgba(255,255,255,0.6)] hover:text-white hover:bg-[rgba(255,255,255,0.05)]">
+        <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-[rgba(255,255,255,0.6)] hover:text-white hover:bg-[rgba(255,255,255,0.05)]">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
@@ -322,11 +377,11 @@ export function DashboardHeader({ title, subtitle }: { title: string; subtitle?:
         
         {/* Back to site */}
         <Link href="/">
-          <Button variant="outline" size="sm" className="border-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.05)]">
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <Button variant="outline" size="sm" className="border-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.05)] px-2 md:px-3">
+            <svg className="w-4 h-4 md:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Retour au site
+            <span className="hidden md:inline">Retour au site</span>
           </Button>
         </Link>
       </div>

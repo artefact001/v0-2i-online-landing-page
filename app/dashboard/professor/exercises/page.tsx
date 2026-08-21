@@ -360,7 +360,7 @@ export default function ExercisesPage() {
             <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Formation</p>
             <FormationPills formations={formations.map((f) => ({ id: f.id, name: f.titre }))} selected={selectedFormation} onSelect={setSelectedFormation} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <p className="text-sm font-medium text-[rgba(255,255,255,0.6)]">Module</p>
               <Select value={selectedModule} onValueChange={setSelectedModule}>
@@ -411,7 +411,7 @@ export default function ExercisesPage() {
                   <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" rows={3} />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label className="text-[rgba(255,255,255,0.8)]">Type</Label>
                     <Select value={type} onValueChange={(v) => setType(v as any)}>

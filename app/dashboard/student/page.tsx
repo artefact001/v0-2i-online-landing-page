@@ -78,10 +78,10 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
 
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title={`Bonjour, ${displayName}`} subtitle="Continuez votre apprentissage" />
 
-        <div className="p-8 space-y-8">
+        <div className="p-4 md:p-8 space-y-8">
           {loading ? (
             <div className="flex items-center justify-center py-24">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#C9A227]" />

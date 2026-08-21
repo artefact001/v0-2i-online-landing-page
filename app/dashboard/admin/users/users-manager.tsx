@@ -222,10 +222,10 @@ export function UsersManager({
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title="Utilisateurs" subtitle="Gérez les comptes administrateurs, professeurs et élèves" />
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 md:p-8 space-y-6">
           {feedback && (
             <div
               className={`rounded-lg px-4 py-3 text-sm ${

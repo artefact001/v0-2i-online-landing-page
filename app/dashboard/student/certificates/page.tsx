@@ -68,10 +68,10 @@ export default function CertificatesPage() {
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title="Mes Certificats" subtitle="Tes diplômes et attestations obtenus" />
 
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />

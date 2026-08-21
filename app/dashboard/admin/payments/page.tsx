@@ -53,10 +53,10 @@ export default function AdminPaymentsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
-      <main className="ml-64">
+      <main className="lg:ml-64">
         <DashboardHeader title="Paiements" subtitle="Suivi des revenus et des transactions" />
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 md:p-8 space-y-6">
           <Card className="bg-gradient-to-r from-[#0d0d1a] to-[#C9A227]/10 border-[#C9A227]/30">
             <CardContent className="p-6">
               <p className="text-[rgba(255,255,255,0.5)] text-xs uppercase tracking-wider mb-1">

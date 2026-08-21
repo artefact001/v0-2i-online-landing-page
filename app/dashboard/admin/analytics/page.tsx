@@ -31,11 +31,11 @@ export default function AnalyticsDashboard() {
   }, []);
 
   if (loading) {
-    return <div className="p-8">Chargement des données...</div>;
+    return <div className="p-4 md:p-8">Chargement des données...</div>;
   }
 
   if (!analytics) {
-    return <div className="p-8">Erreur lors du chargement</div>;
+    return <div className="p-4 md:p-8">Erreur lors du chargement</div>;
   }
 
   const chartData = formations.map(f => ({
@@ -46,7 +46,7 @@ export default function AnalyticsDashboard() {
   }));
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-[#0D2545]">Analytiques</h1>
         <Button className="bg-[#0D2545] hover:bg-[#0a1d2e] flex items-center gap-2">
