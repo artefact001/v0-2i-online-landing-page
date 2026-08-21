@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Edit, Key, Power, Trash2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -335,42 +336,46 @@ export function UsersManager({
                           </Badge>
                         </td>
                         <td className="p-4">
-                          <div className="flex gap-2 justify-end flex-wrap">
+                          <div className="flex gap-1.5 justify-end flex-wrap">
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => openEdit(u)}
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]"
+                              title="Modifier"
+                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
                             >
-                              Modifier
+                              <Edit className="w-4 h-4" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => {
                                 setPwdTarget(u)
                                 setPassword("")
                               }}
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]"
+                              title="Réinitialiser le mot de passe"
+                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
                             >
-                              Mot de passe
+                              <Key className="w-4 h-4" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => toggleActive(u)}
                               disabled={isPending}
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]"
+                              title={u.isActive ? "Désactiver" : "Activer"}
+                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
                             >
-                              {u.isActive ? "Désactiver" : "Activer"}
+                              <Power className="w-4 h-4" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="outline"
                               onClick={() => setDeleteTarget(u)}
-                              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                              title="Supprimer"
+                              className="border-red-500/30 text-red-400 hover:bg-red-500/10 h-8 w-8"
                             >
-                              Supprimer
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </td>

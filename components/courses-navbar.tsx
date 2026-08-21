@@ -76,7 +76,7 @@ export function CoursesNavbar({ currentPage }: CoursesNavbarProps) {
           <div className="w-px h-4 bg-[rgba(255,255,255,0.15)]" />
           <Link
             href="/login"
-            className="text-[10px] font-medium tracking-[2px] uppercase text-[rgba(255,255,255,0.7)] px-4 py-2.5 rounded-lg no-underline transition-all duration-300 hover:text-white hover:bg-[rgba(255,255,255,0.05)]"
+            className="touch-manipulation inline-flex items-center gap-2 bg-[#C9A227] text-[#0D2545] text-[10px] font-bold tracking-[2px] uppercase px-5 py-2.5 rounded no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105"
           >
             Connexion
           </Link>

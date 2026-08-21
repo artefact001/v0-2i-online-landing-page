@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Card, CardContent } from '@/components/ui/card'
-import { CreditCard } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { CreditCard, Eye } from 'lucide-react'
 
 interface Paiement {
   id: string
@@ -32,6 +34,7 @@ const statusLabel: Record<string, string> = {
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<Paiement[]>([])
   const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState<Paiement | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -92,9 +95,20 @@ export default function AdminPaymentsPage() {
                         </p>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[p.status] || statusStyle.pending}`}>
-                      {statusLabel[p.status] || p.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[p.status] || statusStyle.pending}`}>
+                        {statusLabel[p.status] || p.status}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => setSelected(p)}
+                        title="Voir détails"
+                        className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -102,6 +116,46 @@ export default function AdminPaymentsPage() {
           )}
         </div>
       </main>
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Détails du paiement</DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
+                <span className="text-[rgba(255,255,255,0.5)]">Montant</span>
+                <span className="text-white font-semibold">{Number(selected.amount).toLocaleString()} FCFA</span>
+              </div>
+              <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
+                <span className="text-[rgba(255,255,255,0.5)]">Méthode</span>
+                <span className="text-white">{selected.payment_method || 'Bictorys'}</span>
+              </div>
+              <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
+                <span className="text-[rgba(255,255,255,0.5)]">Statut</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyle[selected.status]}`}>
+                  {statusLabel[selected.status]}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
+                <span className="text-[rgba(255,255,255,0.5)]">Devise</span>
+                <span className="text-white">{selected.currency || 'XOF'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[rgba(255,255,255,0.5)]">Date</span>
+                <span className="text-white">
+                  {selected.created_at ? new Date(selected.created_at).toLocaleString('fr-FR') : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-[rgba(255,255,255,0.08)]">
+                <span className="text-[rgba(255,255,255,0.5)]">ID transaction</span>
+                <span className="text-white font-mono text-xs">{selected.id}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
