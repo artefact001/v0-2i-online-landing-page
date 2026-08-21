@@ -55,6 +55,7 @@ export default function AdminFormationsPage() {
   const [formData, setFormData] = useState(emptyForm)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null)
+  const [existingNbInscrit, setExistingNbInscrit] = useState(0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -89,6 +90,7 @@ export default function AdminFormationsPage() {
     setFormData(emptyForm)
     setImageFile(null)
     setExistingImageUrl(null)
+    setExistingNbInscrit(0)
     setEditingId(null)
     setIsCreating(false)
     setError('')
@@ -106,6 +108,7 @@ export default function AdminFormationsPage() {
     })
     setImageFile(null)
     setExistingImageUrl(f.image || null)
+    setExistingNbInscrit(f.nb_inscrit ?? 0)
     setEditingId(f.id)
     setIsCreating(true)
   }
@@ -129,6 +132,9 @@ export default function AdminFormationsPage() {
     body.append('prix', String(formData.prix ? Number(formData.prix) : 0))
     body.append('statut', formData.statut)
     body.append('categorie_id', formData.categorie_id)
+    // Laravel exige ce champ explicitement malgré ->default(0) en base — la
+    // validation FormRequest ne connaît pas la valeur par défaut SQL.
+    body.append('nb_inscrit', String(editingId ? existingNbInscrit : 0))
     if (imageFile) {
       body.append('image', imageFile)
     }
