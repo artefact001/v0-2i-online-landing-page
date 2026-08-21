@@ -7,10 +7,12 @@ import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, GraduationCap, Users } from 'lucide-react'
+import { combine, required, minLength, positiveNumber } from '@/lib/validators'
 
 // Schéma Laravel réel (table formations) :
 // id, titre, description, image, niveau, duree, prix (decimal), statut
@@ -190,16 +192,15 @@ export default function AdminFormationsPage() {
                       {error}
                     </div>
                   )}
-                  <div className="space-y-2">
-                    <Label className="text-[rgba(255,255,255,0.8)]">Titre de la formation</Label>
-                    <Input
-                      value={formData.titre}
-                      onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
-                      placeholder="Ex: CAP Cuisinier"
-                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                      required
-                    />
-                  </div>
+                  <ValidatedInput
+                    label="Titre de la formation"
+                    value={formData.titre}
+                    onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+                    placeholder="Ex: CAP Cuisinier"
+                    validator={combine(required("Le titre est obligatoire"), minLength(3))}
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                    required
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -257,17 +258,16 @@ export default function AdminFormationsPage() {
                         className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[rgba(255,255,255,0.8)]">Prix (FCFA)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={formData.prix}
-                        onChange={(e) => setFormData({ ...formData, prix: e.target.value })}
-                        placeholder="Ex: 60000"
-                        className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                      />
-                    </div>
+                    <ValidatedInput
+                      label="Prix (FCFA)"
+                      type="number"
+                      step="0.01"
+                      value={formData.prix}
+                      onChange={(e) => setFormData({ ...formData, prix: e.target.value })}
+                      placeholder="Ex: 60000"
+                      validator={positiveNumber}
+                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                    />
                   </div>
 
                   <ImageUpload
