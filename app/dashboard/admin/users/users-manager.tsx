@@ -5,9 +5,18 @@ import { DashboardSidebar, DashboardHeader } from "@/components/dashboard-layout
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { ValidatedInput } from "@/components/ui/validated-input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Edit, Key, Power, Trash2 } from "lucide-react"
+import {
+  combine,
+  required,
+  minLength,
+  email as emailValidator,
+  phone as phoneValidator,
+  password as passwordValidator,
+} from "@/lib/validators"
 import {
   Dialog,
   DialogContent,
@@ -421,53 +430,48 @@ export function UsersManager({
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.7)]">Prénom</Label>
-                <Input
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.7)]">Nom</Label>
-                <Input
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-[rgba(255,255,255,0.7)]">Email</Label>
-              <Input
-                type="email"
-                value={email}
-                disabled={!!editing}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white disabled:opacity-50"
+              <ValidatedInput
+                label="Prénom"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                validator={combine(required("Le prénom est obligatoire"), minLength(2))}
+                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+              />
+              <ValidatedInput
+                label="Nom"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                validator={combine(required("Le nom est obligatoire"), minLength(2))}
+                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
               />
             </div>
+            <ValidatedInput
+              label="Email"
+              type="email"
+              value={email}
+              disabled={!!editing}
+              onChange={(e) => setEmail(e.target.value)}
+              validator={editing ? undefined : combine(required("L'email est obligatoire"), emailValidator)}
+              className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white disabled:opacity-50"
+            />
             {!editing && (
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.7)]">Mot de passe</Label>
-                <Input
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-                />
-              </div>
+              <ValidatedInput
+                label="Mot de passe"
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                validator={combine(required("Le mot de passe est obligatoire"), passwordValidator)}
+                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+              />
             )}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.7)]">Téléphone</Label>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-                />
-              </div>
+              <ValidatedInput
+                label="Téléphone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                validator={phoneValidator}
+                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+              />
               <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.7)]">Rôle</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as ManagedUser["role"])}>
