@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { apiClient } from '@/lib/api/client'
+import { apiClient, apiClientUpload } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth-context'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ValidatedInput } from '@/components/ui/validated-input'
+import { FileUpload } from '@/components/ui/file-upload'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -56,10 +57,12 @@ export default function LessonsPage() {
   const [formData, setFormData] = useState({
     titre: '',
     contenu: '',
-    video: '',
-    document: '',
     ordre: 0,
   })
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null)
+  const [existingDocumentUrl, setExistingDocumentUrl] = useState<string | null>(null)
 
   const { user } = useAuth()
 
@@ -124,10 +127,6 @@ export default function LessonsPage() {
     if (formData.titre.trim().length < 3) return 'Le titre doit contenir au moins 3 caractères.'
     if (!formData.contenu.trim()) return 'Le contenu de la leçon est obligatoire.'
     if (formData.ordre < 0) return "L'ordre ne peut pas être négatif."
-    const video = formData.video.trim()
-    if (video && !/^https?:\/\//i.test(video)) return "L'URL de la vidéo doit commencer par http:// ou https://."
-    const doc = formData.document.trim()
-    if (doc && !/^https?:\/\//i.test(doc)) return "L'URL du document doit commencer par http:// ou https://."
     return ''
   }
 
@@ -144,26 +143,18 @@ export default function LessonsPage() {
 
     setIsLoading(true)
     try {
-      const payload = {
-        titre: formData.titre.trim(),
-        contenu: formData.contenu.trim(),
-        video: formData.video.trim() || undefined,
-        document: formData.document.trim() || undefined,
-        ordre: formData.ordre,
-      }
+      const body = new FormData()
+      body.append('titre', formData.titre.trim())
+      body.append('contenu', formData.contenu.trim())
+      body.append('ordre', String(formData.ordre))
+      if (videoFile) body.append('video', videoFile)
+      if (documentFile) body.append('document', documentFile)
+
       if (editingId) {
-        await apiClient(`/lecons/${editingId}`, {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        })
+        await apiClientUpload(`/lecons/${editingId}`, body, 'PUT')
       } else {
-        await apiClient('/lecons', {
-          method: 'POST',
-          body: JSON.stringify({
-            ...payload,
-            module_id: selectedModule,
-          }),
-        })
+        body.append('module_id', selectedModule)
+        await apiClientUpload('/lecons', body, 'POST')
       }
 
       await loadLessons()
@@ -188,7 +179,11 @@ export default function LessonsPage() {
   }
 
   const resetForm = () => {
-    setFormData({ titre: '', contenu: '', video: '', document: '', ordre: 0 })
+    setFormData({ titre: '', contenu: '', ordre: 0 })
+    setVideoFile(null)
+    setDocumentFile(null)
+    setExistingVideoUrl(null)
+    setExistingDocumentUrl(null)
     setFormError('')
     setEditingId(null)
     setIsCreating(false)
@@ -198,10 +193,12 @@ export default function LessonsPage() {
     setFormData({
       titre: lesson.titre,
       contenu: lesson.contenu,
-      video: lesson.video || '',
-      document: lesson.document || '',
       ordre: lesson.ordre,
     })
+    setVideoFile(null)
+    setDocumentFile(null)
+    setExistingVideoUrl(lesson.video || null)
+    setExistingDocumentUrl(lesson.document || null)
     setEditingId(lesson.id)
     setIsCreating(true)
   }
@@ -297,28 +294,28 @@ export default function LessonsPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)]">URL Vidéo (optionnel)</Label>
-                <Input
-                  value={formData.video}
-                  onChange={(e) => setFormData({ ...formData, video: e.target.value })}
-                  placeholder="https://exemple.com/video.mp4"
-                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                />
-              </div>
+              <FileUpload
+                label="Vidéo (optionnel)"
+                kind="video"
+                value={existingVideoUrl}
+                onFileSelected={setVideoFile}
+                disabled={isLoading}
+                accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/mpeg"
+                acceptedTypes={['video/']}
+                typeLabel="fichier vidéo"
+                maxSizeMb={50}
+              />
 
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.8)] flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#C9A227]" />
-                  URL Document (optionnel)
-                </Label>
-                <Input
-                  value={formData.document}
-                  onChange={(e) => setFormData({ ...formData, document: e.target.value })}
-                  placeholder="https://exemple.com/support-de-cours.pdf"
-                  className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                />
-              </div>
+              <FileUpload
+                label="Document (optionnel)"
+                kind="document"
+                value={existingDocumentUrl}
+                onFileSelected={setDocumentFile}
+                disabled={isLoading}
+                accept=".pdf,.doc,.docx,.ppt,.pptx"
+                typeLabel="document (PDF, Word, PowerPoint)"
+                maxSizeMb={20}
+              />
 
               <div className="space-y-2">
                 <Label className="text-[rgba(255,255,255,0.8)]">Ordre</Label>

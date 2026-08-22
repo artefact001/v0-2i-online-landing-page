@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { apiClient } from '@/lib/api/client'
+import { apiClient, apiClientUpload } from '@/lib/api/client'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ValidatedInput } from '@/components/ui/validated-input'
+import { FileUpload } from '@/components/ui/file-upload'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -16,7 +17,7 @@ import { combine, required, minLength } from '@/lib/validators'
 
 // Schéma Laravel réel (table opportunites) : id, titre, type
 // ('stage'|'emploi'|'formation'|'bourse'|'partenariat'), description,
-// documents (URL PDF), date_debut, date_fin, ville, pays, entreprise,
+// documents (fichier PDF uploadé), date_debut, date_fin, ville, pays, entreprise,
 // lien_inscription, statut ('ouvert'|'ferme'|'en cours')
 interface Opportunite {
   id: string
@@ -57,7 +58,6 @@ const emptyForm = {
   titre: '',
   type: 'emploi' as Opportunite['type'],
   description: '',
-  documents: '',
   date_debut: new Date().toISOString().slice(0, 10),
   date_fin: '',
   ville: '',
@@ -73,6 +73,8 @@ export default function AdminOpportunitesPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [existingDocumentUrl, setExistingDocumentUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -93,6 +95,8 @@ export default function AdminOpportunitesPage() {
 
   const resetForm = () => {
     setFormData(emptyForm)
+    setDocumentFile(null)
+    setExistingDocumentUrl(null)
     setEditingId(null)
     setIsCreating(false)
     setError('')
@@ -103,7 +107,6 @@ export default function AdminOpportunitesPage() {
       titre: o.titre,
       type: o.type,
       description: o.description,
-      documents: o.documents || '',
       date_debut: o.date_debut?.slice(0, 10) || emptyForm.date_debut,
       date_fin: o.date_fin?.slice(0, 10) || '',
       ville: o.ville,
@@ -112,6 +115,8 @@ export default function AdminOpportunitesPage() {
       lien_inscription: o.lien_inscription || '',
       statut: o.statut,
     })
+    setDocumentFile(null)
+    setExistingDocumentUrl(o.documents || null)
     setEditingId(o.id)
     setIsCreating(true)
   }
@@ -121,25 +126,24 @@ export default function AdminOpportunitesPage() {
     setSaving(true)
     setError('')
 
-    const payload = {
-      titre: formData.titre,
-      type: formData.type,
-      description: formData.description,
-      documents: formData.documents || undefined,
-      date_debut: formData.date_debut,
-      date_fin: formData.date_fin,
-      ville: formData.ville,
-      pays: formData.pays,
-      entreprise: formData.entreprise || undefined,
-      lien_inscription: formData.lien_inscription || undefined,
-      statut: formData.statut,
-    }
+    const body = new FormData()
+    body.append('titre', formData.titre)
+    body.append('type', formData.type)
+    body.append('description', formData.description)
+    body.append('date_debut', formData.date_debut)
+    body.append('date_fin', formData.date_fin)
+    body.append('ville', formData.ville)
+    body.append('pays', formData.pays)
+    if (formData.entreprise) body.append('entreprise', formData.entreprise)
+    if (formData.lien_inscription) body.append('lien_inscription', formData.lien_inscription)
+    body.append('statut', formData.statut)
+    if (documentFile) body.append('documents', documentFile)
 
     try {
       if (editingId) {
-        await apiClient(`/opportunites/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
+        await apiClientUpload(`/opportunites/${editingId}`, body, 'PUT')
       } else {
-        await apiClient('/opportunites', { method: 'POST', body: JSON.stringify(payload) })
+        await apiClientUpload('/opportunites', body, 'POST')
       }
       await load()
       resetForm()
@@ -285,15 +289,16 @@ export default function AdminOpportunitesPage() {
                     </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[rgba(255,255,255,0.8)]">Document (URL PDF, optionnel)</Label>
-                    <Input
-                      value={formData.documents}
-                      onChange={(e) => setFormData({ ...formData, documents: e.target.value })}
-                      placeholder="https://..."
-                      className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
-                    />
-                  </div>
+                  <FileUpload
+                    label="Document PDF (optionnel)"
+                    value={existingDocumentUrl}
+                    onFileSelected={setDocumentFile}
+                    disabled={saving}
+                    accept=".pdf"
+                    acceptedTypes={['application/pdf']}
+                    typeLabel="PDF"
+                    maxSizeMb={10}
+                  />
 
                   <div className="space-y-2">
                     <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
