@@ -6,6 +6,8 @@ import Link from "next/link"
 import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/auth-context"
 import { progressService } from "@/lib/progress-service"
+import { favoritesService } from "@/lib/notes-service"
+import { LessonNotesPanel } from "@/components/lesson/notes-panel"
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -21,7 +23,9 @@ import {
   X,
   Award,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  StickyNote,
+  Star
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -77,7 +81,8 @@ export default function CoursePage() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [expandedModules, setExpandedModules] = useState<string[]>([])
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
-  const [activeTab, setActiveTab] = useState<"content" | "exercises">("content")
+  const [activeTab, setActiveTab] = useState<"content" | "exercises" | "notes">("content")
+  const [isFavorite, setIsFavorite] = useState(false)
   const [loading, setLoading] = useState(true)
   const [totalProgress, setTotalProgress] = useState(0)
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null) // null = pas encore vérifié
@@ -232,6 +237,32 @@ export default function CoursePage() {
       setProgress({ statut: 'termine' })
     }
   }, [currentLesson, user])
+
+  // Favoris — chargement de l'état + toggle
+  useEffect(() => {
+    if (!currentLesson) return
+    let active = true
+    favoritesService.isFavorite(currentLesson.id).then((fav) => {
+      if (active) setIsFavorite(!!fav)
+    })
+    return () => {
+      active = false
+    }
+  }, [currentLesson])
+
+  const toggleFavorite = useCallback(async () => {
+    if (!currentLesson) return
+    if (isFavorite) {
+      const fav = await favoritesService.isFavorite(currentLesson.id)
+      if (fav) {
+        const ok = await favoritesService.removeFavorite(fav.id)
+        if (ok) setIsFavorite(false)
+      }
+    } else {
+      const fav = await favoritesService.addFavorite(currentLesson.id, String(params.formationId))
+      if (fav) setIsFavorite(true)
+    }
+  }, [currentLesson, isFavorite, params.formationId])
 
   // Navigation
   const getAllLessons = useCallback(() => {
@@ -450,6 +481,15 @@ export default function CoursePage() {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button
+              onClick={toggleFavorite}
+              variant="outline"
+              size="icon"
+              title={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+              className={isFavorite ? "border-[#C9A227] text-[#C9A227]" : "border-[#1a2942] text-gray-400"}
+            >
+              <Star className={`w-4 h-4 ${isFavorite ? "fill-[#C9A227]" : ""}`} />
+            </Button>
             {progress?.statut !== 'termine' && (
               <Button
                 onClick={markAsComplete}
@@ -499,12 +539,25 @@ export default function CoursePage() {
                 </span>
               )}
             </button>
+            <button
+              onClick={() => setActiveTab("notes")}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "notes" 
+                  ? "border-[#C9A227] text-[#C9A227]" 
+                  : "border-transparent text-gray-400 hover:text-white"
+              }`}
+            >
+              <StickyNote className="w-4 h-4 inline mr-2" />
+              Notes
+            </button>
           </div>
         </div>
         
         {/* Main content area */}
         <div className="flex-1 overflow-y-auto">
-          {activeTab === "content" ? (
+          {activeTab === "notes" ? (
+            <LessonNotesPanel leconId={currentLesson.id} />
+          ) : activeTab === "content" ? (
             <div className="max-w-4xl mx-auto p-6">
               {/* Video section */}
               {currentLesson.video && (

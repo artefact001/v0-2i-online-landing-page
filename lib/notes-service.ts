@@ -1,12 +1,15 @@
+import { apiClient } from '@/lib/api/client'
+
 /**
- * STAND BY — aucune route Laravel pour notes/favoris étudiants dans routes/api.php.
- * Fonctions désactivées en attendant le backend.
+ * Connecté au vrai backend (NoteController/FavoriController).
+ * notes: user_id, lecon_id, content, timestamp_seconds
+ * favoris: user_id, lecon_id, formation_id
  */
 
 export interface StudentNote {
   id: string
-  student_id: string
-  lesson_id: string
+  user_id: string
+  lecon_id: string
   content: string
   timestamp_seconds: number
   created_at: string
@@ -15,62 +18,103 @@ export interface StudentNote {
 
 export interface Favorite {
   id: string
-  student_id: string
-  lesson_id: string
+  user_id: string
+  lecon_id: string
   formation_id: string
   created_at: string
 }
 
-function notReady(fn: string) {
-  console.warn(`[notesService.${fn}] en attente d'un endpoint Laravel — fonctionnalité en pause`)
-}
-
 export const notesService = {
-  async createNote(..._args: any[]): Promise<StudentNote | null> {
-    notReady('createNote')
-    return null
+  // POST /v1/notes
+  async createNote(leconId: string, content: string, timestampSeconds = 0): Promise<StudentNote | null> {
+    try {
+      const res = await apiClient<StudentNote>('/notes', {
+        method: 'POST',
+        body: JSON.stringify({ lecon_id: leconId, content, timestamp_seconds: timestampSeconds }),
+      })
+      return res.data ?? null
+    } catch (error) {
+      console.error('[notesService.createNote]', error)
+      return null
+    }
   },
-  async getLessonNotes(..._args: any[]): Promise<StudentNote[]> {
-    notReady('getLessonNotes')
-    return []
+
+  // GET /v1/notes?lecon_id=...
+  async getLessonNotes(leconId: string): Promise<StudentNote[]> {
+    try {
+      const res = await apiClient<StudentNote[]>(`/notes?lecon_id=${leconId}`)
+      return res.data || []
+    } catch (error) {
+      console.error('[notesService.getLessonNotes]', error)
+      return []
+    }
   },
-  async updateNote(..._args: any[]): Promise<StudentNote | null> {
-    notReady('updateNote')
-    return null
+
+  // PUT /v1/notes/{id}
+  async updateNote(noteId: string, content: string): Promise<StudentNote | null> {
+    try {
+      const res = await apiClient<StudentNote>(`/notes/${noteId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ content }),
+      })
+      return res.data ?? null
+    } catch (error) {
+      console.error('[notesService.updateNote]', error)
+      return null
+    }
   },
-  async deleteNote(..._args: any[]): Promise<boolean> {
-    notReady('deleteNote')
-    return false
-  },
-  async getAllStudentNotes(_studentId: string): Promise<StudentNote[]> {
-    notReady('getAllStudentNotes')
-    return []
-  },
-  async exportNotes(_studentId: string): Promise<string> {
-    notReady('exportNotes')
-    return ''
+
+  // DELETE /v1/notes/{id}
+  async deleteNote(noteId: string): Promise<boolean> {
+    try {
+      await apiClient(`/notes/${noteId}`, { method: 'DELETE' })
+      return true
+    } catch (error) {
+      console.error('[notesService.deleteNote]', error)
+      return false
+    }
   },
 }
 
 export const favoritesService = {
-  async addFavorite(..._args: any[]): Promise<Favorite | null> {
-    notReady('addFavorite')
-    return null
+  // POST /v1/favoris
+  async addFavorite(leconId: string, formationId: string): Promise<Favorite | null> {
+    try {
+      const res = await apiClient<Favorite>('/favoris', {
+        method: 'POST',
+        body: JSON.stringify({ lecon_id: leconId, formation_id: formationId }),
+      })
+      return res.data ?? null
+    } catch (error) {
+      console.error('[favoritesService.addFavorite]', error)
+      return null
+    }
   },
-  async removeFavorite(..._args: any[]): Promise<boolean> {
-    notReady('removeFavorite')
-    return false
+
+  // DELETE /v1/favoris/{id}
+  async removeFavorite(favoriId: string): Promise<boolean> {
+    try {
+      await apiClient(`/favoris/${favoriId}`, { method: 'DELETE' })
+      return true
+    } catch (error) {
+      console.error('[favoritesService.removeFavorite]', error)
+      return false
+    }
   },
-  async isFavorite(..._args: any[]): Promise<boolean> {
-    notReady('isFavorite')
-    return false
+
+  // GET /v1/favoris (filtré côté client sur lecon_id, pas de filtre serveur dédié)
+  async getStudentFavorites(): Promise<Favorite[]> {
+    try {
+      const res = await apiClient<Favorite[]>('/favoris')
+      return res.data || []
+    } catch (error) {
+      console.error('[favoritesService.getStudentFavorites]', error)
+      return []
+    }
   },
-  async getStudentFavorites(_studentId: string): Promise<Favorite[]> {
-    notReady('getStudentFavorites')
-    return []
-  },
-  async getFavoriteCount(_lessonId: string): Promise<number> {
-    notReady('getFavoriteCount')
-    return 0
+
+  async isFavorite(leconId: string): Promise<Favorite | null> {
+    const all = await this.getStudentFavorites()
+    return all.find((f) => f.lecon_id === leconId) ?? null
   },
 }

@@ -1,7 +1,9 @@
+import { apiClient } from '@/lib/api/client'
+
 /**
- * STAND BY — aucune route Laravel équivalente pour l'analytics n'existe dans
- * routes/api.php. Fonctions désactivées (retournent des valeurs neutres) en
- * attendant la création des endpoints côté backend.
+ * Connecté au vrai backend (AnalyticsController) — agrégation calculée
+ * côté Laravel depuis les données existantes (formations, inscriptions,
+ * paiements, resultats), aucune nouvelle table.
  */
 
 export interface AnalyticsData {
@@ -32,36 +34,58 @@ export interface StudentAnalytics {
   completedCourses: number
   averageScore: number
   lastActivity: string
-  totalTimeSpent: number
-}
-
-function notReady(fn: string) {
-  console.warn(`[analyticsService.${fn}] en attente d'un endpoint Laravel — fonctionnalité en pause`)
 }
 
 export const analyticsService = {
+  // GET /v1/analytics/admin
   async getAdminAnalytics(): Promise<AnalyticsData | null> {
-    notReady('getAdminAnalytics')
-    return null
+    try {
+      const res = await apiClient<AnalyticsData>('/analytics/admin')
+      return res.data ?? null
+    } catch (error) {
+      console.error('[analyticsService.getAdminAnalytics]', error)
+      return null
+    }
   },
-  async getFormationAnalytics(_formationId: string): Promise<FormationAnalytics | null> {
-    notReady('getFormationAnalytics')
-    return null
+
+  // GET /v1/analytics/formations/{id}
+  async getFormationAnalytics(formationId: string): Promise<FormationAnalytics | null> {
+    try {
+      const res = await apiClient<FormationAnalytics>(`/analytics/formations/${formationId}`)
+      return res.data ?? null
+    } catch (error) {
+      console.error('[analyticsService.getFormationAnalytics]', error)
+      return null
+    }
   },
+
+  // GET /v1/analytics/formations
   async getAllFormationsAnalytics(): Promise<FormationAnalytics[]> {
-    notReady('getAllFormationsAnalytics')
-    return []
+    try {
+      const res = await apiClient<FormationAnalytics[]>('/analytics/formations')
+      return res.data || []
+    } catch (error) {
+      console.error('[analyticsService.getAllFormationsAnalytics]', error)
+      return []
+    }
   },
-  async getStudentAnalytics(_studentId?: string): Promise<StudentAnalytics[]> {
-    notReady('getStudentAnalytics')
-    return []
+
+  // GET /v1/analytics/students?student_id=...
+  async getStudentAnalytics(studentId?: string): Promise<StudentAnalytics[]> {
+    try {
+      const query = studentId ? `?student_id=${studentId}` : ''
+      const res = await apiClient<StudentAnalytics[]>(`/analytics/students${query}`)
+      return res.data || []
+    } catch (error) {
+      console.error('[analyticsService.getStudentAnalytics]', error)
+      return []
+    }
   },
-  async exportAnalyticsCSV(_data: any[]): Promise<string> {
-    notReady('exportAnalyticsCSV')
-    return ''
-  },
-  async getPaymentHistory(_studentId?: string): Promise<any[]> {
-    notReady('getPaymentHistory')
-    return []
+
+  exportAnalyticsCSV(data: Record<string, any>[]): string {
+    if (data.length === 0) return ''
+    const headers = Object.keys(data[0])
+    const rows = data.map((row) => headers.map((h) => JSON.stringify(row[h] ?? '')).join(','))
+    return [headers.join(','), ...rows].join('\n')
   },
 }
