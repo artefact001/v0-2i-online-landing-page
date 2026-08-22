@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { Edit, Trash2, Plus, Newspaper } from 'lucide-react'
+import { ActuCard } from '@/components/dashboard/actu-card'
 import { combine, required, minLength } from '@/lib/validators'
 
 // Schéma Laravel réel (table 'actuses', endpoint /actus) : id, titre,
@@ -274,32 +275,9 @@ export default function AdminActusPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {actus.map((a) => (
-                <Card key={a.id} className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
-                  <CardContent className="py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-[#C9A227]/10 flex items-center justify-center shrink-0">
-                        <Newspaper className="w-5 h-5 text-[#C9A227]" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-white font-medium truncate">{a.titre}</h3>
-                        <p className="text-[rgba(255,255,255,0.4)] text-xs flex items-center gap-2">
-                          <span>{typeLabel[a.type]}</span>
-                          <span className={`px-2 py-0.5 rounded-full ${statutStyle[a.statut]}`}>{statutLabel[a.statut]}</span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <Button size="icon" variant="outline" onClick={() => handleEdit(a)} title="Modifier" className="border-[rgba(255,255,255,0.2)] text-white h-8 w-8">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="outline" onClick={() => handleDelete(a.id)} title="Supprimer" className="border-red-500/20 text-red-400 hover:bg-red-500/10 h-8 w-8">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ActuCard key={a.id} actu={a} onEdit={() => handleEdit(a)} onDelete={() => handleDelete(a.id)} />
               ))}
 
               {actus.length === 0 && (

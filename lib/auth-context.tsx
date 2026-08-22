@@ -95,14 +95,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
-    try {
-      const res = await apiClient('/me')
-      if (res.data) {
-        console.log('[auth] Réponse brute de /me (pour vérifier les noms de champs):', res.data)
+    // Un accroc réseau transitoire au tout premier chargement ne doit
+    // jamais faire croire à l'utilisateur qu'il est déconnecté alors que
+    // sa session est toujours valide côté serveur — on retente une fois
+    // avant d'abandonner.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await apiClient('/me')
+        setUser(res.data ? buildUser(res.data) : null)
+        return
+      } catch (error) {
+        if (attempt === 1) {
+          console.error('[auth] Échec de la vérification de session après 2 tentatives:', error)
+          setUser(null)
+        }
       }
-      setUser(res.data ? buildUser(res.data) : null)
-    } catch {
-      setUser(null)
     }
   }, [])
 

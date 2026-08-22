@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth-context'
+import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Edit, Trash2, Plus, Book, Layers, FileText } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
-import { ContentSidebar } from '@/components/professor/content-sidebar'
 import { combine, required, minLength } from '@/lib/validators'
 
 // Schéma Laravel réel (table modules) : id, titre, description (nullable),
@@ -164,9 +164,11 @@ export default function ModulesPage() {
   const totalLessons = modules.reduce((sum, m) => sum + (m.lecons?.length || 0), 0)
 
   return (
-    <div className="flex gap-6 items-start">
-      <ContentSidebar role="professor" />
-      <div className="min-w-0 flex-1 space-y-6">
+    <div className="min-h-screen bg-[#0a0a1a]">
+      <DashboardSidebar />
+      <main className="lg:ml-64">
+        <DashboardHeader title="Gestion des modules" subtitle="Organisez votre formation en modules thématiques" />
+        <div className="p-4 md:p-8 space-y-6">
       <SectionHeader
         icon={<Layers className="h-7 w-7" />}
         title="Gestion des modules"
@@ -310,7 +312,8 @@ export default function ModulesPage() {
           </Button>
         </div>
       )}
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

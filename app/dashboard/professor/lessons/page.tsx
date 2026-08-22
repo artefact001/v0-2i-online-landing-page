@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { apiClient } from '@/lib/api/client'
 import { useAuth } from '@/lib/auth-context'
+import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -12,7 +13,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, Play, FileText, BookOpen } from 'lucide-react'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
-import { ContentSidebar } from '@/components/professor/content-sidebar'
 import { TablePagination } from '@/components/admin/table-pagination'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -210,9 +210,11 @@ export default function LessonsPage() {
   const withDocument = lessons.filter((l) => l.document).length
 
   return (
-    <div className="flex gap-6 items-start">
-      <ContentSidebar role="professor" />
-      <div className="min-w-0 flex-1 space-y-6">
+    <div className="min-h-screen bg-[#0a0a1a]">
+      <DashboardSidebar />
+      <main className="lg:ml-64">
+        <DashboardHeader title="Gestion des leçons" subtitle="Créez vos leçons avec vidéos et documents" />
+        <div className="p-4 md:p-8 space-y-6">
       <SectionHeader
         icon={<BookOpen className="h-7 w-7" />}
         title="Gestion des leçons"
@@ -410,7 +412,8 @@ export default function LessonsPage() {
           </CardContent>
         </Card>
       )}
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

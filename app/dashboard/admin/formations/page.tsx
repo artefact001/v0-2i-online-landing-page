@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, GraduationCap, Users } from 'lucide-react'
+import { FormationCard } from '@/components/dashboard/formation-card'
 import { combine, required, minLength, positiveNumber } from '@/lib/validators'
 
 // Schéma Laravel réel (table formations) :
@@ -305,39 +306,13 @@ export default function AdminFormationsPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {formations.map((f) => (
-                <Card key={f.id} className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
-                  <CardContent className="py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-[#C9A227]/10 flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-[#C9A227]" />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-medium">{f.titre}</h3>
-                        <p className="text-[rgba(255,255,255,0.4)] text-xs flex items-center gap-3">
-                          <span>{f.duree}</span>
-                          <span>{Number(f.prix).toLocaleString()} FCFA</span>
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" /> {f.nb_inscrit ?? 0}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(f)} className="border-[rgba(255,255,255,0.2)] text-white">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDelete(f.id)} className="border-red-500/20 text-red-400 hover:bg-red-500/10">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <FormationCard key={f.id} formation={f} onEdit={() => handleEdit(f)} onDelete={() => handleDelete(f.id)} />
               ))}
 
               {formations.length === 0 && (
-                <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
+                <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)] sm:col-span-2 lg:col-span-3">
                   <CardContent className="py-12 text-center">
                     <p className="text-[rgba(255,255,255,0.5)]">Aucune formation pour le moment.</p>
                   </CardContent>
