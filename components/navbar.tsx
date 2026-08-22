@@ -2,10 +2,15 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 
 export function Navbar() {
+  const { user } = useAuth()
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const dashboardHref =
+    user?.role === "admin" ? "/dashboard/admin" : user?.role === "professor" ? "/dashboard/professor" : "/dashboard/student"
 
   useEffect(() => {
     const handleScroll = () => {
@@ -79,10 +84,10 @@ export function Navbar() {
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
           <Link
-            href="/login"
+            href={user ? dashboardHref : "/login"}
             className="touch-manipulation inline-flex items-center gap-2 bg-[#C9A227] text-[#0D2545] text-[10px] font-bold tracking-[2px] uppercase px-5 py-2.5 rounded no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105"
           >
-            Connexion
+            {user ? "Tableau de bord" : "Connexion"}
           </Link>
         </div>
 
@@ -163,11 +168,11 @@ export function Navbar() {
             }}
           >
             <Link
-              href="/login"
+              href={user ? dashboardHref : "/login"}
               className="touch-manipulation inline-flex items-center justify-center gap-2 bg-[#C9A227] text-[#0D2545] text-sm font-bold tracking-[2px] uppercase px-6 py-4 rounded-lg no-underline transition-all duration-300 hover:bg-[#E8C050] hover:scale-105"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Connexion
+              {user ? "Tableau de bord" : "Connexion"}
 
               <svg
                 className="w-4 h-4"
