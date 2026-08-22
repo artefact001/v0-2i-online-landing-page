@@ -22,8 +22,9 @@ function SuccessContent() {
 
       // On ne fait JAMAIS confiance à l'URL de retour elle-même — on relit
       // le statut réel depuis Laravel, mis à jour uniquement par le webhook
-      // Bictorys. Bictorys peut rediriger ici avant que le webhook n'arrive
-      // (léger délai réseau), donc on retente quelques fois si "pending".
+      // PayDunya (IPN). PayDunya peut rediriger ici avant que l'IPN
+      // n'arrive (léger délai réseau), donc on retente quelques fois si
+      // le paiement est encore "en attente".
       for (let attempt = 0; attempt < 5; attempt++) {
         const data = await paymentService.getPaymentStatus(paiementId)
 
@@ -32,17 +33,17 @@ function SuccessContent() {
           return
         }
 
-        if (data.status === 'completed') {
+        if (data.statut === 'confirme') {
           setStatus('completed')
           return
         }
 
-        if (data.status === 'failed' || data.status === 'cancelled') {
+        if (data.statut === 'echec') {
           setStatus('failed')
           return
         }
 
-        // status "pending" : le webhook n'est peut-être pas encore arrivé,
+        // statut "en attente" : l'IPN n'est peut-être pas encore arrivée,
         // on patiente un peu avant de réessayer.
         await new Promise((resolve) => setTimeout(resolve, 2000))
       }

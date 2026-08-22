@@ -30,8 +30,8 @@ export default function AdminDashboard() {
 
         const paiements = paiementsRes.data || []
         const revenue = paiements
-          .filter((p: any) => p.status === 'completed')
-          .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0)
+          .filter((p: any) => p.statut === 'confirme')
+          .reduce((sum: number, p: any) => sum + Number(p.montant || 0), 0)
 
         setCounts({
           formations: (formationsRes.data || []).length,

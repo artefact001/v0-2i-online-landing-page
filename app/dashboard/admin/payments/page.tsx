@@ -8,27 +8,27 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CreditCard, Eye } from 'lucide-react'
 
+// Schéma Laravel réel (table paiements) : montant (decimal), methode
+// (enum FIXE: 'Wave'|'Orange Money'|'Free Money'|'Virement'|'CB'), statut
+// (enum: 'en attente'|'confirme'|'echec'), date, user_id, formation_id.
 interface Paiement {
   id: string
-  amount: number
-  payment_method?: string
-  currency?: string
-  status: 'pending' | 'completed' | 'failed' | 'cancelled'
-  created_at?: string
+  montant: number
+  methode: 'Wave' | 'Orange Money' | 'Free Money' | 'Virement' | 'CB'
+  statut: 'en attente' | 'confirme' | 'echec'
+  date: string
 }
 
-const statusStyle: Record<string, string> = {
-  completed: 'bg-green-500/20 text-green-400',
-  pending: 'bg-yellow-500/20 text-yellow-400',
-  failed: 'bg-red-500/20 text-red-400',
-  cancelled: 'bg-gray-500/20 text-gray-400',
+const statutStyle: Record<Paiement['statut'], string> = {
+  confirme: 'bg-green-500/20 text-green-400',
+  'en attente': 'bg-yellow-500/20 text-yellow-400',
+  echec: 'bg-red-500/20 text-red-400',
 }
 
-const statusLabel: Record<string, string> = {
-  completed: 'Complété',
-  pending: 'En attente',
-  failed: 'Échoué',
-  cancelled: 'Annulé',
+const statutLabel: Record<Paiement['statut'], string> = {
+  confirme: 'Confirmé',
+  'en attente': 'En attente',
+  echec: 'Échec',
 }
 
 export default function AdminPaymentsPage() {
@@ -49,9 +49,9 @@ export default function AdminPaymentsPage() {
     load()
   }, [])
 
-  const totalCompleted = payments
-    .filter((p) => p.status === 'completed')
-    .reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  const totalConfirme = payments
+    .filter((p) => p.statut === 'confirme')
+    .reduce((sum, p) => sum + Number(p.montant || 0), 0)
 
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
@@ -63,9 +63,9 @@ export default function AdminPaymentsPage() {
           <Card className="bg-gradient-to-r from-[#0d0d1a] to-[#C9A227]/10 border-[#C9A227]/30">
             <CardContent className="p-6">
               <p className="text-[rgba(255,255,255,0.5)] text-xs uppercase tracking-wider mb-1">
-                Total encaissé (paiements complétés)
+                Total encaissé (paiements confirmés)
               </p>
-              <p className="text-3xl font-bold text-white">{totalCompleted.toLocaleString()} FCFA</p>
+              <p className="text-3xl font-bold text-white">{totalConfirme.toLocaleString()} FCFA</p>
             </CardContent>
           </Card>
 
@@ -89,15 +89,15 @@ export default function AdminPaymentsPage() {
                         <CreditCard className="w-5 h-5 text-[#C9A227]" />
                       </div>
                       <div>
-                        <p className="text-white font-medium">{Number(p.amount).toLocaleString()} FCFA</p>
+                        <p className="text-white font-medium">{Number(p.montant).toLocaleString()} FCFA</p>
                         <p className="text-[rgba(255,255,255,0.4)] text-xs">
-                          {p.payment_method || 'Bictorys'} {p.created_at ? `· ${new Date(p.created_at).toLocaleDateString('fr-FR')}` : ''}
+                          {p.methode} {p.date ? `· ${new Date(p.date).toLocaleDateString('fr-FR')}` : ''}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[p.status] || statusStyle.pending}`}>
-                        {statusLabel[p.status] || p.status}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statutStyle[p.statut] || statutStyle['en attente']}`}>
+                        {statutLabel[p.statut] || p.statut}
                       </span>
                       <Button
                         size="icon"
@@ -126,26 +126,22 @@ export default function AdminPaymentsPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
                 <span className="text-[rgba(255,255,255,0.5)]">Montant</span>
-                <span className="text-white font-semibold">{Number(selected.amount).toLocaleString()} FCFA</span>
+                <span className="text-white font-semibold">{Number(selected.montant).toLocaleString()} FCFA</span>
               </div>
               <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
                 <span className="text-[rgba(255,255,255,0.5)]">Méthode</span>
-                <span className="text-white">{selected.payment_method || 'Bictorys'}</span>
+                <span className="text-white">{selected.methode}</span>
               </div>
               <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
                 <span className="text-[rgba(255,255,255,0.5)]">Statut</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyle[selected.status]}`}>
-                  {statusLabel[selected.status]}
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statutStyle[selected.statut]}`}>
+                  {statutLabel[selected.statut]}
                 </span>
-              </div>
-              <div className="flex justify-between border-b border-[rgba(255,255,255,0.08)] pb-2">
-                <span className="text-[rgba(255,255,255,0.5)]">Devise</span>
-                <span className="text-white">{selected.currency || 'XOF'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[rgba(255,255,255,0.5)]">Date</span>
                 <span className="text-white">
-                  {selected.created_at ? new Date(selected.created_at).toLocaleString('fr-FR') : '—'}
+                  {selected.date ? new Date(selected.date).toLocaleDateString('fr-FR') : '—'}
                 </span>
               </div>
               <div className="flex justify-between pt-2 border-t border-[rgba(255,255,255,0.08)]">

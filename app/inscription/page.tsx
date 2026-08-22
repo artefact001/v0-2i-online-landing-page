@@ -125,33 +125,19 @@ export default function InscriptionPage() {
         return
       }
 
-      // Créer l'inscription si une formation a été sélectionnée
-      // À VÉRIFIER: champs attendus par InscriptionController::store
+      // Compte créé : si une formation a été sélectionnée, direction le
+      // paiement directement. L'inscription elle-même n'est PLUS créée
+      // ici — le schéma réel Laravel ne prévoit aucun statut "en attente"
+      // pour les inscriptions (seulement actif/termine/annule), donc
+      // c'est désormais le webhook PayDunya (paiement confirmé) qui crée
+      // l'inscription avec le statut "actif". Créer l'inscription ici,
+      // avant tout paiement, donnerait un accès gratuit à la formation.
       if (formData.formationId && result.user) {
-        try {
-          const enrollRes = await apiClient<{ id: string }>('/inscriptions', {
-            method: 'POST',
-            body: JSON.stringify({
-              user_id: result.user.id,
-              formation_id: formData.formationId,
-              status: 'pending',
-              payment_status: 'pending',
-            }),
-          })
-
-          const enrollmentId = (enrollRes.data as any)?.id
-          if (enrollmentId) {
-            // Compte + inscription créés : direction le paiement pour finaliser.
-            router.push(`/payment?enrollment_id=${enrollmentId}`)
-            return
-          }
-        } catch (enrollErr) {
-          console.error('Error creating enrollment:', enrollErr)
-        }
+        router.push(`/payment?formation_id=${formData.formationId}`)
+        return
       }
 
-      // Pas de formation sélectionnée (ou création d'inscription échouée) :
-      // écran de confirmation classique.
+      // Pas de formation sélectionnée : écran de confirmation classique.
       setSuccess(true)
     } catch (err) {
       setError('Une erreur est survenue')
