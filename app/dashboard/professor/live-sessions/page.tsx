@@ -10,6 +10,7 @@ import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Edit, Trash2, Plus, Calendar, Radio, Youtube } from 'lucide-react'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -194,10 +195,14 @@ export default function LiveSessionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-[#0a0a1a]">
+      <DashboardSidebar />
+      <main className="lg:ml-64">
+        <DashboardHeader title="Cours en direct" subtitle="Planifiez et gérez vos sessions en direct YouTube" />
+        <div className="p-4 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-serif font-bold text-white">Cours en direct</h1>
+        <div />
         <Button
           onClick={() => setIsCreating(!isCreating)}
           className="bg-[#C9A227] hover:bg-[#B8860B] text-white"
@@ -404,6 +409,8 @@ export default function LiveSessionsPage() {
           </CardContent>
         </Card>
       )}
+        </div>
+      </main>
     </div>
   )
 }

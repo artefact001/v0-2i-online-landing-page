@@ -53,13 +53,9 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     setIsSaving(true)
     setFeedback(null)
 
-    // ATTENTION: aucune route PUT /v1/me n'existe dans routes/api.php — seule
-    // GET /v1/me est exposée pour le profil de l'utilisateur connecté. Cet
-    // appel suppose qu'un endpoint équivalent sera ajouté côté Laravel ; en
-    // son absence il échouera avec une 404/405, ce qui est intentionnel
-    // (pas de faux succès).
+    // PUT /v1/me (UpdateProfileRequest côté Laravel) : prenom, nom,
+    // telephone, photo (fichier image, optionnel) — pas de champ "name".
     const body = new FormData()
-    body.append("name", `${firstName.trim()} ${lastName.trim()}`.trim())
     body.append("prenom", firstName.trim())
     body.append("nom", lastName.trim())
     if (phone.trim()) body.append("telephone", phone.trim())
@@ -72,8 +68,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     } catch (error) {
       setFeedback({
         type: "error",
-        message:
-          "Impossible d'enregistrer : aucun endpoint Laravel pour la mise à jour du profil (PUT /v1/me manquant).",
+        message: error instanceof Error ? error.message : "Impossible d'enregistrer le profil.",
       })
     }
     setIsSaving(false)
