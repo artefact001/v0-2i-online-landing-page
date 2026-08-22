@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ValidatedInput } from "@/components/ui/validated-input"
 import { Label } from "@/components/ui/label"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Key, Power } from "lucide-react"
 import {
   combine,
   required,
@@ -48,6 +48,8 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  setUserActive,
+  resetUserPassword,
 } from "./actions"
 import { TablePagination } from "@/components/admin/table-pagination"
 
@@ -226,6 +228,35 @@ export function UsersManager({
     })
   }
 
+  function handleToggleActive(u: ManagedUser) {
+    startTransition(async () => {
+      const res = await setUserActive(u.id, u.role)
+      if (res.success) {
+        notify({ type: "success", message: u.isActive ? "Compte désactivé" : "Compte activé" })
+        await refresh()
+      } else {
+        notify({ type: "error", message: res.error ?? "Erreur" })
+      }
+    })
+  }
+
+  function handleResetPassword(u: ManagedUser) {
+    if (!confirm(`Réinitialiser le mot de passe de ${u.firstName} ${u.lastName} ? Un nouveau mot de passe lui sera envoyé par email.`)) return
+    startTransition(async () => {
+      const res = await resetUserPassword(u.id, u.role)
+      if (res.success) {
+        notify({
+          type: "success",
+          message: res.passwordTemporaire
+            ? `Mot de passe réinitialisé et envoyé par email (${res.passwordTemporaire})`
+            : "Mot de passe réinitialisé",
+        })
+      } else {
+        notify({ type: "error", message: res.error ?? "Erreur" })
+      }
+    })
+  }
+
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 10
 
@@ -342,6 +373,11 @@ export function UsersManager({
                           <span className={`text-xs px-2 py-1 rounded-full ${ROLE_STYLES[u.role]}`}>
                             {ROLE_LABELS[u.role]}
                           </span>
+                          {!u.isActive && (
+                            <span className="ml-1.5 text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400">
+                              Désactivé
+                            </span>
+                          )}
                         </td>
                         <td className="p-4">
                           <div className="flex gap-1.5 justify-end flex-wrap">
@@ -353,6 +389,24 @@ export function UsersManager({
                               className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
                             >
                               <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleResetPassword(u)}
+                              title="Réinitialiser le mot de passe"
+                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                            >
+                              <Key className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              onClick={() => handleToggleActive(u)}
+                              title={u.isActive ? "Désactiver" : "Activer"}
+                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                            >
+                              <Power className="w-4 h-4" />
                             </Button>
                             <Button
                               size="icon"

@@ -68,7 +68,7 @@ function mapUser(raw: any, role: "professor" | "student"): ManagedUser {
     lastName: u.nom ?? "",
     role,
     phone: u.telephone ?? null,
-    isActive: true, // pas de notion de désactivation côté Laravel actuellement
+    isActive: u.is_active ?? true,
     createdAt: raw.created_at ?? "",
     emailConfirmed: true,
     specialite: raw.specialite ?? undefined,
@@ -232,17 +232,27 @@ export async function updateUser(
   }
 }
 
-export async function setUserActive(_id: string, _isActive: boolean): Promise<ActionResult> {
-  return {
-    success: false,
-    error: "Fonctionnalité indisponible : aucun endpoint Laravel pour activer/désactiver un compte.",
+export async function setUserActive(id: string, role: "professor" | "student"): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const endpoint = role === "professor" ? `/api/v1/formateurs/${id}/toggle-active` : `/api/v1/etudiants/${id}/toggle-active`
+    await apiServer(endpoint, { method: "PUT" })
+    revalidatePath("/dashboard/admin/users")
+    return { success: true }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Erreur inconnue" }
   }
 }
 
-export async function resetUserPassword(_id: string, _password: string): Promise<ActionResult> {
-  return {
-    success: false,
-    error: "Fonctionnalité indisponible : aucun endpoint Laravel pour réinitialiser le mot de passe d'un tiers.",
+export async function resetUserPassword(id: string, role: "professor" | "student"): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const endpoint = role === "professor" ? `/api/v1/formateurs/${id}/reset-password` : `/api/v1/etudiants/${id}/reset-password`
+    const res = await apiServer(endpoint, { method: "POST" })
+    revalidatePath("/dashboard/admin/users")
+    return { success: true, passwordTemporaire: (res as any)?.password_temporaire }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Erreur inconnue" }
   }
 }
 
