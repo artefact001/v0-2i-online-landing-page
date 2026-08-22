@@ -80,19 +80,16 @@ export default function ExercisePage() {
       }
 
       try {
-        const exerciceRes = await apiClient<Exercice>(`/exercices/${params.exerciseId}`)
-        const questionsRes = await apiClient<Question[]>(`/questions?exercice_id=${params.exerciseId}`)
-        const questionsList = (questionsRes.data || []).sort((a, b) => a.ordre - b.ordre)
-
-        // Charge les choix (options QCM) de chaque question
-        const withChoix = await Promise.all(
-          questionsList.map(async (q) => {
-            if (q.type !== 'qcm') return q
-            const choixRes = await apiClient<Choix[]>(`/choix?question_id=${q.id}`)
-            const choix = (choixRes.data || []).sort((a, b) => a.ordre - b.ordre)
-            return { ...q, choix }
-          }),
+        // GET /exercices/{id} charge déjà ->load('questions.choix') côté
+        // Laravel — un seul appel suffit.
+        const exerciceRes = await apiClient<Exercice & { questions?: Question[] }>(`/exercices/${params.exerciseId}`)
+        const questionsList = ((exerciceRes.data as any)?.questions || []).sort(
+          (a: Question, b: Question) => a.ordre - b.ordre,
         )
+        const withChoix = questionsList.map((q: any) => ({
+          ...q,
+          choix: q.type === 'qcm' ? [...(q.choix || [])].sort((a: any, b: any) => a.ordre - b.ordre) : [],
+        }))
 
         if (!active) return
 
@@ -104,11 +101,10 @@ export default function ExercisePage() {
         }
         setQuestions(withChoix)
 
-        // Vérifie si l'étudiant a déjà répondu (contrainte unique
-        // exercice_id+user_id+question_id côté Laravel)
-        const reponsesRes = await apiClient<Reponse[]>(
-          `/reponses?exercice_id=${params.exerciseId}&user_id=${user.id}`,
-        )
+        // Vérifie si l'étudiant a déjà répondu (résultats disponibles via
+        // GET /exercices/{id}/resultats, déjà scopé à l'utilisateur connecté
+        // côté Laravel par défaut).
+        const reponsesRes = await apiClient<Reponse[]>(`/exercices/${params.exerciseId}/resultats`)
         const reponses = reponsesRes.data || []
         if (reponses.length > 0) {
           setExistingReponses(reponses)
@@ -156,47 +152,27 @@ export default function ExercisePage() {
     setSubmitting(true)
 
     try {
-      // Une entrée "reponses" par question, chacune notée automatiquement
-      // pour les QCM (comparaison au choix marqué est_correct côté client,
-      // le score définitif reste géré côté Laravel) et laissée "en_attente"
-      // pour les questions ouvertes (correction manuelle par le formateur).
-      const submissions = await Promise.all(
-        questions.map(async (q) => {
-          const answer = answers[q.id]
-          let score: number | null = null
-          let statut: "en_attente" | "corrige" = "en_attente"
+      // Le vrai backend (POST /exercices/{id}/soumettre) attend TOUTES les
+      // réponses en un seul appel, sous la clé "reponses", et note lui-même
+      // automatiquement les QCM côté serveur (pas besoin de le faire ici).
+      const reponses = questions.map((q) => {
+        const answer = answers[q.id]
+        return {
+          question_id: q.id,
+          choix_id: answer?.choix_id ?? null,
+          reponse_texte: answer?.reponse_texte ?? null,
+        }
+      })
 
-          if (q.type === "qcm" && answer?.choix_id) {
-            const chosen = q.choix?.find((c) => c.id === answer.choix_id)
-            score = chosen?.est_correct ? q.points : 0
-            statut = "corrige"
-          }
-
-          const payload = {
-            exercice_id: exercice.id,
-            user_id: user.id,
-            question_id: q.id,
-            choix_id: answer?.choix_id ?? null,
-            reponse_texte: answer?.reponse_texte ?? null,
-            score,
-            statut,
-          }
-
-          try {
-            const res = await apiClient<Reponse>("/reponses", {
-              method: "POST",
-              body: JSON.stringify(payload),
-            })
-            return res.data as Reponse
-          } catch (err) {
-            console.error("[reponse submission error]:", err)
-            return null
-          }
-        }),
+      const res = await apiClient<Reponse[]>(
+        `/exercices/${exercice.id}/soumettre`,
+        { method: 'POST', body: JSON.stringify({ reponses }) },
       )
 
-      setExistingReponses(submissions.filter((r): r is Reponse => r !== null))
+      setExistingReponses(res.data || [])
       setShowResults(true)
+    } catch (error) {
+      console.error('[exercice submission error]:', error)
     } finally {
       setSubmitting(false)
     }

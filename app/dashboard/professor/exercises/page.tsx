@@ -185,15 +185,14 @@ export default function ExercisesPage() {
     setIsCreating(true)
 
     try {
-      const qRes = await apiClient<any[]>(`/questions?exercice_id=${ex.id}`)
-      const qList = (qRes.data || []).sort((a, b) => a.ordre - b.ordre)
-      const withChoix = await Promise.all(
-        qList.map(async (q) => {
-          if (q.type !== 'qcm') return { ...q, choix: [] }
-          const cRes = await apiClient<Choix[]>(`/choix?question_id=${q.id}`)
-          return { ...q, choix: (cRes.data || []).sort((a, b) => a.ordre - b.ordre) }
-        }),
-      )
+      // GET /exercices/{id} charge déjà ->load('questions.choix') côté
+      // Laravel — un seul appel suffit, pas besoin de requêtes séparées.
+      const res = await apiClient<any>(`/exercices/${ex.id}`)
+      const qList = (res.data?.questions || []).sort((a: any, b: any) => a.ordre - b.ordre)
+      const withChoix = qList.map((q: any) => ({
+        ...q,
+        choix: q.type === 'qcm' ? [...(q.choix || [])].sort((a: any, b: any) => a.ordre - b.ordre) : [],
+      }))
       setQuestions(withChoix.length > 0 ? withChoix : [emptyQuestion(0)])
     } catch (error) {
       console.error('Error loading questions for edit:', error)
@@ -271,49 +270,40 @@ export default function ExercisesPage() {
     setSaving(true)
 
     try {
-      const exercicePayload = {
+      // Le vrai backend (StoreExerciceRequest/UpdateExerciceRequest) attend
+      // UN SEUL appel imbriqué : l'exercice + son tableau "questions", et
+      // chaque question QCM avec son propre tableau "choix" — pas des
+      // appels séparés POST /questions puis POST /choix.
+      const payload = {
         titre: titre.trim(),
         description: description.trim() || undefined,
         type,
         duree: duree === '' ? null : Number(duree),
         note_max: noteMax,
         lecon_id: selectedLesson,
+        questions: questions.map((q, i) => ({
+          ...(q.id ? { id: q.id } : {}),
+          contenu: q.contenu.trim(),
+          type: q.type,
+          points: q.points,
+          ordre: i,
+          ...(q.type === 'qcm'
+            ? {
+                choix: q.choix.map((c, ci) => ({
+                  ...(c.id ? { id: c.id } : {}),
+                  contenu: c.contenu.trim(),
+                  est_correct: c.est_correct,
+                  ordre: ci,
+                })),
+              }
+            : {}),
+        })),
       }
 
-      let exerciceId = editingId
       if (editingId) {
-        await apiClient(`/exercices/${editingId}`, { method: 'PUT', body: JSON.stringify(exercicePayload) })
+        await apiClient(`/exercices/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
       } else {
-        const res = await apiClient<Exercise>('/exercices', { method: 'POST', body: JSON.stringify(exercicePayload) })
-        exerciceId = (res.data as any)?.id
-      }
-
-      if (!exerciceId) throw new Error("Impossible de créer l'exercice")
-
-      // Création des questions + choix (pas de gestion de suppression des
-      // anciennes questions en édition ici — à faire manuellement pour
-      // l'instant si des questions ont été retirées).
-      for (const [i, q] of questions.entries()) {
-        let questionId = q.id
-        const qPayload = { exercice_id: exerciceId, contenu: q.contenu.trim(), type: q.type, points: q.points, ordre: i }
-
-        if (questionId) {
-          await apiClient(`/questions/${questionId}`, { method: 'PUT', body: JSON.stringify(qPayload) })
-        } else {
-          const qRes = await apiClient<any>('/questions', { method: 'POST', body: JSON.stringify(qPayload) })
-          questionId = qRes.data?.id
-        }
-
-        if (q.type === 'qcm' && questionId) {
-          for (const [ci, c] of q.choix.entries()) {
-            const cPayload = { question_id: questionId, contenu: c.contenu.trim(), est_correct: c.est_correct, ordre: ci }
-            if (c.id) {
-              await apiClient(`/choix/${c.id}`, { method: 'PUT', body: JSON.stringify(cPayload) })
-            } else {
-              await apiClient('/choix', { method: 'POST', body: JSON.stringify(cPayload) })
-            }
-          }
-        }
+        await apiClient('/exercices', { method: 'POST', body: JSON.stringify(payload) })
       }
 
       await loadExercises()
