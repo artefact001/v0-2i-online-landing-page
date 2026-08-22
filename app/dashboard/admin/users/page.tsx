@@ -12,8 +12,7 @@ function AdminUsersContent() {
   const searchParams = useSearchParams()
 
   const newParam = searchParams.get("new")
-  const initialNewRole =
-    newParam === "student" || newParam === "professor" || newParam === "admin" ? newParam : null
+  const initialNewRole = newParam === "student" || newParam === "professor" ? newParam : null
 
   useEffect(() => {
     listUsers()

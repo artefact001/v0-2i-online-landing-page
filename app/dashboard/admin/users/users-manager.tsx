@@ -7,15 +7,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ValidatedInput } from "@/components/ui/validated-input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Edit, Key, Power, Trash2 } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 import {
   combine,
   required,
   minLength,
   email as emailValidator,
   phone as phoneValidator,
-  password as passwordValidator,
 } from "@/lib/validators"
 import {
   Dialog,
@@ -45,22 +43,20 @@ import {
 import {
   type ManagedUser,
   listUsers,
+  listModules,
+  listFormationsForEnrollment,
   createUser,
   updateUser,
   deleteUser,
-  setUserActive,
-  resetUserPassword,
 } from "./actions"
 import { TablePagination } from "@/components/admin/table-pagination"
 
 const ROLE_LABELS: Record<ManagedUser["role"], string> = {
-  admin: "Administrateur",
   professor: "Professeur",
   student: "Élève",
 }
 
 const ROLE_STYLES: Record<ManagedUser["role"], string> = {
-  admin: "bg-[#C9A227]/20 text-[#C9A227]",
   professor: "bg-blue-500/20 text-blue-400",
   student: "bg-green-500/20 text-green-400",
 }
@@ -75,24 +71,40 @@ export function UsersManager({
   initialNewRole?: ManagedUser["role"] | null
 }) {
   const [users, setUsers] = useState<ManagedUser[]>(initialUsers)
+  const [modules, setModules] = useState<{ id: string; titre: string }[]>([])
+  const [formations, setFormations] = useState<{ id: string; titre: string }[]>([])
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [isPending, startTransition] = useTransition()
   const [feedback, setFeedback] = useState<Feedback>(null)
+  const [lastPassword, setLastPassword] = useState<string | null>(null)
 
   // dialog state
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<ManagedUser | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null)
-  const [pwdTarget, setPwdTarget] = useState<ManagedUser | null>(null)
 
-  // form fields
+  // champs communs
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  const [password, setPassword] = useState("")
   const [role, setRole] = useState<ManagedUser["role"]>("student")
+
+  // champs spécifiques formateur
+  const [specialite, setSpecialite] = useState("")
+  const [moduleIds, setModuleIds] = useState<string[]>([])
+
+  // champs spécifiques étudiant
+  const [dateNaissance, setDateNaissance] = useState("")
+  const [lieuNaissance, setLieuNaissance] = useState("")
+  const [niveau, setNiveau] = useState("")
+  const [formationIds, setFormationIds] = useState<string[]>([])
+
+  useEffect(() => {
+    listModules().then(setModules).catch(() => {})
+    listFormationsForEnrollment().then(setFormations).catch(() => {})
+  }, [])
 
   function notify(f: Feedback) {
     setFeedback(f)
@@ -108,14 +120,23 @@ export function UsersManager({
     }
   }
 
-  function openCreate(presetRole: ManagedUser["role"] = "student") {
-    setEditing(null)
+  function resetFormFields(presetRole: ManagedUser["role"]) {
     setFirstName("")
     setLastName("")
     setEmail("")
     setPhone("")
-    setPassword("")
     setRole(presetRole)
+    setSpecialite("")
+    setModuleIds([])
+    setDateNaissance("")
+    setLieuNaissance("")
+    setNiveau("")
+    setFormationIds([])
+  }
+
+  function openCreate(presetRole: ManagedUser["role"] = "student") {
+    setEditing(null)
+    resetFormFields(presetRole)
     setFormOpen(true)
   }
 
@@ -132,15 +153,34 @@ export function UsersManager({
     setLastName(u.lastName)
     setEmail(u.email)
     setPhone(u.phone ?? "")
-    setPassword("")
     setRole(u.role)
+    setSpecialite(u.specialite ?? "")
+    setModuleIds(u.moduleIds ?? [])
+    setDateNaissance(u.dateNaissance ?? "")
+    setLieuNaissance(u.lieuNaissance ?? "")
+    setNiveau(u.niveau ?? "")
+    setFormationIds(u.formationIds ?? [])
     setFormOpen(true)
+  }
+
+  function toggleModuleId(id: string) {
+    setModuleIds((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]))
+  }
+
+  function toggleFormationId(id: string) {
+    setFormationIds((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]))
   }
 
   function submitForm() {
     startTransition(async () => {
+      const common = { firstName, lastName, role, phone }
+      const roleSpecific =
+        role === "professor"
+          ? { specialite, moduleIds }
+          : { dateNaissance, lieuNaissance, niveau, formationIds }
+
       if (editing) {
-        const res = await updateUser(editing.id, { firstName, lastName, role, phone })
+        const res = await updateUser(editing.id, { ...common, email, ...roleSpecific })
         if (res.success) {
           notify({ type: "success", message: "Utilisateur mis à jour" })
           setFormOpen(false)
@@ -149,13 +189,19 @@ export function UsersManager({
           notify({ type: "error", message: res.error ?? "Erreur" })
         }
       } else {
-        if (!email || !password) {
-          notify({ type: "error", message: "Email et mot de passe requis" })
+        if (!email) {
+          notify({ type: "error", message: "Email requis" })
           return
         }
-        const res = await createUser({ email, password, firstName, lastName, role, phone })
+        const res = await createUser({ email, ...common, ...roleSpecific })
         if (res.success) {
-          notify({ type: "success", message: "Compte créé avec succès" })
+          notify({
+            type: "success",
+            message: res.passwordTemporaire
+              ? `Compte créé — mot de passe envoyé par email (${res.passwordTemporaire})`
+              : "Compte créé avec succès",
+          })
+          setLastPassword(res.passwordTemporaire ?? null)
           setFormOpen(false)
           await refresh()
         } else {
@@ -168,7 +214,7 @@ export function UsersManager({
   function confirmDelete() {
     if (!deleteTarget) return
     startTransition(async () => {
-      const res = await deleteUser(deleteTarget.id)
+      const res = await deleteUser(deleteTarget.id, deleteTarget.role)
       if (res.success) {
         notify({ type: "success", message: "Utilisateur supprimé" })
         setDeleteTarget(null)
@@ -176,32 +222,6 @@ export function UsersManager({
       } else {
         notify({ type: "error", message: res.error ?? "Erreur" })
         setDeleteTarget(null)
-      }
-    })
-  }
-
-  function toggleActive(u: ManagedUser) {
-    startTransition(async () => {
-      const res = await setUserActive(u.id, !u.isActive)
-      if (res.success) {
-        notify({ type: "success", message: !u.isActive ? "Compte activé" : "Compte désactivé" })
-        await refresh()
-      } else {
-        notify({ type: "error", message: res.error ?? "Erreur" })
-      }
-    })
-  }
-
-  function submitPassword() {
-    if (!pwdTarget || !password) return
-    startTransition(async () => {
-      const res = await resetUserPassword(pwdTarget.id, password)
-      if (res.success) {
-        notify({ type: "success", message: "Mot de passe réinitialisé" })
-        setPwdTarget(null)
-        setPassword("")
-      } else {
-        notify({ type: "error", message: res.error ?? "Erreur" })
       }
     })
   }
@@ -224,7 +244,6 @@ export function UsersManager({
 
   const counts = {
     total: users.length,
-    admin: users.filter((u) => u.role === "admin").length,
     professor: users.filter((u) => u.role === "professor").length,
     student: users.filter((u) => u.role === "student").length,
   }
@@ -233,7 +252,7 @@ export function UsersManager({
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Utilisateurs" subtitle="Gérez les comptes administrateurs, professeurs et élèves" />
+        <DashboardHeader title="Utilisateurs" subtitle="Gérez les comptes professeurs et élèves" />
 
         <div className="p-4 md:p-8 space-y-6">
           {feedback && (
@@ -250,17 +269,11 @@ export function UsersManager({
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="p-5">
                 <p className="text-[rgba(255,255,255,0.5)] text-sm">Total</p>
                 <p className="text-2xl font-bold text-white mt-1">{counts.total}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
-              <CardContent className="p-5">
-                <p className="text-[rgba(255,255,255,0.5)] text-sm">Administrateurs</p>
-                <p className="text-2xl font-bold text-[#C9A227] mt-1">{counts.admin}</p>
               </CardContent>
             </Card>
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
@@ -292,7 +305,6 @@ export function UsersManager({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les rôles</SelectItem>
-                  <SelectItem value="admin">Administrateurs</SelectItem>
                   <SelectItem value="professor">Professeurs</SelectItem>
                   <SelectItem value="student">Élèves</SelectItem>
                 </SelectContent>
@@ -313,13 +325,12 @@ export function UsersManager({
                       <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Nom</th>
                       <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Email</th>
                       <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Rôle</th>
-                      <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Statut</th>
                       <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pagedUsers.map((u) => (
-                      <tr key={u.id} className="border-b border-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
+                      <tr key={`${u.role}-${u.id}`} className="border-b border-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.02)]">
                         <td className="p-4">
                           <p className="text-white font-medium">
                             {u.firstName} {u.lastName}
@@ -333,18 +344,6 @@ export function UsersManager({
                           </span>
                         </td>
                         <td className="p-4">
-                          <Badge
-                            variant="outline"
-                            className={
-                              u.isActive
-                                ? "border-green-500/40 text-green-400"
-                                : "border-red-500/40 text-red-400"
-                            }
-                          >
-                            {u.isActive ? "Actif" : "Désactivé"}
-                          </Badge>
-                        </td>
-                        <td className="p-4">
                           <div className="flex gap-1.5 justify-end flex-wrap">
                             <Button
                               size="icon"
@@ -354,28 +353,6 @@ export function UsersManager({
                               className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
                             >
                               <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => {
-                                setPwdTarget(u)
-                                setPassword("")
-                              }}
-                              title="Réinitialiser le mot de passe"
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
-                            >
-                              <Key className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              onClick={() => toggleActive(u)}
-                              disabled={isPending}
-                              title={u.isActive ? "Désactiver" : "Activer"}
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
-                            >
-                              <Power className="w-4 h-4" />
                             </Button>
                             <Button
                               size="icon"
@@ -392,7 +369,7 @@ export function UsersManager({
                     ))}
                     {filtered.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-[rgba(255,255,255,0.4)]">
+                        <td colSpan={4} className="p-8 text-center text-[rgba(255,255,255,0.4)]">
                           Aucun utilisateur trouvé
                         </td>
                       </tr>
@@ -417,7 +394,7 @@ export function UsersManager({
 
       {/* Create / Edit dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="bg-[#0d0d1a] border-[rgba(255,255,255,0.1)] text-white">
+        <DialogContent className="bg-[#0d0d1a] border-[rgba(255,255,255,0.1)] text-white max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-serif">
               {editing ? "Modifier l'utilisateur" : "Nouvel utilisateur"}
@@ -425,10 +402,25 @@ export function UsersManager({
             <DialogDescription className="text-[rgba(255,255,255,0.5)]">
               {editing
                 ? "Mettez à jour les informations du compte."
-                : "Créez un nouveau compte. L'email sera confirmé automatiquement."}
+                : "Un mot de passe est généré automatiquement et envoyé par email — aucune saisie nécessaire ici."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {!editing && (
+              <div className="space-y-2">
+                <Label className="text-[rgba(255,255,255,0.7)]">Type de compte</Label>
+                <Select value={role} onValueChange={(v) => setRole(v as ManagedUser["role"])}>
+                  <SelectTrigger className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="student">Élève</SelectItem>
+                    <SelectItem value="professor">Professeur</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <ValidatedInput
                 label="Prénom"
@@ -449,43 +441,106 @@ export function UsersManager({
               label="Email"
               type="email"
               value={email}
-              disabled={!!editing}
               onChange={(e) => setEmail(e.target.value)}
-              validator={editing ? undefined : combine(required("L'email est obligatoire"), emailValidator)}
-              className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white disabled:opacity-50"
+              validator={combine(required("L'email est obligatoire"), emailValidator)}
+              className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
             />
-            {!editing && (
-              <ValidatedInput
-                label="Mot de passe"
-                type="text"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                validator={combine(required("Le mot de passe est obligatoire"), passwordValidator)}
-                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-              />
+            <ValidatedInput
+              label="Téléphone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              validator={combine(required("Le téléphone est obligatoire"), phoneValidator)}
+              className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+            />
+
+            {role === "professor" ? (
+              <>
+                <ValidatedInput
+                  label="Spécialité"
+                  value={specialite}
+                  onChange={(e) => setSpecialite(e.target.value)}
+                  placeholder="Ex: Cuisine française"
+                  validator={required("La spécialité est obligatoire")}
+                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+                />
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.7)]">Modules enseignés (optionnel)</Label>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-[#0a0a1a] rounded-lg border border-[rgba(255,255,255,0.1)]">
+                    {modules.length === 0 && (
+                      <p className="text-xs text-[rgba(255,255,255,0.4)]">Aucun module disponible</p>
+                    )}
+                    {modules.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => toggleModuleId(m.id)}
+                        className={`px-2.5 py-1 rounded-full text-xs transition-colors ${
+                          moduleIds.includes(m.id)
+                            ? "bg-[#C9A227] text-[#0a0a1a]"
+                            : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]"
+                        }`}
+                      >
+                        {m.titre}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-[rgba(255,255,255,0.7)]">Date de naissance</Label>
+                    <Input
+                      type="date"
+                      value={dateNaissance}
+                      onChange={(e) => setDateNaissance(e.target.value)}
+                      className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+                    />
+                  </div>
+                  <ValidatedInput
+                    label="Lieu de naissance"
+                    value={lieuNaissance}
+                    onChange={(e) => setLieuNaissance(e.target.value)}
+                    validator={required("Le lieu de naissance est obligatoire")}
+                    className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+                  />
+                </div>
+                <ValidatedInput
+                  label="Niveau"
+                  value={niveau}
+                  onChange={(e) => setNiveau(e.target.value)}
+                  placeholder="Ex: Débutant"
+                  validator={required("Le niveau est obligatoire")}
+                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+                />
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.7)]">Formation(s) *</Label>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-[#0a0a1a] rounded-lg border border-[rgba(255,255,255,0.1)]">
+                    {formations.length === 0 && (
+                      <p className="text-xs text-[rgba(255,255,255,0.4)]">Aucune formation disponible</p>
+                    )}
+                    {formations.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => toggleFormationId(f.id)}
+                        className={`px-2.5 py-1 rounded-full text-xs transition-colors ${
+                          formationIds.includes(f.id)
+                            ? "bg-[#C9A227] text-[#0a0a1a]"
+                            : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]"
+                        }`}
+                      >
+                        {f.titre}
+                      </button>
+                    ))}
+                  </div>
+                  {formationIds.length === 0 && (
+                    <p className="text-xs text-red-400">Au moins une formation est obligatoire</p>
+                  )}
+                </div>
+              </>
             )}
-            <div className="grid grid-cols-2 gap-3">
-              <ValidatedInput
-                label="Téléphone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                validator={phoneValidator}
-                className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-              />
-              <div className="space-y-2">
-                <Label className="text-[rgba(255,255,255,0.7)]">Rôle</Label>
-                <Select value={role} onValueChange={(v) => setRole(v as ManagedUser["role"])}>
-                  <SelectTrigger className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Élève</SelectItem>
-                    <SelectItem value="professor">Professeur</SelectItem>
-                    <SelectItem value="admin">Administrateur</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -501,43 +556,6 @@ export function UsersManager({
               className="bg-[#C9A227] text-[#0a0a1a] hover:bg-[#b8941f] font-medium"
             >
               {isPending ? "Enregistrement..." : editing ? "Enregistrer" : "Créer"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Password reset dialog */}
-      <Dialog open={!!pwdTarget} onOpenChange={(o) => !o && setPwdTarget(null)}>
-        <DialogContent className="bg-[#0d0d1a] border-[rgba(255,255,255,0.1)] text-white">
-          <DialogHeader>
-            <DialogTitle className="font-serif">Réinitialiser le mot de passe</DialogTitle>
-            <DialogDescription className="text-[rgba(255,255,255,0.5)]">
-              Nouveau mot de passe pour {pwdTarget?.firstName} {pwdTarget?.lastName}.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label className="text-[rgba(255,255,255,0.7)]">Nouveau mot de passe</Label>
-            <Input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPwdTarget(null)}
-              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)]"
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={submitPassword}
-              disabled={isPending || !password}
-              className="bg-[#C9A227] text-[#0a0a1a] hover:bg-[#b8941f] font-medium"
-            >
-              {isPending ? "..." : "Réinitialiser"}
             </Button>
           </DialogFooter>
         </DialogContent>

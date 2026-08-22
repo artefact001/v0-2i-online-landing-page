@@ -4,34 +4,52 @@ import { revalidatePath } from "next/cache"
 import { apiServer, getCurrentUser } from "@/lib/api/server"
 
 /**
- * ATTENTION — mismatch d'architecture entre le frontend (une seule table "users"
- * avec un champ role) et le backend Laravel (deux ressources séparées:
- * /v1/formateurs et /v1/etudiants, chacune réservée aux admins). Conséquences :
+ * Schéma Laravel réel (confirmé en lisant FormateurController/Service et
+ * EtudiantController/Service) :
  *
- * 1. Il n'existe AUCUNE route pour lister/créer un "admin" — seuls formateurs et
- *    étudiants sont gérables via l'API actuelle. La création/liste des comptes admin
- *    doit être ajoutée côté Laravel (ou faite via un seeder/tinker en dehors du frontend).
- * 2. Il n'existe AUCUNE route "activer/désactiver un compte" (is_active/ban) ni de route
- *    "admin réinitialise le mot de passe d'un autre utilisateur". setUserActive() et
- *    resetUserPassword() sont donc désactivées ci-dessous en attendant ces endpoints.
- * 3. Changer un utilisateur d'étudiant à formateur (ou inversement) supposerait de le
- *    supprimer d'une ressource et le recréer dans l'autre — non géré ici, à confirmer
- *    avec toi si ce cas d'usage existe vraiment.
+ * - Pas de route pour lister/créer un compte "admin" — seuls formateurs et
+ *   étudiants sont gérables via l'API. Comptes admin à créer via
+ *   seeder/tinker côté Laravel.
+ * - GET /formateurs renvoie une structure IMBRIQUÉE :
+ *   { id, specialite, user: { id, prenom, nom, email, telephone }, modules: [...] }
+ *   (id ci-dessus = l'id du Formateur, PAS l'id du User — distinction
+ *   importante pour update/delete, qui opèrent sur l'id Formateur/Etudiant).
+ * - GET /etudiants renvoie pareil, avec date_naissance/lieu_naissance/
+ *   niveau/formations au lieu de specialite/modules.
+ * - Création : AUCUN champ password n'est accepté — Laravel génère un mot
+ *   de passe aléatoire à 6 caractères et l'envoie par email. La réponse
+ *   contient `password_temporaire` (à afficher à l'admin une seule fois).
+ * - Formateur requiert `specialite` (obligatoire), `modules` (optionnel).
+ * - Étudiant requiert `date_naissance`, `lieu_naissance`, `niveau`,
+ *   `formations` (tous obligatoires, y compris à la MODIFICATION — la
+ *   même classe de validation est réutilisée pour update, donc pas de
+ *   mise à jour partielle possible côté étudiant).
+ * - Aucune route pour activer/désactiver un compte, ni pour qu'un admin
+ *   réinitialise le mot de passe d'un tiers.
  */
 
 export type ManagedUser = {
-  id: string
+  id: string // id Formateur/Etudiant (PAS l'id User)
+  userId: string
   email: string
   firstName: string
   lastName: string
-  role: "admin" | "professor" | "student"
+  role: "professor" | "student"
   phone: string | null
   isActive: boolean
   createdAt: string
   emailConfirmed: boolean
+  // Spécifique formateur
+  specialite?: string
+  moduleIds?: string[]
+  // Spécifique étudiant
+  dateNaissance?: string
+  lieuNaissance?: string
+  niveau?: string
+  formationIds?: string[]
 }
 
-type ActionResult = { success: boolean; error?: string }
+type ActionResult = { success: boolean; error?: string; passwordTemporaire?: string }
 
 async function requireAdmin() {
   const user = await getCurrentUser()
@@ -41,16 +59,24 @@ async function requireAdmin() {
 }
 
 function mapUser(raw: any, role: "professor" | "student"): ManagedUser {
+  const u = raw.user ?? {}
   return {
     id: String(raw.id),
-    email: raw.email ?? "",
-    firstName: raw.prenom ?? raw.first_name ?? "",
-    lastName: raw.nom ?? raw.last_name ?? "",
+    userId: String(u.id ?? raw.user_id ?? ""),
+    email: u.email ?? "",
+    firstName: u.prenom ?? "",
+    lastName: u.nom ?? "",
     role,
-    phone: raw.telephone ?? raw.phone ?? null,
-    isActive: raw.is_active ?? true,
+    phone: u.telephone ?? null,
+    isActive: true, // pas de notion de désactivation côté Laravel actuellement
     createdAt: raw.created_at ?? "",
-    emailConfirmed: true, // pas de notion de confirmation email visible côté Laravel
+    emailConfirmed: true,
+    specialite: raw.specialite ?? undefined,
+    moduleIds: Array.isArray(raw.modules) ? raw.modules.map((m: any) => String(m.id)) : undefined,
+    dateNaissance: raw.date_naissance ?? undefined,
+    lieuNaissance: raw.lieu_naissance ?? undefined,
+    niveau: raw.niveau ?? undefined,
+    formationIds: Array.isArray(raw.formations) ? raw.formations.map((f: any) => String(f.id)) : undefined,
   }
 }
 
@@ -71,13 +97,32 @@ export async function listUsers(): Promise<ManagedUser[]> {
   ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
 }
 
+export async function listModules(): Promise<{ id: string; titre: string }[]> {
+  await requireAdmin()
+  const res = await apiServer("/api/v1/modules")
+  const list = Array.isArray(res.data) ? res.data : []
+  return list.map((m: any) => ({ id: String(m.id), titre: m.titre }))
+}
+
+export async function listFormationsForEnrollment(): Promise<{ id: string; titre: string }[]> {
+  await requireAdmin()
+  const res = await apiServer("/api/v1/formations")
+  const list = Array.isArray(res.data) ? res.data : []
+  return list.map((f: any) => ({ id: String(f.id), titre: f.titre }))
+}
+
 export async function createUser(input: {
   email: string
-  password: string
   firstName: string
   lastName: string
   role: "admin" | "professor" | "student"
   phone?: string
+  specialite?: string
+  moduleIds?: string[]
+  dateNaissance?: string
+  lieuNaissance?: string
+  niveau?: string
+  formationIds?: string[]
 }): Promise<ActionResult> {
   try {
     await requireAdmin()
@@ -91,23 +136,34 @@ export async function createUser(input: {
 
     const endpoint = input.role === "professor" ? "/api/v1/formateurs" : "/api/v1/etudiants"
 
-    await apiServer(endpoint, {
+    const body =
+      input.role === "professor"
+        ? {
+            prenom: input.firstName,
+            nom: input.lastName,
+            telephone: input.phone ?? "",
+            email: input.email.trim().toLowerCase(),
+            specialite: input.specialite ?? "",
+            modules: input.moduleIds ?? [],
+          }
+        : {
+            prenom: input.firstName,
+            nom: input.lastName,
+            telephone: input.phone ?? "",
+            email: input.email.trim().toLowerCase(),
+            date_naissance: input.dateNaissance ?? "",
+            lieu_naissance: input.lieuNaissance ?? "",
+            niveau: input.niveau ?? "",
+            formations: input.formationIds ?? [],
+          }
+
+    const res = await apiServer(endpoint, {
       method: "POST",
-      body: JSON.stringify({
-        name: `${input.firstName} ${input.lastName}`.trim(),
-        email: input.email.trim().toLowerCase(),
-        password: input.password,
-        prenom: input.firstName,
-        nom: input.lastName,
-        telephone: input.phone ?? null,
-        first_name: input.firstName,
-        last_name: input.lastName,
-        phone: input.phone ?? null,
-      }),
+      body: JSON.stringify(body),
     })
 
     revalidatePath("/dashboard/admin/users")
-    return { success: true }
+    return { success: true, passwordTemporaire: (res as any)?.password_temporaire }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : "Erreur inconnue" }
   }
@@ -120,6 +176,13 @@ export async function updateUser(
     lastName: string
     role: "admin" | "professor" | "student"
     phone?: string
+    email?: string
+    specialite?: string
+    moduleIds?: string[]
+    dateNaissance?: string
+    lieuNaissance?: string
+    niveau?: string
+    formationIds?: string[]
   },
 ): Promise<ActionResult> {
   try {
@@ -131,17 +194,35 @@ export async function updateUser(
 
     const endpoint = input.role === "professor" ? `/api/v1/formateurs/${id}` : `/api/v1/etudiants/${id}`
 
+    // ATTENTION: EtudiantController::update réutilise StoreEtudiantRequest
+    // (pas de classe "Update" dédiée) — tous les champs y sont validés
+    // comme obligatoires, y compris à la modification. On les renvoie donc
+    // systématiquement pour un étudiant, même si l'admin ne les a pas
+    // changés.
+    const body =
+      input.role === "professor"
+        ? {
+            prenom: input.firstName,
+            nom: input.lastName,
+            telephone: input.phone ?? "",
+            email: input.email,
+            specialite: input.specialite ?? "",
+            modules: input.moduleIds ?? [],
+          }
+        : {
+            prenom: input.firstName,
+            nom: input.lastName,
+            telephone: input.phone ?? "",
+            email: input.email,
+            date_naissance: input.dateNaissance ?? "",
+            lieu_naissance: input.lieuNaissance ?? "",
+            niveau: input.niveau ?? "",
+            formations: input.formationIds ?? [],
+          }
+
     await apiServer(endpoint, {
       method: "PUT",
-      body: JSON.stringify({
-        name: `${input.firstName} ${input.lastName}`.trim(),
-        prenom: input.firstName,
-        nom: input.lastName,
-        telephone: input.phone ?? null,
-        first_name: input.firstName,
-        last_name: input.lastName,
-        phone: input.phone ?? null,
-      }),
+      body: JSON.stringify(body),
     })
 
     revalidatePath("/dashboard/admin/users")
@@ -152,8 +233,6 @@ export async function updateUser(
 }
 
 export async function setUserActive(_id: string, _isActive: boolean): Promise<ActionResult> {
-  // Aucune route Laravel pour activer/désactiver un compte (ban) dans routes/api.php.
-  // À ajouter côté backend avant de pouvoir réactiver cette fonctionnalité.
   return {
     success: false,
     error: "Fonctionnalité indisponible : aucun endpoint Laravel pour activer/désactiver un compte.",
@@ -161,28 +240,21 @@ export async function setUserActive(_id: string, _isActive: boolean): Promise<Ac
 }
 
 export async function resetUserPassword(_id: string, _password: string): Promise<ActionResult> {
-  // Aucune route "admin réinitialise le mot de passe d'un autre utilisateur" dans
-  // routes/api.php — seules les routes self-service (changePassword) et publiques
-  // (forgotPassword/resetPassword par email) existent.
   return {
     success: false,
     error: "Fonctionnalité indisponible : aucun endpoint Laravel pour réinitialiser le mot de passe d'un tiers.",
   }
 }
 
-export async function deleteUser(id: string): Promise<ActionResult> {
+export async function deleteUser(id: string, role: "professor" | "student"): Promise<ActionResult> {
   try {
     const adminId = await requireAdmin()
     if (adminId === id) {
       return { success: false, error: "Vous ne pouvez pas supprimer votre propre compte" }
     }
 
-    // On ne connaît pas le rôle a priori : on tente formateur puis étudiant.
-    try {
-      await apiServer(`/api/v1/formateurs/${id}`, { method: "DELETE" })
-    } catch {
-      await apiServer(`/api/v1/etudiants/${id}`, { method: "DELETE" })
-    }
+    const endpoint = role === "professor" ? `/api/v1/formateurs/${id}` : `/api/v1/etudiants/${id}`
+    await apiServer(endpoint, { method: "DELETE" })
 
     revalidatePath("/dashboard/admin/users")
     return { success: true }
