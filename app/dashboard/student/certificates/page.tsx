@@ -49,20 +49,12 @@ export default function CertificatesPage() {
     loadCertificates();
   }, [user?.id]);
 
-  const handleDownloadPDF = async (certificate: Certificate) => {
-    try {
-      const blob = await certificateService.generatePDF(certificate, {
-        studentName: user?.name,
-        formationName: formationNames[certificate.formation_id],
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `certificat-${certificate.numero_certificat}.pdf`;
-      link.click();
-    } catch (error) {
-      console.error('Error downloading certificate:', error);
-    }
+  const handleDownloadPDF = (certificate: Certificate) => {
+    // Télécharge le vrai fichier PDF généré/uploadé côté serveur
+    // (GET /v1/certificats/{id}/download) — plus de régénération côté
+    // client avec des données potentiellement différentes (score/date
+    // factices) de ce que le certificat officiel contient réellement.
+    window.open(certificateService.getDownloadUrl(certificate.id), '_blank')
   };
 
   return (

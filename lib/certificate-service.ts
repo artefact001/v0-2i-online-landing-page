@@ -16,28 +16,17 @@ export interface Certificate {
 }
 
 export const certificateService = {
-  generateCertificateNumber(): string {
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = Math.random().toString(36).substring(2, 9).toUpperCase()
-    return `2ION-${timestamp}-${random}`
-  },
-
-  // Crée un certificat — POST /v1/certificats
-  // ATTENTION: 'fichier_pdf' est un champ NOT NULL côté Laravel (pas de
-  // endpoint de génération/upload PDF connu). En attendant de clarifier ce
-  // flux avec le backend, on envoie l'URL de la route de téléchargement
-  // elle-même comme valeur temporaire — à ajuster si Laravel attend un
-  // vrai chemin de fichier déjà stocké.
+  // Génère un certificat PDF automatiquement côté serveur —
+  // POST /v1/certificats/generate (nécessite composer require
+  // barryvdh/laravel-dompdf côté Laravel). Remplace l'ancien flux qui
+  // envoyait un chemin de fichier factice, puisqu'aucune vraie génération
+  // n'existait avant.
   async createCertificate(formationId: string, userId: string) {
-    const numero = this.generateCertificateNumber()
-    const res = await apiClient<Certificate>('/certificats', {
+    const res = await apiClient<Certificate>('/certificats/generate', {
       method: 'POST',
       body: JSON.stringify({
         user_id: userId,
         formation_id: formationId,
-        numero_certificat: numero,
-        fichier_pdf: `/certificats/${numero}.pdf`,
-        date_obtention: new Date().toISOString().slice(0, 10),
       }),
     })
     return res.data as Certificate

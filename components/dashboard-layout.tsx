@@ -161,6 +161,15 @@ const professorNavItems: NavItem[] = [
     ),
   },
   {
+    href: '/dashboard/professor/exams',
+    label: 'Examens',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M4 7h16M4 7a2 2 0 002 2h12a2 2 0 002-2M4 7a2 2 0 012-2h12a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
     href: '/dashboard/professor/live-sessions',
     label: 'Session Live',
     icon: (
