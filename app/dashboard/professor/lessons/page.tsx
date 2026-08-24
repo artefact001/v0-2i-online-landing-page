@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, Play, FileText, BookOpen } from 'lucide-react'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { TablePagination } from '@/components/admin/table-pagination'
 import { combine, required, minLength } from '@/lib/validators'
@@ -159,22 +160,28 @@ export default function LessonsPage() {
 
       await loadLessons()
       resetForm()
-    } catch (error) {
+      alertSuccess(editingId ? 'Leçon modifiée avec succès.' : 'Leçon créée avec succès.')
+    } catch (error: any) {
       console.error('[v0] Error saving lesson:', error)
-      setFormError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
+      const msg = "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
+      setFormError(msg)
+      alertError(msg)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr?')) return
+  const handleDelete = async (id: string, titre?: string) => {
+    const confirmed = await confirmDelete(titre)
+    if (!confirmed) return
 
     try {
       await apiClient(`/lecons/${id}`, { method: 'DELETE' })
       loadLessons()
-    } catch (error) {
+      alertSuccess('Leçon supprimée avec succès.')
+    } catch (error: any) {
       console.error('Error deleting lesson:', error)
+      alertError(error?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -377,7 +384,7 @@ export default function LessonsPage() {
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button
-                    onClick={() => handleDelete(lesson.id)}
+                    onClick={() => handleDelete(lesson.id, lesson.titre)}
                     variant="outline"
                     size="sm"
                     className="border-red-500/20 text-red-400 hover:bg-red-500/10"
