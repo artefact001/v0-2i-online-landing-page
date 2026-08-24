@@ -15,6 +15,7 @@ import {
   email as emailValidator,
   phone as phoneValidator,
 } from "@/lib/validators"
+import { alertSuccess, alertError, confirmDelete as confirmDeleteDialog } from "@/lib/alerts"
 import {
   Dialog,
   DialogContent,
@@ -184,30 +185,29 @@ export function UsersManager({
       if (editing) {
         const res = await updateUser(editing.id, { ...common, email, ...roleSpecific })
         if (res.success) {
-          notify({ type: "success", message: "Utilisateur mis à jour" })
-          setFormOpen(false)
+          setFormOpen(false) // ferme le formulaire automatiquement
           await refresh()
+          alertSuccess("Utilisateur mis à jour avec succès.")
         } else {
-          notify({ type: "error", message: res.error ?? "Erreur" })
+          alertError(res.error ?? "Erreur")
         }
       } else {
         if (!email) {
-          notify({ type: "error", message: "Email requis" })
+          alertError("Email requis")
           return
         }
         const res = await createUser({ email, ...common, ...roleSpecific })
         if (res.success) {
-          notify({
-            type: "success",
-            message: res.passwordTemporaire
+          setLastPassword(res.passwordTemporaire ?? null)
+          setFormOpen(false) // ferme le formulaire automatiquement
+          await refresh()
+          alertSuccess(
+            res.passwordTemporaire
               ? `Compte créé — mot de passe envoyé par email (${res.passwordTemporaire})`
               : "Compte créé avec succès",
-          })
-          setLastPassword(res.passwordTemporaire ?? null)
-          setFormOpen(false)
-          await refresh()
+          )
         } else {
-          notify({ type: "error", message: res.error ?? "Erreur" })
+          alertError(res.error ?? "Erreur")
         }
       }
     })
@@ -217,13 +217,12 @@ export function UsersManager({
     if (!deleteTarget) return
     startTransition(async () => {
       const res = await deleteUser(deleteTarget.id, deleteTarget.role)
+      setDeleteTarget(null)
       if (res.success) {
-        notify({ type: "success", message: "Utilisateur supprimé" })
-        setDeleteTarget(null)
         await refresh()
+        alertSuccess("Utilisateur supprimé avec succès.")
       } else {
-        notify({ type: "error", message: res.error ?? "Erreur" })
-        setDeleteTarget(null)
+        alertError(res.error ?? "Erreur")
       }
     })
   }
@@ -232,27 +231,27 @@ export function UsersManager({
     startTransition(async () => {
       const res = await setUserActive(u.id, u.role)
       if (res.success) {
-        notify({ type: "success", message: u.isActive ? "Compte désactivé" : "Compte activé" })
         await refresh()
+        alertSuccess(u.isActive ? "Compte désactivé." : "Compte activé.")
       } else {
-        notify({ type: "error", message: res.error ?? "Erreur" })
+        alertError(res.error ?? "Erreur")
       }
     })
   }
 
-  function handleResetPassword(u: ManagedUser) {
-    if (!confirm(`Réinitialiser le mot de passe de ${u.firstName} ${u.lastName} ? Un nouveau mot de passe lui sera envoyé par email.`)) return
+  async function handleResetPassword(u: ManagedUser) {
+    const confirmed = await confirmDeleteDialog(`Réinitialiser le mot de passe de ${u.firstName} ${u.lastName}`)
+    if (!confirmed) return
     startTransition(async () => {
       const res = await resetUserPassword(u.id, u.role)
       if (res.success) {
-        notify({
-          type: "success",
-          message: res.passwordTemporaire
+        alertSuccess(
+          res.passwordTemporaire
             ? `Mot de passe réinitialisé et envoyé par email (${res.passwordTemporaire})`
             : "Mot de passe réinitialisé",
-        })
+        )
       } else {
-        notify({ type: "error", message: res.error ?? "Erreur" })
+        alertError(res.error ?? "Erreur")
       }
     })
   }
