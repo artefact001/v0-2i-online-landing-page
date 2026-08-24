@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, X, FileCheck, Award } from 'lucide-react'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { StatCard, FormationPills } from '@/components/professor/section-header'
 import { combine, required, minLength } from '@/lib/validators'
@@ -228,21 +229,27 @@ export default function ExamsPage() {
 
       await loadExamens()
       resetForm()
-    } catch (error) {
+      alertSuccess(editingId ? "Examen modifié avec succès." : 'Examen créé avec succès.')
+    } catch (error: any) {
       console.error('[v0] Error saving examen:', error)
-      setFormError("Une erreur est survenue lors de l'enregistrement.")
+      const msg = "Une erreur est survenue lors de l'enregistrement."
+      setFormError(msg)
+      alertError(msg)
     } finally {
       setSaving(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cet examen ?')) return
+  const handleDelete = async (id: string, titre?: string) => {
+    const confirmed = await confirmDelete(titre)
+    if (!confirmed) return
     try {
       await apiClient(`/examens/${id}`, { method: 'DELETE' })
       loadExamens()
-    } catch (error) {
+      alertSuccess('Examen supprimé avec succès.')
+    } catch (error: any) {
       console.error('Error deleting examen:', error)
+      alertError(error?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -410,7 +417,7 @@ export default function ExamsPage() {
                     <Button onClick={() => handleEdit(ex)} variant="outline" size="sm" className="border-[rgba(255,255,255,0.2)] text-white">
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button onClick={() => handleDelete(ex.id)} variant="outline" size="sm" className="border-red-500/20 text-red-400 hover:bg-red-500/10">
+                    <Button onClick={() => handleDelete(ex.id, ex.titre)} variant="outline" size="sm" className="border-red-500/20 text-red-400 hover:bg-red-500/10">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
