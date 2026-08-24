@@ -9,9 +9,33 @@ export async function apiClient<T = any>(
     // Pour un upload de fichier (FormData), NE PAS fixer Content-Type
     // nous-mêmes : le navigateur doit le définir lui-même avec le bon
     // "boundary" multipart, sinon Laravel ne peut pas parser le fichier.
-    headers: isFormData ? { ...options.headers } : { 'Content-Type': 'application/json', ...options.headers },
+    // "Accept: application/json" est TOUJOURS nécessaire : sans lui,
+    // Laravel peut renvoyer sa page d'erreur HTML par défaut au lieu de
+    // JSON en cas d'erreur serveur, ce que le parsing ci-dessous
+    // planterait sinon en essayant de le lire comme du JSON.
+    headers: isFormData
+      ? { Accept: 'application/json', ...options.headers }
+      : { 'Content-Type': 'application/json', Accept: 'application/json', ...options.headers },
   })
-  const json = await res.json()
+
+  // Lecture défensive : si le serveur renvoie autre chose que du JSON
+  // valide (page d'erreur HTML, texte brut...), on ne plante jamais avec
+  // un message cryptique — on affiche un message clair et exploitable.
+  const rawText = await res.text()
+  let json: any = null
+  if (rawText) {
+    try {
+      json = JSON.parse(rawText)
+    } catch {
+      console.error('[apiClient] Réponse non-JSON du serveur:', res.status, rawText.slice(0, 300))
+      throw new Error(
+        res.ok
+          ? 'Réponse inattendue du serveur.'
+          : `Erreur serveur (${res.status}). Réessayez ou contactez le support si le problème persiste.`,
+      )
+    }
+  }
+
   if (!res.ok) throw new Error(json?.message || `Erreur API (${res.status})`)
 
   // Normalisation: certains contrôleurs Laravel (apiResource par défaut,
