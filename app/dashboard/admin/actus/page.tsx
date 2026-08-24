@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { Edit, Trash2, Plus, Newspaper } from 'lucide-react'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { ActuCard } from '@/components/dashboard/actu-card'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -134,20 +135,26 @@ export default function AdminActusPage() {
       }
       await loadActus()
       resetForm()
+      alertSuccess(editingId ? 'Actualité modifiée avec succès.' : 'Actualité créée avec succès.')
     } catch (err: any) {
       console.error('[admin/actus] Erreur de sauvegarde:', err)
-      setError(err?.message || "Erreur lors de l'enregistrement")
+      const msg = err?.message || "Erreur lors de l'enregistrement"
+      setError(msg)
+      alertError(msg)
     }
     setSaving(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette actualité ?')) return
+  const handleDelete = async (id: string, titre?: string) => {
+    const confirmed = await confirmDelete(titre)
+    if (!confirmed) return
     try {
       await apiClient(`/actus/${id}`, { method: 'DELETE' })
       await loadActus()
-    } catch (err) {
+      alertSuccess('Actualité supprimée avec succès.')
+    } catch (err: any) {
       console.error('[admin/actus] Erreur de suppression:', err)
+      alertError(err?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -277,7 +284,7 @@ export default function AdminActusPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {actus.map((a) => (
-                <ActuCard key={a.id} actu={a} onEdit={() => handleEdit(a)} onDelete={() => handleDelete(a.id)} />
+                <ActuCard key={a.id} actu={a} onEdit={() => handleEdit(a)} onDelete={() => handleDelete(a.id, a.titre)} />
               ))}
 
               {actus.length === 0 && (

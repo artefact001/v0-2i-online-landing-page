@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Edit, Trash2, Plus, Briefcase } from 'lucide-react'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { OpportuniteCard } from '@/components/dashboard/opportunite-card'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -147,20 +148,26 @@ export default function AdminOpportunitesPage() {
       }
       await load()
       resetForm()
+      alertSuccess(editingId ? 'Opportunité modifiée avec succès.' : 'Opportunité créée avec succès.')
     } catch (err: any) {
       console.error('[admin/opportunites] Erreur de sauvegarde:', err)
-      setError(err?.message || "Erreur lors de l'enregistrement")
+      const msg = err?.message || "Erreur lors de l'enregistrement"
+      setError(msg)
+      alertError(msg)
     }
     setSaving(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette opportunité ?')) return
+  const handleDelete = async (id: string, titre?: string) => {
+    const confirmed = await confirmDelete(titre)
+    if (!confirmed) return
     try {
       await apiClient(`/opportunites/${id}`, { method: 'DELETE' })
       await load()
-    } catch (err) {
+      alertSuccess('Opportunité supprimée avec succès.')
+    } catch (err: any) {
       console.error('[admin/opportunites] Erreur de suppression:', err)
+      alertError(err?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -331,7 +338,7 @@ export default function AdminOpportunitesPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {opportunites.map((o) => (
-                <OpportuniteCard key={o.id} opportunite={o} onEdit={() => handleEdit(o)} onDelete={() => handleDelete(o.id)} />
+                <OpportuniteCard key={o.id} opportunite={o} onEdit={() => handleEdit(o)} onDelete={() => handleDelete(o.id, o.titre)} />
               ))}
 
               {opportunites.length === 0 && (

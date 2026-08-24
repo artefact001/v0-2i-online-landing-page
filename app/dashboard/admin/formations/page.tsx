@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit, Trash2, Plus, GraduationCap, Users } from 'lucide-react'
 import { FormationCard } from '@/components/dashboard/formation-card'
 import { combine, required, minLength, positiveNumber } from '@/lib/validators'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 
 // Schéma Laravel réel (table formations) :
 // id, titre, description, image, niveau, duree, prix (decimal), statut
@@ -149,21 +150,27 @@ export default function AdminFormationsPage() {
         await apiClientUpload('/formations', body, 'POST')
       }
       await loadFormations()
-      resetForm()
+      resetForm() // ferme le formulaire automatiquement
+      alertSuccess(editingId ? 'Formation modifiée avec succès.' : 'Formation créée avec succès.')
     } catch (err: any) {
       console.error('[admin/formations] Erreur de sauvegarde:', err)
-      setError(err?.message || "Erreur lors de l'enregistrement")
+      const msg = err?.message || "Erreur lors de l'enregistrement"
+      setError(msg)
+      alertError(msg)
     }
     setSaving(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette formation ? Cette action est irréversible.')) return
+  const handleDelete = async (id: string, titre?: string) => {
+    const confirmed = await confirmDelete(titre)
+    if (!confirmed) return
     try {
       await apiClient(`/formations/${id}`, { method: 'DELETE' })
       await loadFormations()
-    } catch (err) {
+      alertSuccess('Formation supprimée avec succès.')
+    } catch (err: any) {
       console.error('[admin/formations] Erreur de suppression:', err)
+      alertError(err?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -308,7 +315,7 @@ export default function AdminFormationsPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {formations.map((f) => (
-                <FormationCard key={f.id} formation={f} onEdit={() => handleEdit(f)} onDelete={() => handleDelete(f.id)} />
+                <FormationCard key={f.id} formation={f} onEdit={() => handleEdit(f)} onDelete={() => handleDelete(f.id, f.titre)} />
               ))}
 
               {formations.length === 0 && (
