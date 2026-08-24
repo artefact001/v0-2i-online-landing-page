@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuth, UserProfile } from '@/components/auth-guard'
 import { ProfileDialog } from '@/components/profile-dialog'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -423,11 +424,7 @@ export function DashboardHeader({ title, subtitle }: { title: string; subtitle?:
       
       <div className="flex items-center gap-2 md:gap-4 shrink-0">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="hidden sm:inline-flex text-[rgba(255,255,255,0.6)] hover:text-white hover:bg-[rgba(255,255,255,0.05)]">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-        </Button>
+        <NotificationBell />
         
         {/* Back to site */}
         <Link href="/">
