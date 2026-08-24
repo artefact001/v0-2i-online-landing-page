@@ -123,11 +123,15 @@ export default function CoursePage() {
           // (sa "classe") peut lire ses leçons. Les admins/formateurs contournent ce
           // contrôle (ils gèrent le contenu, pas besoin d'être "inscrits").
           if (user.role === 'student') {
+            // Le backend GET /inscriptions ne filtre que par user_id/
+            // formation_id — le vrai champ de statut ("actif", pas
+            // "active") doit être vérifié côté client sur les résultats.
             const enrollRes = await apiClient(
-              `/inscriptions?formation_id=${formationData.id}&user_id=${user.id}&status=active`,
+              `/inscriptions?formation_id=${formationData.id}&user_id=${user.id}`,
             )
             const enrollments = Array.isArray(enrollRes.data) ? enrollRes.data : []
-            if (enrollments.length === 0) {
+            const hasActiveEnrollment = enrollments.some((e: any) => e.statut === 'actif')
+            if (!hasActiveEnrollment) {
               setIsEnrolled(false)
               setLoading(false)
               return
