@@ -12,7 +12,8 @@ import { FileUpload } from '@/components/ui/file-upload'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, Play, FileText, BookOpen } from 'lucide-react'
+import Link from 'next/link'
+import { Edit, Trash2, Plus, Play, FileText, BookOpen, Eye } from 'lucide-react'
 import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { TablePagination } from '@/components/admin/table-pagination'
@@ -360,7 +361,12 @@ export default function LessonsPage() {
                     ) : (
                       <BookOpen className="w-5 h-5 text-[rgba(255,255,255,0.4)]" />
                     )}
-                    <h3 className="text-lg font-semibold text-white">{lesson.titre}</h3>
+                    <Link
+                      href={`/cours/${selectedFormation}/${lesson.id}`}
+                      className="text-lg font-semibold text-white hover:text-[#C9A227] transition-colors"
+                    >
+                      {lesson.titre}
+                    </Link>
                   </div>
                   <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2 line-clamp-2">{lesson.contenu}</p>
                   <div className="flex items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
@@ -375,6 +381,16 @@ export default function LessonsPage() {
                 </div>
 
                 <div className="flex gap-2">
+                  <Link href={`/cours/${selectedFormation}/${lesson.id}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      title="Voir la leçon"
+                      className="border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </Link>
                   <Button
                     onClick={() => handleEdit(lesson)}
                     variant="outline"

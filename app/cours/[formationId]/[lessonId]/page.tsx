@@ -559,18 +559,35 @@ export default function CoursePage() {
             <LessonNotesPanel leconId={currentLesson.id} />
           ) : activeTab === "content" ? (
             <div className="max-w-4xl mx-auto p-6">
-              {/* Video section */}
+              {/* Video section — fichier vidéo réellement uploadé désormais
+                  (plus une URL YouTube à embarquer), lecteur natif requis */}
               {currentLesson.video && (
                 <div className="mb-8">
                   <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
-                    <iframe
-                      src={currentLesson.video}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                    <video src={currentLesson.video} controls className="w-full h-full" />
                   </div>
                 </div>
+              )}
+
+              {/* Téléchargement du support de cours (PDF/Word/PowerPoint) */}
+              {currentLesson.document && (
+                <a
+                  href={currentLesson.document}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 mb-8 bg-[#0D1B2A] border border-[#1a2942] hover:border-[#C9A227]/50 rounded-xl p-4 transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#C9A227]/10 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-[#C9A227]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium group-hover:text-[#C9A227] transition-colors">
+                      Télécharger le support de cours
+                    </p>
+                    <p className="text-gray-500 text-xs">PDF, Word ou PowerPoint</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-[#C9A227] transition-colors" />
+                </a>
               )}
               
               {/* Text content */}
