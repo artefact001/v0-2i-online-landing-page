@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react"
 import { ImagePlus, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { compressImage } from "@/lib/compress-image"
 
 interface ImageUploadProps {
   label?: string
@@ -25,7 +26,9 @@ export function ImageUpload({ label = "Image", value, onFileSelected, disabled }
     setPreviewUrl(value ?? null)
   }, [value])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [compressing, setCompressing] = useState(false)
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
     if (!file) return
 
@@ -40,9 +43,13 @@ export function ImageUpload({ label = "Image", value, onFileSelected, disabled }
       return
     }
 
-    setFileName(file.name)
-    setPreviewUrl(URL.createObjectURL(file))
-    onFileSelected(file)
+    setCompressing(true)
+    const compressed = await compressImage(file)
+    setCompressing(false)
+
+    setFileName(compressed.name)
+    setPreviewUrl(URL.createObjectURL(compressed))
+    onFileSelected(compressed)
   }
 
   const handleClear = () => {
@@ -87,12 +94,16 @@ export function ImageUpload({ label = "Image", value, onFileSelected, disabled }
         <Button
           type="button"
           variant="outline"
-          disabled={disabled}
+          disabled={disabled || compressing}
           onClick={() => inputRef.current?.click()}
           className="border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
         >
-          <ImagePlus className="w-4 h-4 mr-2" />
-          Choisir une image
+          {compressing ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <ImagePlus className="w-4 h-4 mr-2" />
+          )}
+          {compressing ? "Optimisation en cours..." : "Choisir une image"}
         </Button>
       )}
     </div>

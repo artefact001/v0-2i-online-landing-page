@@ -58,7 +58,7 @@ const emptyForm = {
   type: 'actualite' as Actu['type'],
   date_publication: new Date().toISOString().slice(0, 10),
   date_expiration: '',
-  statut: 'brouillon' as Actu['statut'],
+  statut: 'publie' as Actu['statut'],
 }
 
 export default function AdminActusPage() {

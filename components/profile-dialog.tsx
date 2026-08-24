@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { ValidatedInput } from "@/components/ui/validated-input"
 import { Label } from "@/components/ui/label"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { alertSuccess, alertError } from "@/lib/alerts"
 import { combine, required, minLength, phone as phoneValidator } from "@/lib/validators"
 import {
   Dialog,
@@ -64,12 +65,12 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     try {
       await apiClientUpload("/me", body, "PUT")
       await refresh()
-      setFeedback({ type: "success", message: "Profil mis à jour avec succès." })
+      onOpenChange(false) // ferme le dialog automatiquement
+      alertSuccess("Profil mis à jour avec succès.")
     } catch (error) {
-      setFeedback({
-        type: "error",
-        message: error instanceof Error ? error.message : "Impossible d'enregistrer le profil.",
-      })
+      const message = error instanceof Error ? error.message : "Impossible d'enregistrer le profil."
+      setFeedback({ type: "error", message })
+      alertError(message)
     }
     setIsSaving(false)
   }
