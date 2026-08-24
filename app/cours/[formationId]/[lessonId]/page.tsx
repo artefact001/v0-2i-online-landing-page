@@ -86,6 +86,7 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true)
   const [totalProgress, setTotalProgress] = useState(0)
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null) // null = pas encore vérifié
+  const [noAccessToContent, setNoAccessToContent] = useState(false)
   const [expandedLessonLists, setExpandedLessonLists] = useState<Set<string>>(new Set())
 
   const LESSONS_PREVIEW_COUNT = 8
@@ -119,9 +120,13 @@ export default function CoursePage() {
         if (formationData) {
           setFormation(formationData)
 
-          // Contrôle d'accès: seul un étudiant activement inscrit à cette formation
-          // (sa "classe") peut lire ses leçons. Les admins/formateurs contournent ce
-          // contrôle (ils gèrent le contenu, pas besoin d'être "inscrits").
+          // Contrôle d'accès: le backend vérifie lui-même l'accès réel —
+          // un étudiant doit être activement inscrit, un formateur doit
+          // être propriétaire de la formation (un admin voit tout). Côté
+          // frontend on ne fait qu'un contrôle explicite supplémentaire
+          // pour l'étudiant (message dédié "non inscrit"); pour un
+          // formateur/admin sans accès, le backend renvoie simplement une
+          // liste de modules vide (voir plus bas).
           if (user.role === 'student') {
             // Le backend GET /inscriptions ne filtre que par user_id/
             // formation_id — le vrai champ de statut ("actif", pas
@@ -154,6 +159,18 @@ export default function CoursePage() {
           )
           setModules(modulesWithLessons.sort((a, b) => a.ordre - b.ordre))
           setExpandedModules(modulesWithLessons.map((m) => m.id))
+
+          // Si la formation existe mais qu'aucun module n'est accessible
+          // (liste vide alors que la formation, elle, a bien été trouvée),
+          // c'est que le backend a filtré silencieusement : ce compte
+          // (formateur non-propriétaire, généralement) n'a pas accès au
+          // contenu de cette formation précise — à distinguer d'un vrai
+          // "leçon introuvable".
+          if (modulesWithLessons.length === 0 && user.role !== 'student') {
+            setNoAccessToContent(true)
+            setLoading(false)
+            return
+          }
 
           if (params.lessonId) {
             for (const mod of modulesWithLessons) {
@@ -335,6 +352,23 @@ export default function CoursePage() {
             className="text-[#C9A227] hover:underline"
           >
             Voir la formation
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (noAccessToContent) {
+    return (
+      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
+        <div className="text-center max-w-md px-6">
+          <h1 className="text-2xl mb-4">Accès non autorisé</h1>
+          <p className="text-[rgba(255,255,255,0.6)] mb-6">
+            Cette formation n&apos;est pas gérée par ton compte — tu ne peux consulter que le contenu des
+            formations dont tu es responsable.
+          </p>
+          <Link href="/dashboard/professor" className="text-[#C9A227] hover:underline">
+            Retour au tableau de bord
           </Link>
         </div>
       </div>
