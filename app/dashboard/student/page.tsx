@@ -8,18 +8,31 @@ import { apiClient } from '@/lib/api/client'
 import { progressService } from '@/lib/progress-service'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Newspaper, Briefcase, ChevronRight, Award } from 'lucide-react'
 
 interface Enrollment {
   id: string
   formation_id: string
-  status: string
-  formations?: { id: string; titre: string }
+  statut: string
+  formation?: { id: string; titre: string }
 }
 
 interface LiveSession {
   id: string
   title: string
+  formation_id: string
   status: 'scheduled' | 'live' | 'completed' | 'cancelled'
+}
+
+interface Actu {
+  id: string
+  titre: string
+}
+
+interface Opportunite {
+  id: string
+  titre: string
+  type: string
 }
 
 export default function StudentDashboard() {
@@ -27,6 +40,8 @@ export default function StudentDashboard() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([])
   const [progressByFormation, setProgressByFormation] = useState<Record<string, number>>({})
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
+  const [recentActus, setRecentActus] = useState<Actu[]>([])
+  const [recentOpportunites, setRecentOpportunites] = useState<Opportunite[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,12 +49,13 @@ export default function StudentDashboard() {
       if (!user) return
       setLoading(true)
       try {
-        // Route Laravel réelle: /v1/inscriptions?user_id=...&status=active
-        const res = await apiClient<Enrollment[]>(`/inscriptions?user_id=${user.id}&status=active`)
-        const list = res.data || []
+        // Le vrai champ de statut est "statut" (pas "status"), valeur
+        // "actif" (pas "active") — GET /inscriptions ignore silencieusement
+        // les paramètres inconnus, donc filtrage réel côté client.
+        const res = await apiClient<Enrollment[]>(`/inscriptions?user_id=${user.id}`)
+        const list = (res.data || []).filter((e) => e.statut === 'actif')
         setEnrollments(list)
 
-        // Progression réelle par formation (déjà connectée à /v1/progressions)
         const progressEntries = await Promise.all(
           list.map(async (e) => {
             const p = await progressService.getFormationProgress(user.id, e.formation_id)
@@ -48,7 +64,6 @@ export default function StudentDashboard() {
         )
         setProgressByFormation(Object.fromEntries(progressEntries))
 
-        // Sessions live à venir, toutes formations inscrites confondues
         if (list.length > 0) {
           const liveResults = await Promise.all(
             list.map((e) => apiClient<LiveSession[]>(`/directs?formation_id=${e.formation_id}`).catch(() => null)),
@@ -58,6 +73,13 @@ export default function StudentDashboard() {
             .filter((s) => s.status === 'live' || s.status === 'scheduled')
           setLiveSessions(upcoming)
         }
+
+        const [actusRes, oppoRes] = await Promise.all([
+          apiClient<Actu[]>('/actus').catch(() => ({ data: [] })),
+          apiClient<Opportunite[]>('/opportunites').catch(() => ({ data: [] })),
+        ])
+        setRecentActus(((actusRes.data || []) as any[]).filter((a) => a.statut === 'publie').slice(0, 3))
+        setRecentOpportunites(((oppoRes.data || []) as any[]).filter((o) => o.statut === 'ouvert').slice(0, 3))
       } catch (error) {
         console.error('[dashboard/student] Erreur de chargement:', error)
       }
@@ -137,7 +159,7 @@ export default function StudentDashboard() {
                   <CardContent className="space-y-4">
                     {enrollments.map((enrollment) => {
                       const progress = progressByFormation[enrollment.formation_id] ?? 0
-                      const formationName = enrollment.formations?.titre || 'Formation'
+                      const formationName = enrollment.formation?.titre || 'Formation'
 
                       return (
                         <div
@@ -180,9 +202,10 @@ export default function StudentDashboard() {
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {liveSessions.map((session) => (
-                          <div
+                          <Link
                             key={session.id}
-                            className="p-3 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)]"
+                            href={`/cours/${session.formation_id}/direct/${session.id}`}
+                            className="block p-3 rounded-lg bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] hover:border-[#C9A227]/30 transition-colors"
                           >
                             {session.status === 'live' && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full mb-2">
@@ -191,28 +214,86 @@ export default function StudentDashboard() {
                               </span>
                             )}
                             <h4 className="text-white font-medium text-sm">{session.title}</h4>
-                          </div>
+                          </Link>
                         ))}
                       </CardContent>
                     </Card>
                   )}
 
                   <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
-                    <CardHeader>
-                      <CardTitle className="text-white font-serif">Certificats</CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                       <Link href="/dashboard/student/certificates">
                         <Button
                           variant="outline"
                           className="w-full border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
                         >
+                          <Award className="w-4 h-4 mr-2" />
                           Voir mes certificats
                         </Button>
                       </Link>
                     </CardContent>
                   </Card>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Actualités récentes */}
+                <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white font-semibold flex items-center gap-2">
+                        <Newspaper className="w-4 h-4 text-[#C9A227]" />
+                        Actualités
+                      </h3>
+                      <Link href="/actualites" className="text-xs text-[#C9A227] hover:underline flex items-center gap-0.5">
+                        Voir tout <ChevronRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                    <div className="space-y-3">
+                      {recentActus.map((a) => (
+                        <Link
+                          key={a.id}
+                          href={`/actualites/${a.id}`}
+                          className="block text-sm text-[rgba(255,255,255,0.8)] hover:text-[#C9A227] truncate transition-colors"
+                        >
+                          {a.titre}
+                        </Link>
+                      ))}
+                      {recentActus.length === 0 && (
+                        <p className="text-[rgba(255,255,255,0.4)] text-sm">Aucune actualité pour le moment.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Opportunités */}
+                <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-white font-semibold flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-[#C9A227]" />
+                        Opportunités
+                      </h3>
+                      <Link href="/actualites" className="text-xs text-[#C9A227] hover:underline flex items-center gap-0.5">
+                        Voir tout <ChevronRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                    <div className="space-y-3">
+                      {recentOpportunites.map((o) => (
+                        <Link
+                          key={o.id}
+                          href={`/opportunites/${o.id}`}
+                          className="block text-sm text-[rgba(255,255,255,0.8)] hover:text-[#C9A227] truncate transition-colors"
+                        >
+                          {o.titre}
+                        </Link>
+                      ))}
+                      {recentOpportunites.length === 0 && (
+                        <p className="text-[rgba(255,255,255,0.4)] text-sm">Aucune opportunité ouverte pour le moment.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </>
           )}
