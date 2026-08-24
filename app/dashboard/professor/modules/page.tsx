@@ -11,6 +11,7 @@ import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Edit, Trash2, Plus, Book, Layers, FileText } from 'lucide-react'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -125,22 +126,28 @@ export default function ModulesPage() {
 
       await loadModules()
       resetForm()
-    } catch (error) {
+      alertSuccess(editingId ? 'Module modifié avec succès.' : 'Module créé avec succès.')
+    } catch (error: any) {
       console.error('[v0] Error saving module:', error)
-      setFormError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
+      const msg = "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
+      setFormError(msg)
+      alertError(msg)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr?')) return
+  const handleDelete = async (id: string, titre?: string) => {
+    const confirmed = await confirmDelete(titre)
+    if (!confirmed) return
 
     try {
       await apiClient(`/modules/${id}`, { method: 'DELETE' })
       loadModules()
-    } catch (error) {
+      alertSuccess('Module supprimé avec succès.')
+    } catch (error: any) {
       console.error('Error deleting module:', error)
+      alertError(error?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -284,7 +291,7 @@ export default function ModulesPage() {
                 <Edit className="h-4 w-4" />
               </Button>
               <Button
-                onClick={() => handleDelete(module.id)}
+                onClick={() => handleDelete(module.id, module.titre)}
                 variant="outline"
                 size="sm"
                 className="border-red-500/20 text-red-400 hover:bg-red-500/10"
