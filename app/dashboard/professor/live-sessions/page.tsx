@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Edit, Trash2, Plus, Calendar, Radio, Youtube } from 'lucide-react'
+import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { combine, required, minLength } from '@/lib/validators'
 
 interface LiveSession {
@@ -129,20 +130,25 @@ export default function LiveSessionsPage() {
 
       await loadSessions()
       resetForm()
-    } catch (error) {
+      alertSuccess(editingId ? 'Session live modifiée avec succès.' : 'Session live créée avec succès.')
+    } catch (error: any) {
       console.error('Error saving session:', error)
+      alertError(error?.message || "Une erreur est survenue lors de l'enregistrement.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer ce cours en direct ?')) return
+  const handleDelete = async (id: string, title?: string) => {
+    const confirmed = await confirmDelete(title)
+    if (!confirmed) return
     try {
       await apiClient(`/directs/${id}`, { method: 'DELETE' })
       loadSessions()
-    } catch (error) {
+      alertSuccess('Session live supprimée avec succès.')
+    } catch (error: any) {
       console.error('Error deleting session:', error)
+      alertError(error?.message || 'Erreur lors de la suppression')
     }
   }
 
@@ -377,7 +383,7 @@ export default function LiveSessionsPage() {
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button
-                        onClick={() => handleDelete(session.id)}
+                        onClick={() => handleDelete(session.id, session.title)}
                         variant="outline"
                         size="sm"
                         className="border-red-500/20 text-red-400 hover:bg-red-500/10"
