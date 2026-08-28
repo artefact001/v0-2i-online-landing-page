@@ -25,7 +25,8 @@ import {
   ChevronDown,
   ChevronUp,
   StickyNote,
-  Star
+  Star,
+  Download
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -607,25 +608,55 @@ export default function CoursePage() {
                 </div>
               )}
 
-              {/* Téléchargement du support de cours (PDF/Word/PowerPoint) */}
+              {/* Support de cours (PDF/Word/PowerPoint) — le PDF s'affiche
+                  directement dans la page (essentiel pour les élèves qui
+                  préfèrent lire à l'écran plutôt que télécharger), les
+                  autres formats restent en téléchargement (un navigateur
+                  ne peut pas afficher un .docx/.pptx nativement). */}
               {currentLesson.document && (
-                <a
-                  href={currentLesson.document}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 mb-8 bg-[#0D1B2A] border border-[#1a2942] hover:border-[#C9A227]/50 rounded-xl p-4 transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-[#C9A227]/10 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-[#C9A227]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium group-hover:text-[#C9A227] transition-colors">
-                      Télécharger le support de cours
-                    </p>
-                    <p className="text-gray-500 text-xs">PDF, Word ou PowerPoint</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-[#C9A227] transition-colors" />
-                </a>
+                <div className="mb-8">
+                  {currentLesson.document.toLowerCase().endsWith('.pdf') ? (
+                    <div className="bg-[#0D1B2A] border border-[#1a2942] rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a2942]">
+                        <span className="flex items-center gap-2 text-white text-sm font-medium">
+                          <FileText className="w-4 h-4 text-[#C9A227]" />
+                          Support de cours (PDF)
+                        </span>
+                        <a
+                          href={currentLesson.document}
+                          download
+                          className="flex items-center gap-1.5 text-xs text-[#C9A227] hover:underline"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Télécharger
+                        </a>
+                      </div>
+                      <iframe
+                        src={currentLesson.document}
+                        title="Support de cours"
+                        className="w-full h-[600px] bg-white"
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      href={currentLesson.document}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 bg-[#0D1B2A] border border-[#1a2942] hover:border-[#C9A227]/50 rounded-xl p-4 transition-colors group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-[#C9A227]/10 flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5 text-[#C9A227]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium group-hover:text-[#C9A227] transition-colors">
+                          Télécharger le support de cours
+                        </p>
+                        <p className="text-gray-500 text-xs">Word ou PowerPoint</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-[#C9A227] transition-colors" />
+                    </a>
+                  )}
+                </div>
               )}
               
               {/* Text content */}
