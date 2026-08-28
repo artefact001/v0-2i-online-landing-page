@@ -11,6 +11,7 @@ export interface Certificate {
   user_id: string
   formation_id: string
   numero_certificat: string
+  code_verification?: string
   fichier_pdf: string
   date_obtention: string
 }

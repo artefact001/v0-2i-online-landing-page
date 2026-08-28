@@ -7,7 +7,7 @@ import { apiClient } from '@/lib/api/client';
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Award } from 'lucide-react';
+import { Download, Award, Linkedin, ShieldCheck } from 'lucide-react';
 
 export default function CertificatesPage() {
   const { user } = useAuth();
@@ -91,7 +91,7 @@ export default function CertificatesPage() {
                         Obtenu le {new Date(cert.date_obtention).toLocaleDateString('fr-FR')}
                       </p>
                       <p className="text-sm text-[#C9A227] font-mono mt-2">N° {cert.numero_certificat}</p>
-                      <div className="mt-4">
+                      <div className="mt-4 flex flex-wrap gap-2">
                         <Button
                           onClick={() => handleDownloadPDF(cert)}
                           className="bg-[#C9A227] hover:bg-[#B8860B] text-white flex items-center gap-2"
@@ -99,6 +99,33 @@ export default function CertificatesPage() {
                           <Download className="w-4 h-4" />
                           Télécharger
                         </Button>
+                        {cert.code_verification && (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                window.open(
+                                  `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                                    `${window.location.origin}/verifier/${cert.code_verification}`,
+                                  )}`,
+                                  '_blank',
+                                )
+                              }
+                              className="border-[#0A66C2] text-[#0A66C2] hover:bg-[#0A66C2]/10 flex items-center gap-2"
+                            >
+                              <Linkedin className="w-4 h-4" />
+                              Partager sur LinkedIn
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => window.open(`/verifier/${cert.code_verification}`, '_blank')}
+                              className="border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)] flex items-center gap-2"
+                            >
+                              <ShieldCheck className="w-4 h-4" />
+                              Voir la page de vérification
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="inline-block bg-[#C9A227]/20 text-[#C9A227] px-4 py-2 rounded font-bold text-sm">
