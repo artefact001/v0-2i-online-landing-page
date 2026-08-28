@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
-import { Edit, Trash2, Plus, Calendar, Radio, Youtube } from 'lucide-react'
+import Link from 'next/link'
+import { Edit, Trash2, Plus, Calendar, Radio, Youtube, ClipboardCheck } from 'lucide-react'
 import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -374,6 +375,16 @@ export default function LiveSessionsPage() {
                         <Radio className="w-3 h-3 mr-1" />
                         Démarrer
                       </Button>
+                      <Link href={`/dashboard/professor/live-sessions/${session.id}/presences`}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title="Marquer les présences"
+                          className="border-[#C9A227]/40 text-[#C9A227] hover:bg-[#C9A227]/10"
+                        >
+                          <ClipboardCheck className="w-4 h-4" />
+                        </Button>
+                      </Link>
                       <Button
                         onClick={() => handleEdit(session)}
                         variant="outline"
