@@ -12,7 +12,13 @@ export function CoursesNavbar({ currentPage }: CoursesNavbarProps) {
   const { user } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dashboardHref =
-    user?.role === "admin" ? "/dashboard/admin" : user?.role === "professor" ? "/dashboard/professor" : "/dashboard/student"
+    user?.role === "admin"
+      ? "/dashboard/admin"
+      : user?.role === "professor"
+        ? "/dashboard/professor"
+        : user?.role === "partner"
+          ? "/dashboard/partner"
+          : "/dashboard/student"
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[rgba(8,15,30,0.95)] backdrop-blur-[20px] border-b border-[rgba(201,162,39,0.15)] shadow-[0_4px_30px_rgba(0,0,0,0.3)]">

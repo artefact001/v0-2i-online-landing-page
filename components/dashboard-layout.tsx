@@ -247,7 +247,28 @@ const studentNavItems: NavItem[] = [
   },
 ]
 
-type UserRole = 'admin' | 'professor' | 'student'
+const partnerNavItems: NavItem[] = [
+  {
+    href: '/dashboard/partner',
+    label: 'Tableau de bord',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+    ),
+  },
+  {
+    href: '/dashboard/partner/formations',
+    label: 'Formations financées',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+      </svg>
+    ),
+  },
+]
+
+type UserRole = 'admin' | 'professor' | 'student' | 'partner'
 
 function getNavItems(role: UserRole): NavItem[] {
   switch (role) {
@@ -257,6 +278,8 @@ function getNavItems(role: UserRole): NavItem[] {
       return professorNavItems
     case 'student':
       return studentNavItems
+    case 'partner':
+      return partnerNavItems
     default:
       return []
   }
@@ -280,6 +303,8 @@ export function DashboardSidebar() {
         return { label: 'Professeur', color: 'bg-blue-500/20 text-blue-400' }
       case 'student':
         return { label: 'Élève', color: 'bg-green-500/20 text-green-400' }
+      case 'partner':
+        return { label: 'Partenaire', color: 'bg-purple-500/20 text-purple-400' }
     }
   }
 

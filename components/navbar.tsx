@@ -10,7 +10,13 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const dashboardHref =
-    user?.role === "admin" ? "/dashboard/admin" : user?.role === "professor" ? "/dashboard/professor" : "/dashboard/student"
+    user?.role === "admin"
+      ? "/dashboard/admin"
+      : user?.role === "professor"
+        ? "/dashboard/professor"
+        : user?.role === "partner"
+          ? "/dashboard/partner"
+          : "/dashboard/student"
 
   useEffect(() => {
     const handleScroll = () => {

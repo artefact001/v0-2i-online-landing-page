@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { login as loginAction, logout as logoutAction } from '@/app/actions/auth'
 import { apiClient } from '@/lib/api/client'
 
-export type UserRole = 'admin' | 'professor' | 'student'
+export type UserRole = 'admin' | 'professor' | 'student' | 'partner'
 
 export interface User {
   id: string
@@ -57,6 +57,9 @@ function normalizeRole(rawRole: unknown): UserRole {
     case 'eleve':
     case 'élève':
       return 'student'
+    case 'partenaire':
+    case 'partner':
+      return 'partner'
     default:
       console.warn(`[auth] Rôle inconnu reçu du backend: "${rawRole}" — repli sur "student"`)
       return 'student'

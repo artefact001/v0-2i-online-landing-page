@@ -41,6 +41,9 @@ export function AuthGuard({ children, allowedRoles }: AuthGuardProps) {
         case 'professor':
           router.push('/dashboard/professor')
           break
+        case 'partner':
+          router.push('/dashboard/partner')
+          break
         default:
           router.push('/dashboard/student')
       }
