@@ -1,88 +1,49 @@
-/**
- * STAND BY — aucune route Laravel pour badges/achievements/points/leaderboard
- * dans routes/api.php. Fonctions désactivées en attendant le backend.
- */
+import { apiClient } from '@/lib/api/client'
 
 export interface Badge {
   id: string
-  slug: string
-  name: string
+  code: string
+  titre: string
   description: string
-  icon_url: string
-  requirement_type: 'lessons_completed' | 'quiz_score' | 'streak' | 'participation'
-  requirement_value: number
-}
-
-export interface StudentBadge {
-  id: string
-  student_id: string
-  badge_id: string
-  unlocked_at: string
-}
-
-export interface Achievement {
-  id: string
-  student_id: string
-  title: string
-  description: string
+  icone?: string
   points: number
-  created_at: string
 }
 
-function notReady(fn: string) {
-  console.warn(`[gamification.${fn}] en attente d'un endpoint Laravel — fonctionnalité en pause`)
+export interface LeaderboardEntry {
+  id: string
+  prenom: string
+  nom: string
+  points: number
 }
 
-export const badgeService = {
+export const gamificationService = {
+  async getMesBadges(): Promise<{ points: number; badges: Badge[] } | null> {
+    try {
+      const res = await apiClient<{ points: number; badges: Badge[] }>('/mes-badges')
+      return res.data ?? null
+    } catch (error) {
+      console.error('[gamificationService.getMesBadges]', error)
+      return null
+    }
+  },
+
+  async getClassement(): Promise<LeaderboardEntry[]> {
+    try {
+      const res = await apiClient<LeaderboardEntry[]>('/classement')
+      return res.data || []
+    } catch (error) {
+      console.error('[gamificationService.getClassement]', error)
+      return []
+    }
+  },
+
   async getAllBadges(): Promise<Badge[]> {
-    notReady('getAllBadges')
-    return []
-  },
-  async getStudentBadges(_studentId: string): Promise<StudentBadge[]> {
-    notReady('getStudentBadges')
-    return []
-  },
-  async unlockBadge(..._args: any[]): Promise<StudentBadge | null> {
-    notReady('unlockBadge')
-    return null
-  },
-  async checkBadgeEligibility(..._args: any[]): Promise<Badge[]> {
-    notReady('checkBadgeEligibility')
-    return []
-  },
-  async awardBadgesForAchievement(..._args: any[]): Promise<Badge[]> {
-    notReady('awardBadgesForAchievement')
-    return []
-  },
-}
-
-export const achievementService = {
-  async addAchievement(..._args: any[]): Promise<Achievement | null> {
-    notReady('addAchievement')
-    return null
-  },
-  async getStudentAchievements(_studentId: string): Promise<Achievement[]> {
-    notReady('getStudentAchievements')
-    return []
-  },
-  async getStudentPoints(_studentId: string): Promise<number> {
-    notReady('getStudentPoints')
-    return 0
-  },
-  async getLeaderboard(..._args: any[]): Promise<any[]> {
-    notReady('getLeaderboard')
-    return []
-  },
-  async awardPoints(..._args: any[]): Promise<boolean> {
-    notReady('awardPoints')
-    return false
-  },
-  async getMilestones(): Promise<any[]> {
-    notReady('getMilestones')
-    return []
-  },
-  async getStudentMilestoneProgress(_studentId: string): Promise<any[]> {
-    notReady('getStudentMilestoneProgress')
-    return []
+    try {
+      const res = await apiClient<Badge[]>('/badges')
+      return res.data || []
+    } catch (error) {
+      console.error('[gamificationService.getAllBadges]', error)
+      return []
+    }
   },
 }
