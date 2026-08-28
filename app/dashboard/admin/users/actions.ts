@@ -4,37 +4,32 @@ import { revalidatePath } from "next/cache"
 import { apiServer, getCurrentUser } from "@/lib/api/server"
 
 /**
- * Schéma Laravel réel (confirmé en lisant FormateurController/Service et
- * EtudiantController/Service) :
+ * Schéma Laravel réel (confirmé en lisant FormateurController/Service,
+ * EtudiantController/Service, et désormais PartenaireController/Service) :
  *
- * - Pas de route pour lister/créer un compte "admin" — seuls formateurs et
- *   étudiants sont gérables via l'API. Comptes admin à créer via
- *   seeder/tinker côté Laravel.
- * - GET /formateurs renvoie une structure IMBRIQUÉE :
- *   { id, specialite, user: { id, prenom, nom, email, telephone }, modules: [...] }
- *   (id ci-dessus = l'id du Formateur, PAS l'id du User — distinction
- *   importante pour update/delete, qui opèrent sur l'id Formateur/Etudiant).
- * - GET /etudiants renvoie pareil, avec date_naissance/lieu_naissance/
- *   niveau/formations au lieu de specialite/modules.
+ * - Pas de route pour lister/créer un compte "admin" — seuls formateurs,
+ *   étudiants et partenaires sont gérables via l'API. Comptes admin à
+ *   créer via seeder/tinker côté Laravel.
+ * - GET /formateurs|etudiants|partenaires renvoie une structure IMBRIQUÉE :
+ *   { id, ..., user: { id, prenom, nom, email, telephone }, ... }
+ *   (id ci-dessus = l'id Formateur/Etudiant/Partenaire, PAS l'id du User).
  * - Création : AUCUN champ password n'est accepté — Laravel génère un mot
- *   de passe aléatoire à 6 caractères et l'envoie par email. La réponse
- *   contient `password_temporaire` (à afficher à l'admin une seule fois).
+ *   de passe aléatoire à 6 caractères et l'envoie par email.
  * - Formateur requiert `specialite` (obligatoire), `modules` (optionnel).
  * - Étudiant requiert `date_naissance`, `lieu_naissance`, `niveau`,
- *   `formations` (tous obligatoires, y compris à la MODIFICATION — la
- *   même classe de validation est réutilisée pour update, donc pas de
- *   mise à jour partielle possible côté étudiant).
- * - Aucune route pour activer/désactiver un compte, ni pour qu'un admin
- *   réinitialise le mot de passe d'un tiers.
+ *   `formations` (tous obligatoires, y compris à la MODIFICATION).
+ * - Partenaire requiert `nom_organisation` (obligatoire), `secteur`
+ *   (optionnel). Le financement d'une formation (montant + date) se
+ *   gère séparément via financerFormation()/retirerFinancement().
  */
 
 export type ManagedUser = {
-  id: string // id Formateur/Etudiant (PAS l'id User)
+  id: string // id Formateur/Etudiant/Partenaire (PAS l'id User)
   userId: string
   email: string
   firstName: string
   lastName: string
-  role: "professor" | "student"
+  role: "professor" | "student" | "partner"
   phone: string | null
   isActive: boolean
   createdAt: string
@@ -47,6 +42,10 @@ export type ManagedUser = {
   lieuNaissance?: string
   niveau?: string
   formationIds?: string[]
+  // Spécifique partenaire
+  nomOrganisation?: string
+  secteur?: string
+  financedFormations?: { id: string; titre: string; montant: string; date: string }[]
 }
 
 type ActionResult = { success: boolean; error?: string; passwordTemporaire?: string }
@@ -58,7 +57,7 @@ async function requireAdmin() {
   return user.id as string
 }
 
-function mapUser(raw: any, role: "professor" | "student"): ManagedUser {
+function mapUser(raw: any, role: "professor" | "student" | "partner"): ManagedUser {
   const u = raw.user ?? {}
   return {
     id: String(raw.id),
@@ -76,24 +75,38 @@ function mapUser(raw: any, role: "professor" | "student"): ManagedUser {
     dateNaissance: raw.date_naissance ?? undefined,
     lieuNaissance: raw.lieu_naissance ?? undefined,
     niveau: raw.niveau ?? undefined,
-    formationIds: Array.isArray(raw.formations) ? raw.formations.map((f: any) => String(f.id)) : undefined,
+    formationIds: Array.isArray(raw.formations) && role === "student" ? raw.formations.map((f: any) => String(f.id)) : undefined,
+    nomOrganisation: raw.nom_organisation ?? undefined,
+    secteur: raw.secteur ?? undefined,
+    financedFormations:
+      role === "partner" && Array.isArray(raw.formations)
+        ? raw.formations.map((f: any) => ({
+            id: String(f.id),
+            titre: f.titre,
+            montant: f.pivot?.montant_finance ?? "0",
+            date: f.pivot?.date_financement ?? "",
+          }))
+        : undefined,
   }
 }
 
 export async function listUsers(): Promise<ManagedUser[]> {
   await requireAdmin()
 
-  const [formateursRes, etudiantsRes] = await Promise.all([
+  const [formateursRes, etudiantsRes, partenairesRes] = await Promise.all([
     apiServer("/api/v1/formateurs"),
     apiServer("/api/v1/etudiants"),
+    apiServer("/api/v1/partenaires"),
   ])
 
   const formateurs = Array.isArray(formateursRes.data) ? formateursRes.data : []
   const etudiants = Array.isArray(etudiantsRes.data) ? etudiantsRes.data : []
+  const partenaires = Array.isArray(partenairesRes.data) ? partenairesRes.data : []
 
   return [
     ...formateurs.map((f: any) => mapUser(f, "professor")),
     ...etudiants.map((e: any) => mapUser(e, "student")),
+    ...partenaires.map((p: any) => mapUser(p, "partner")),
   ].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
 }
 
@@ -115,7 +128,7 @@ export async function createUser(input: {
   email: string
   firstName: string
   lastName: string
-  role: "admin" | "professor" | "student"
+  role: "admin" | "professor" | "student" | "partner"
   phone?: string
   specialite?: string
   moduleIds?: string[]
@@ -123,6 +136,8 @@ export async function createUser(input: {
   lieuNaissance?: string
   niveau?: string
   formationIds?: string[]
+  nomOrganisation?: string
+  secteur?: string
 }): Promise<ActionResult> {
   try {
     await requireAdmin()
@@ -134,28 +149,28 @@ export async function createUser(input: {
       }
     }
 
-    const endpoint = input.role === "professor" ? "/api/v1/formateurs" : "/api/v1/etudiants"
+    const endpoint =
+      input.role === "professor" ? "/api/v1/formateurs" : input.role === "partner" ? "/api/v1/partenaires" : "/api/v1/etudiants"
+
+    const common = {
+      prenom: input.firstName,
+      nom: input.lastName,
+      telephone: input.phone ?? "",
+      email: input.email.trim().toLowerCase(),
+    }
 
     const body =
       input.role === "professor"
-        ? {
-            prenom: input.firstName,
-            nom: input.lastName,
-            telephone: input.phone ?? "",
-            email: input.email.trim().toLowerCase(),
-            specialite: input.specialite ?? "",
-            modules: input.moduleIds ?? [],
-          }
-        : {
-            prenom: input.firstName,
-            nom: input.lastName,
-            telephone: input.phone ?? "",
-            email: input.email.trim().toLowerCase(),
-            date_naissance: input.dateNaissance ?? "",
-            lieu_naissance: input.lieuNaissance ?? "",
-            niveau: input.niveau ?? "",
-            formations: input.formationIds ?? [],
-          }
+        ? { ...common, specialite: input.specialite ?? "", modules: input.moduleIds ?? [] }
+        : input.role === "partner"
+          ? { ...common, nom_organisation: input.nomOrganisation ?? "", secteur: input.secteur ?? undefined }
+          : {
+              ...common,
+              date_naissance: input.dateNaissance ?? "",
+              lieu_naissance: input.lieuNaissance ?? "",
+              niveau: input.niveau ?? "",
+              formations: input.formationIds ?? [],
+            }
 
     const res = await apiServer(endpoint, {
       method: "POST",
@@ -174,7 +189,7 @@ export async function updateUser(
   input: {
     firstName: string
     lastName: string
-    role: "admin" | "professor" | "student"
+    role: "admin" | "professor" | "student" | "partner"
     phone?: string
     email?: string
     specialite?: string
@@ -183,6 +198,8 @@ export async function updateUser(
     lieuNaissance?: string
     niveau?: string
     formationIds?: string[]
+    nomOrganisation?: string
+    secteur?: string
   },
 ): Promise<ActionResult> {
   try {
@@ -192,7 +209,19 @@ export async function updateUser(
       return { success: false, error: "Gestion des comptes admin non exposée par l'API." }
     }
 
-    const endpoint = input.role === "professor" ? `/api/v1/formateurs/${id}` : `/api/v1/etudiants/${id}`
+    const endpoint =
+      input.role === "professor"
+        ? `/api/v1/formateurs/${id}`
+        : input.role === "partner"
+          ? `/api/v1/partenaires/${id}`
+          : `/api/v1/etudiants/${id}`
+
+    const common = {
+      prenom: input.firstName,
+      nom: input.lastName,
+      telephone: input.phone ?? "",
+      email: input.email,
+    }
 
     // ATTENTION: EtudiantController::update réutilise StoreEtudiantRequest
     // (pas de classe "Update" dédiée) — tous les champs y sont validés
@@ -201,24 +230,16 @@ export async function updateUser(
     // changés.
     const body =
       input.role === "professor"
-        ? {
-            prenom: input.firstName,
-            nom: input.lastName,
-            telephone: input.phone ?? "",
-            email: input.email,
-            specialite: input.specialite ?? "",
-            modules: input.moduleIds ?? [],
-          }
-        : {
-            prenom: input.firstName,
-            nom: input.lastName,
-            telephone: input.phone ?? "",
-            email: input.email,
-            date_naissance: input.dateNaissance ?? "",
-            lieu_naissance: input.lieuNaissance ?? "",
-            niveau: input.niveau ?? "",
-            formations: input.formationIds ?? [],
-          }
+        ? { ...common, specialite: input.specialite ?? "", modules: input.moduleIds ?? [] }
+        : input.role === "partner"
+          ? { ...common, nom_organisation: input.nomOrganisation ?? "", secteur: input.secteur ?? undefined }
+          : {
+              ...common,
+              date_naissance: input.dateNaissance ?? "",
+              lieu_naissance: input.lieuNaissance ?? "",
+              niveau: input.niveau ?? "",
+              formations: input.formationIds ?? [],
+            }
 
     await apiServer(endpoint, {
       method: "PUT",
@@ -232,11 +253,15 @@ export async function updateUser(
   }
 }
 
-export async function setUserActive(id: string, role: "professor" | "student"): Promise<ActionResult> {
+function endpointFor(role: "professor" | "student" | "partner", id: string, suffix = "") {
+  const base = role === "professor" ? "formateurs" : role === "partner" ? "partenaires" : "etudiants"
+  return `/api/v1/${base}/${id}${suffix}`
+}
+
+export async function setUserActive(id: string, role: "professor" | "student" | "partner"): Promise<ActionResult> {
   try {
     await requireAdmin()
-    const endpoint = role === "professor" ? `/api/v1/formateurs/${id}/toggle-active` : `/api/v1/etudiants/${id}/toggle-active`
-    await apiServer(endpoint, { method: "PUT" })
+    await apiServer(endpointFor(role, id, "/toggle-active"), { method: "PUT" })
     revalidatePath("/dashboard/admin/users")
     return { success: true }
   } catch (e) {
@@ -244,11 +269,10 @@ export async function setUserActive(id: string, role: "professor" | "student"): 
   }
 }
 
-export async function resetUserPassword(id: string, role: "professor" | "student"): Promise<ActionResult> {
+export async function resetUserPassword(id: string, role: "professor" | "student" | "partner"): Promise<ActionResult> {
   try {
     await requireAdmin()
-    const endpoint = role === "professor" ? `/api/v1/formateurs/${id}/reset-password` : `/api/v1/etudiants/${id}/reset-password`
-    const res = await apiServer(endpoint, { method: "POST" })
+    const res = await apiServer(endpointFor(role, id, "/reset-password"), { method: "POST" })
     revalidatePath("/dashboard/admin/users")
     return { success: true, passwordTemporaire: (res as any)?.password_temporaire }
   } catch (e) {
@@ -256,16 +280,47 @@ export async function resetUserPassword(id: string, role: "professor" | "student
   }
 }
 
-export async function deleteUser(id: string, role: "professor" | "student"): Promise<ActionResult> {
+export async function deleteUser(id: string, role: "professor" | "student" | "partner"): Promise<ActionResult> {
   try {
     const adminId = await requireAdmin()
     if (adminId === id) {
       return { success: false, error: "Vous ne pouvez pas supprimer votre propre compte" }
     }
 
-    const endpoint = role === "professor" ? `/api/v1/formateurs/${id}` : `/api/v1/etudiants/${id}`
-    await apiServer(endpoint, { method: "DELETE" })
+    await apiServer(endpointFor(role, id), { method: "DELETE" })
 
+    revalidatePath("/dashboard/admin/users")
+    return { success: true }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Erreur inconnue" }
+  }
+}
+
+// --- Gestion du financement (spécifique aux partenaires) ---
+
+export async function financerFormation(
+  partenaireId: string,
+  formationId: string,
+  montant: number,
+  date: string,
+): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    await apiServer(`/api/v1/partenaires/${partenaireId}/financer`, {
+      method: "POST",
+      body: JSON.stringify({ formation_id: formationId, montant_finance: montant, date_financement: date }),
+    })
+    revalidatePath("/dashboard/admin/users")
+    return { success: true }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Erreur inconnue" }
+  }
+}
+
+export async function retirerFinancement(partenaireId: string, formationId: string): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    await apiServer(`/api/v1/partenaires/${partenaireId}/financer/${formationId}`, { method: "DELETE" })
     revalidatePath("/dashboard/admin/users")
     return { success: true }
   } catch (e) {

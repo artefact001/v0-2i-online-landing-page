@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ValidatedInput } from "@/components/ui/validated-input"
 import { Label } from "@/components/ui/label"
-import { Edit, Trash2, Key, Power } from "lucide-react"
+import { Edit, Trash2, Key, Power, Plus } from "lucide-react"
 import {
   combine,
   required,
@@ -48,6 +48,8 @@ import {
   listFormationsForEnrollment,
   createUser,
   updateUser,
+  financerFormation,
+  retirerFinancement,
   deleteUser,
   setUserActive,
   resetUserPassword,
@@ -57,11 +59,13 @@ import { TablePagination } from "@/components/admin/table-pagination"
 const ROLE_LABELS: Record<ManagedUser["role"], string> = {
   professor: "Professeur",
   student: "Élève",
+  partner: "Partenaire",
 }
 
 const ROLE_STYLES: Record<ManagedUser["role"], string> = {
   professor: "bg-blue-500/20 text-blue-400",
   student: "bg-green-500/20 text-green-400",
+  partner: "bg-purple-500/20 text-purple-400",
 }
 
 type Feedback = { type: "success" | "error"; message: string } | null
@@ -104,6 +108,14 @@ export function UsersManager({
   const [niveau, setNiveau] = useState("")
   const [formationIds, setFormationIds] = useState<string[]>([])
 
+  // champs spécifiques partenaire
+  const [nomOrganisation, setNomOrganisation] = useState("")
+  const [secteur, setSecteur] = useState("")
+  const [financedFormations, setFinancedFormations] = useState<{ id: string; titre: string; montant: string; date: string }[]>([])
+  const [newFinanceFormationId, setNewFinanceFormationId] = useState("")
+  const [newFinanceMontant, setNewFinanceMontant] = useState("")
+  const [newFinanceDate, setNewFinanceDate] = useState(new Date().toISOString().slice(0, 10))
+
   useEffect(() => {
     listModules().then(setModules).catch(() => {})
     listFormationsForEnrollment().then(setFormations).catch(() => {})
@@ -135,6 +147,12 @@ export function UsersManager({
     setLieuNaissance("")
     setNiveau("")
     setFormationIds([])
+    setNomOrganisation("")
+    setSecteur("")
+    setFinancedFormations([])
+    setNewFinanceFormationId("")
+    setNewFinanceMontant("")
+    setNewFinanceDate(new Date().toISOString().slice(0, 10))
   }
 
   function openCreate(presetRole: ManagedUser["role"] = "student") {
@@ -163,7 +181,39 @@ export function UsersManager({
     setLieuNaissance(u.lieuNaissance ?? "")
     setNiveau(u.niveau ?? "")
     setFormationIds(u.formationIds ?? [])
+    setNomOrganisation(u.nomOrganisation ?? "")
+    setSecteur(u.secteur ?? "")
+    setFinancedFormations(u.financedFormations ?? [])
     setFormOpen(true)
+  }
+
+  async function handleAddFinancing() {
+    if (!editing || !newFinanceFormationId || !newFinanceMontant) return
+    const res = await financerFormation(editing.id, newFinanceFormationId, Number(newFinanceMontant), newFinanceDate)
+    if (res.success) {
+      await refresh()
+      const updated = (await listUsers()).find((u) => u.id === editing.id)
+      if (updated) setFinancedFormations(updated.financedFormations ?? [])
+      setNewFinanceFormationId("")
+      setNewFinanceMontant("")
+      alertSuccess("Financement enregistré avec succès.")
+    } else {
+      alertError(res.error ?? "Erreur")
+    }
+  }
+
+  async function handleRemoveFinancing(formationId: string) {
+    if (!editing) return
+    const confirmed = await confirmDeleteDialog("ce financement")
+    if (!confirmed) return
+    const res = await retirerFinancement(editing.id, formationId)
+    if (res.success) {
+      setFinancedFormations((prev) => prev.filter((f) => f.id !== formationId))
+      await refresh()
+      alertSuccess("Financement retiré avec succès.")
+    } else {
+      alertError(res.error ?? "Erreur")
+    }
   }
 
   function toggleModuleId(id: string) {
@@ -180,7 +230,9 @@ export function UsersManager({
       const roleSpecific =
         role === "professor"
           ? { specialite, moduleIds }
-          : { dateNaissance, lieuNaissance, niveau, formationIds }
+          : role === "partner"
+            ? { nomOrganisation, secteur }
+            : { dateNaissance, lieuNaissance, niveau, formationIds }
 
       if (editing) {
         const res = await updateUser(editing.id, { ...common, email, ...roleSpecific })
@@ -276,6 +328,7 @@ export function UsersManager({
     total: users.length,
     professor: users.filter((u) => u.role === "professor").length,
     student: users.filter((u) => u.role === "student").length,
+    partner: users.filter((u) => u.role === "partner").length,
   }
 
   return (
@@ -299,7 +352,7 @@ export function UsersManager({
           )}
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="p-5">
                 <p className="text-[rgba(255,255,255,0.5)] text-sm">Total</p>
@@ -316,6 +369,12 @@ export function UsersManager({
               <CardContent className="p-5">
                 <p className="text-[rgba(255,255,255,0.5)] text-sm">Élèves</p>
                 <p className="text-2xl font-bold text-green-400 mt-1">{counts.student}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
+              <CardContent className="p-5">
+                <p className="text-[rgba(255,255,255,0.5)] text-sm">Partenaires</p>
+                <p className="text-2xl font-bold text-purple-400 mt-1">{counts.partner}</p>
               </CardContent>
             </Card>
           </div>
@@ -337,6 +396,7 @@ export function UsersManager({
                   <SelectItem value="all">Tous les rôles</SelectItem>
                   <SelectItem value="professor">Professeurs</SelectItem>
                   <SelectItem value="student">Élèves</SelectItem>
+                  <SelectItem value="partner">Partenaires</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -469,6 +529,7 @@ export function UsersManager({
                   <SelectContent>
                     <SelectItem value="student">Élève</SelectItem>
                     <SelectItem value="professor">Professeur</SelectItem>
+                    <SelectItem value="partner">Partenaire</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -538,6 +599,103 @@ export function UsersManager({
                     ))}
                   </div>
                 </div>
+              </>
+            ) : role === "partner" ? (
+              <>
+                <ValidatedInput
+                  label="Nom de l'organisation"
+                  value={nomOrganisation}
+                  onChange={(e) => setNomOrganisation(e.target.value)}
+                  placeholder="Ex: Fondation ABC"
+                  validator={required("Le nom de l'organisation est obligatoire")}
+                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+                />
+                <ValidatedInput
+                  label="Secteur d'activité (optionnel)"
+                  value={secteur}
+                  onChange={(e) => setSecteur(e.target.value)}
+                  placeholder="Ex: Inclusion sociale"
+                  className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
+                />
+
+                {editing && (
+                  <div className="space-y-3 pt-2 border-t border-[rgba(255,255,255,0.1)]">
+                    <Label className="text-[rgba(255,255,255,0.7)]">Formations financées</Label>
+
+                    {financedFormations.length === 0 ? (
+                      <p className="text-xs text-[rgba(255,255,255,0.4)]">Aucune formation financée pour le moment.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {financedFormations.map((f) => (
+                          <div key={f.id} className="flex items-center justify-between bg-[#0a0a1a] rounded-lg px-3 py-2 border border-[rgba(255,255,255,0.1)]">
+                            <div>
+                              <p className="text-sm text-white">{f.titre}</p>
+                              <p className="text-xs text-[#C9A227]">{Number(f.montant).toLocaleString()} FCFA · {f.date}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleRemoveFinancing(f.id)}
+                              className="text-red-400 hover:bg-red-500/10 h-7 w-7"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-3 gap-2 items-end">
+                      <div className="col-span-3 sm:col-span-1">
+                        <Label className="text-xs text-[rgba(255,255,255,0.5)]">Formation</Label>
+                        <Select value={newFinanceFormationId} onValueChange={setNewFinanceFormationId}>
+                          <SelectTrigger className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white text-sm">
+                            <SelectValue placeholder="Choisir..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                            {formations.map((f) => (
+                              <SelectItem key={f.id} value={f.id} className="text-white">{f.titre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-[rgba(255,255,255,0.5)]">Montant (FCFA)</Label>
+                        <Input
+                          type="number"
+                          value={newFinanceMontant}
+                          onChange={(e) => setNewFinanceMontant(e.target.value)}
+                          className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={newFinanceDate}
+                          onChange={(e) => setNewFinanceDate(e.target.value)}
+                          className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white text-sm"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddFinancing}
+                          disabled={!newFinanceFormationId || !newFinanceMontant}
+                          className="bg-[#C9A227] hover:bg-[#B8860B] shrink-0"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-[rgba(255,255,255,0.4)]">
+                      Le financement s&apos;enregistre immédiatement (indépendamment du bouton &quot;Modifier&quot; ci-dessous).
+                    </p>
+                  </div>
+                )}
+                {!editing && (
+                  <p className="text-xs text-[rgba(255,255,255,0.4)]">
+                    Les formations à financer pourront être ajoutées après la création du compte.
+                  </p>
+                )}
               </>
             ) : (
               <>
