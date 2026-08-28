@@ -1,6 +1,6 @@
 "use client"
 
-import { Edit, Trash2, MapPin } from "lucide-react"
+import { Edit, Trash2, MapPin, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface OpportuniteCardProps {
@@ -17,6 +17,7 @@ interface OpportuniteCardProps {
   }
   onEdit: () => void
   onDelete: () => void
+  onViewCandidatures?: () => void
 }
 
 const typeLabel: Record<string, string> = {
@@ -52,7 +53,7 @@ const statutLabel: Record<string, string> = {
  * (actualites-content.tsx) — badge type + tags + date limite — avec
  * modifier/supprimer côté dashboard.
  */
-export function OpportuniteCard({ opportunite, onEdit, onDelete }: OpportuniteCardProps) {
+export function OpportuniteCard({ opportunite, onEdit, onDelete, onViewCandidatures }: OpportuniteCardProps) {
   return (
     <div className="group bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)] rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:border-[rgba(201,162,39,0.4)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] h-full flex flex-col">
       <div className="flex items-center gap-1.5 mb-3">
@@ -81,6 +82,11 @@ export function OpportuniteCard({ opportunite, onEdit, onDelete }: OpportuniteCa
           Limite : {new Date(opportunite.date_fin).toLocaleDateString("fr-FR")}
         </span>
         <div className="flex items-center gap-2">
+          {onViewCandidatures && (
+            <Button size="icon" variant="outline" onClick={onViewCandidatures} title="Voir les candidatures" className="border-[#C9A227]/40 text-[#C9A227] hover:bg-[#C9A227]/10 h-8 w-8">
+              <Users className="w-3.5 h-3.5" />
+            </Button>
+          )}
           <Button size="icon" variant="outline" onClick={onEdit} title="Modifier" className="border-[rgba(255,255,255,0.15)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8">
             <Edit className="w-3.5 h-3.5" />
           </Button>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { apiClient, apiClientUpload } from '@/lib/api/client'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
@@ -69,6 +70,7 @@ const emptyForm = {
 }
 
 export default function AdminOpportunitesPage() {
+  const router = useRouter()
   const [opportunites, setOpportunites] = useState<Opportunite[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -338,7 +340,13 @@ export default function AdminOpportunitesPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {opportunites.map((o) => (
-                <OpportuniteCard key={o.id} opportunite={o} onEdit={() => handleEdit(o)} onDelete={() => handleDelete(o.id, o.titre)} />
+                <OpportuniteCard
+                  key={o.id}
+                  opportunite={o}
+                  onEdit={() => handleEdit(o)}
+                  onDelete={() => handleDelete(o.id, o.titre)}
+                  onViewCandidatures={() => router.push(`/dashboard/admin/opportunites/${o.id}/candidatures`)}
+                />
               ))}
 
               {opportunites.length === 0 && (

@@ -4,6 +4,9 @@ import { useState, useEffect } from "react"
 import { notFound, useParams } from "next/navigation"
 import Link from "next/link"
 import { apiClient } from "@/lib/api/client"
+import { useAuth } from "@/lib/auth-context"
+import { candidatureService } from "@/lib/candidature-service"
+import { alertSuccess, alertError } from "@/lib/alerts"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 
@@ -40,8 +43,30 @@ const typeColor: Record<Opportunite['type'], string> = {
 
 export default function OpportuniteDetailPage() {
   const params = useParams()
+  const { user } = useAuth()
   const [opportunite, setOpportunite] = useState<Opportunite | null>(null)
   const [loading, setLoading] = useState(true)
+  const [dejaPostule, setDejaPostule] = useState(false)
+  const [postulating, setPostulating] = useState(false)
+
+  useEffect(() => {
+    if (user?.role !== 'student') return
+    candidatureService.getMesCandidatures().then((list) => {
+      setDejaPostule(list.some((c) => c.opportunite_id === params.id))
+    })
+  }, [user, params.id])
+
+  async function handlePostuler() {
+    setPostulating(true)
+    try {
+      await candidatureService.postuler(params.id as string)
+      setDejaPostule(true)
+      alertSuccess('Candidature envoyée avec succès !')
+    } catch (err: any) {
+      alertError(err?.message || "Erreur lors de l'envoi de la candidature")
+    }
+    setPostulating(false)
+  }
 
   useEffect(() => {
     async function load() {
@@ -131,6 +156,16 @@ export default function OpportuniteDetailPage() {
             >
               Voir le document PDF
             </a>
+          )}
+
+          {user?.role === 'student' && (
+            <button
+              onClick={handlePostuler}
+              disabled={dejaPostule || postulating}
+              className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-xl bg-[#C9A227] text-[#0D2545] font-bold tracking-wide hover:bg-[#E8C050] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+            >
+              {dejaPostule ? 'Candidature déjà envoyée' : postulating ? 'Envoi en cours...' : 'Postuler via 2I Online'}
+            </button>
           )}
 
           {opportunite.lien_inscription ? (
