@@ -80,7 +80,7 @@ export default function StudentForumPage() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Forum" subtitle="Échange avec les autres élèves de tes formations" />
+        <DashboardHeader title="Forum" subtitle="Échange avec les autres apprenants de tes formations" />
 
         <div className="p-4 md:p-8 space-y-6">
           {inscriptions.length === 0 && !loading ? (

@@ -571,7 +571,7 @@ export default function CoursePage() {
               }`}
             >
               <Award className="w-4 h-4 inline mr-2" />
-              Exercices / TD
+              Évaluations / TD
               {exercises.length > 0 && (
                 <span className="ml-2 px-2 py-0.5 bg-[#C9A227]/20 text-[#C9A227] text-xs rounded-full">
                   {exercises.length}
@@ -699,7 +699,7 @@ export default function CoursePage() {
             </div>
           ) : (
             <div className="max-w-4xl mx-auto p-6">
-              <h2 className="text-2xl font-bold mb-6 text-white">Exercices et Travaux Diriges</h2>
+              <h2 className="text-2xl font-bold mb-6 text-white">Évaluations et Travaux Diriges</h2>
               
               {exercises.length === 0 ? (
                 <div className="bg-[#0D1B2A] rounded-xl p-8 border border-[#1a2942] text-center">

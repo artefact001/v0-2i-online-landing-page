@@ -96,7 +96,7 @@ export default function PartnerFormationDetailPage() {
                         <tr className="border-b border-[rgba(255,255,255,0.05)]">
                           <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Étudiant</th>
                           <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Progression</th>
-                          <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Moyenne examens</th>
+                          <th className="p-4 text-[rgba(255,255,255,0.4)] text-xs font-medium uppercase">Moyenne examens finaux</th>
                         </tr>
                       </thead>
                       <tbody>

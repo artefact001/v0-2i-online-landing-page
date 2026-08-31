@@ -196,7 +196,7 @@ export default function ExercisePage() {
     return (
       <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
         <div className="text-center">
-          <p className="mb-4">Exercice non trouvé ou sans questions.</p>
+          <p className="mb-4">Évaluation non trouvée ou sans questions.</p>
           <Link href={backHref} className="text-[#C9A227] hover:underline">
             Retour à la leçon
           </Link>

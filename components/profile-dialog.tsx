@@ -47,7 +47,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
   }, [open, user])
 
   const roleLabel =
-    user?.role === "admin" ? "Administrateur" : user?.role === "professor" ? "Professeur" : "Élève"
+    user?.role === "admin" ? "Administrateur" : user?.role === "professor" ? "Professeur" : "Apprenant"
 
   async function handleSave() {
     if (!user) return

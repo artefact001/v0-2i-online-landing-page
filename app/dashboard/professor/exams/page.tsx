@@ -257,14 +257,14 @@ export default function ExamsPage() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Gestion des examens" subtitle="Créez des examens ou quiz pour vos formations" />
+        <DashboardHeader title="Gestion des examens finaux" subtitle="Créez des examens finaux ou quiz pour vos formations" />
 
         <div className="p-4 md:p-8 space-y-6">
           <div className="flex justify-between items-center">
             <FormationPills formations={formations.map((f) => ({ id: f.id, name: f.titre }))} selected={selectedFormation} onSelect={setSelectedFormation} />
             <Button onClick={() => (isCreating ? resetForm() : setIsCreating(true))} className="bg-[#C9A227] hover:bg-[#B8860B] text-white shrink-0">
               <Plus className="mr-2 h-4 w-4" />
-              {isCreating ? 'Annuler' : 'Nouvel examen'}
+              {isCreating ? 'Annuler' : 'Nouvel examen final'}
             </Button>
           </div>
 
@@ -276,7 +276,7 @@ export default function ExamsPage() {
           {isCreating && (
             <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
               <CardHeader>
-                <CardTitle className="text-white">{editingId ? "Modifier l'examen" : 'Créer un examen'}</CardTitle>
+                <CardTitle className="text-white">{editingId ? "Modifier l'examen final" : 'Créer un examen final'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -306,7 +306,7 @@ export default function ExamsPage() {
                         </SelectTrigger>
                         <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
                           <SelectItem value="quiz" className="text-white">Quiz</SelectItem>
-                          <SelectItem value="examen" className="text-white">Examen</SelectItem>
+                          <SelectItem value="examen" className="text-white">Examen final</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -429,7 +429,7 @@ export default function ExamsPage() {
               <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
                 <CardContent className="pt-12 text-center">
                   <FileCheck className="w-12 h-12 text-[rgba(255,255,255,0.2)] mx-auto mb-4" />
-                  <p className="text-[rgba(255,255,255,0.6)]">Aucun examen créé pour cette formation</p>
+                  <p className="text-[rgba(255,255,255,0.6)]">Aucun examen final créé pour cette formation</p>
                 </CardContent>
               </Card>
             )}

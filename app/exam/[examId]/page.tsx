@@ -148,7 +148,7 @@ export default function ExamPage() {
     return (
       <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
         <div className="text-center">
-          <p className="mb-4">Examen non trouvé ou sans questions.</p>
+          <p className="mb-4">Examen final non trouvé ou sans questions.</p>
           <Link href={backHref} className="text-[#C9A227] hover:underline">
             Retour au tableau de bord
           </Link>
@@ -169,7 +169,7 @@ export default function ExamPage() {
       <div className="min-h-screen bg-gradient-to-b from-[#0D2545] to-[#1a3a5c] p-8 flex items-center justify-center">
         <div className="w-full max-w-2xl bg-white rounded-2xl p-8 text-center">
           <Award className="w-16 h-16 text-[#C9A227] mx-auto mb-4" />
-          <h1 className="text-3xl font-bold mb-2 text-[#0D2545]">Examen soumis</h1>
+          <h1 className="text-3xl font-bold mb-2 text-[#0D2545]">Examen final soumis</h1>
           {resultat && (
             <>
               <div className="text-6xl font-bold text-[#C9A227] my-6">

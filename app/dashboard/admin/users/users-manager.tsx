@@ -58,7 +58,7 @@ import { TablePagination } from "@/components/admin/table-pagination"
 
 const ROLE_LABELS: Record<ManagedUser["role"], string> = {
   professor: "Professeur",
-  student: "Élève",
+  student: "Apprenant",
   partner: "Partenaire",
 }
 
@@ -335,7 +335,7 @@ export function UsersManager({
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Utilisateurs" subtitle="Gérez les comptes professeurs et élèves" />
+        <DashboardHeader title="Utilisateurs" subtitle="Gérez les comptes professeurs et apprenants" />
 
         <div className="p-4 md:p-8 space-y-6">
           {feedback && (
@@ -367,7 +367,7 @@ export function UsersManager({
             </Card>
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="p-5">
-                <p className="text-[rgba(255,255,255,0.5)] text-sm">Élèves</p>
+                <p className="text-[rgba(255,255,255,0.5)] text-sm">Apprenants</p>
                 <p className="text-2xl font-bold text-green-400 mt-1">{counts.student}</p>
               </CardContent>
             </Card>
@@ -395,7 +395,7 @@ export function UsersManager({
                 <SelectContent>
                   <SelectItem value="all">Tous les rôles</SelectItem>
                   <SelectItem value="professor">Professeurs</SelectItem>
-                  <SelectItem value="student">Élèves</SelectItem>
+                  <SelectItem value="student">Apprenants</SelectItem>
                   <SelectItem value="partner">Partenaires</SelectItem>
                 </SelectContent>
               </Select>
@@ -527,7 +527,7 @@ export function UsersManager({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="student">Élève</SelectItem>
+                    <SelectItem value="student">Apprenant</SelectItem>
                     <SelectItem value="professor">Professeur</SelectItem>
                     <SelectItem value="partner">Partenaire</SelectItem>
                   </SelectContent>
