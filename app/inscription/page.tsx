@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { apiClient } from '@/lib/api/client'
@@ -20,7 +20,7 @@ interface Formation {
   prix: number
 }
 
-export default function InscriptionPage() {
+function InscriptionContent() {
   const [step, setStep] = useState(1)
   const [formations, setFormations] = useState<Formation[]>([])
   const [formData, setFormData] = useState({
@@ -42,6 +42,11 @@ export default function InscriptionPage() {
   const [formationsLoading, setFormationsLoading] = useState(true)
   const [formationsError, setFormationsError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // Formation choisie sur la page de la formation elle-même (bouton
+  // "S'inscrire à cette formation") — on la garde et on verrouille le
+  // choix, plutôt que de forcer la personne à tout re-sélectionner.
+  const preselectedFormationId = searchParams.get('formation_id')
 
   useEffect(() => {
     async function loadFormations() {
@@ -73,6 +78,13 @@ export default function InscriptionPage() {
           )
         }
         setFormations(list)
+
+        // Pré-remplit le choix de formation si transmis par l'URL
+        // (venant du bouton "S'inscrire à cette formation"), à condition
+        // que cet ID corresponde bien à une formation réelle.
+        if (preselectedFormationId && list.some((f) => f.id === preselectedFormationId)) {
+          setFormData((prev) => ({ ...prev, formationId: preselectedFormationId }))
+        }
       } catch (err) {
         console.error('Error loading formations:', err)
         setFormationsError('Impossible de charger les formations. Réessaie dans quelques instants.')
@@ -421,30 +433,49 @@ export default function InscriptionPage() {
                   <Label className="text-[rgba(255,255,255,0.8)]">
                     Choisissez votre formation
                   </Label>
-                  <Select
-                    value={formData.formationId}
-                    onValueChange={(value) => setFormData({ ...formData, formationId: value })}
-                    disabled={formationsLoading || formations.length === 0}
-                  >
-                    <SelectTrigger className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
-                      <SelectValue
-                        placeholder={
-                          formationsLoading ? 'Chargement des formations...' : 'Sélectionnez une formation'
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                      {formations.map((formation) => (
-                        <SelectItem 
-                          key={formation.id} 
-                          value={formation.id}
-                          className="text-white hover:bg-[rgba(255,255,255,0.1)] focus:bg-[rgba(255,255,255,0.1)]"
-                        >
-                          {formation.titre} - {Number(formation.prix).toLocaleString()} FCFA
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {preselectedFormationId && formData.formationId ? (
+                    // Formation déjà choisie depuis sa page dédiée — on ne
+                    // fait pas tout re-sélectionner, juste une confirmation
+                    // visuelle du choix déjà fait.
+                    <div className="h-11 flex items-center justify-between px-3 rounded-md bg-[rgba(201,162,39,0.1)] border border-[rgba(201,162,39,0.3)]">
+                      <span className="text-white text-sm">
+                        {formations.find((f) => f.id === formData.formationId)?.titre} —{' '}
+                        {Number(formations.find((f) => f.id === formData.formationId)?.prix ?? 0).toLocaleString()} FCFA
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, formationId: '' })}
+                        className="text-xs text-[#C9A227] hover:underline shrink-0 ml-3"
+                      >
+                        Changer
+                      </button>
+                    </div>
+                  ) : (
+                    <Select
+                      value={formData.formationId}
+                      onValueChange={(value) => setFormData({ ...formData, formationId: value })}
+                      disabled={formationsLoading || formations.length === 0}
+                    >
+                      <SelectTrigger className="h-11 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white">
+                        <SelectValue
+                          placeholder={
+                            formationsLoading ? 'Chargement des formations...' : 'Sélectionnez une formation'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                        {formations.map((formation) => (
+                          <SelectItem 
+                            key={formation.id} 
+                            value={formation.id}
+                            className="text-white hover:bg-[rgba(255,255,255,0.1)] focus:bg-[rgba(255,255,255,0.1)]"
+                          >
+                            {formation.titre} - {Number(formation.prix).toLocaleString()} FCFA
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   {formationsError && (
                     <p className="text-amber-400 text-xs mt-1">{formationsError}</p>
                   )}
@@ -514,5 +545,13 @@ export default function InscriptionPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function InscriptionPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a1a]" />}>
+      <InscriptionContent />
+    </Suspense>
   )
 }
