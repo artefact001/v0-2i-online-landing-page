@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { apiClient } from "@/lib/api/client"
 import {
   ChefHat,
   Cookie,
@@ -13,191 +14,70 @@ import {
   GraduationCap,
   Home,
   Hammer,
+  BookOpen,
   type LucideIcon,
 } from "lucide-react"
 
-interface PricingPlan {
-  name: string
-  inscription?: string
-  monthly: string | null
-  price?: string
-  featured?: boolean
-  features: { text: string; included: boolean }[]
-  icon: LucideIcon
+/**
+ * ATTENTION: cette section affichait auparavant un plan fictif
+ * "Inscription + Mensualité" (ex: 60 000 F + 30 000 F/mois) pour les CAP
+ * — ce modèle de paiement échelonné n'existe NULLE PART dans le vrai
+ * backend (formations.prix est un montant unique et fixe, et le
+ * paiement PayDunya facture ce montant en une seule fois). Un visiteur
+ * voyait donc un prix radicalement différent de celui réellement
+ * débité au moment de payer. Corrigé en affichant le vrai prix unique,
+ * identique à celui de la page de détail formation et du paiement.
+ */
+interface Formation {
+  id: string
+  titre: string
+  description?: string
+  prix: number
+  statut: "en ligne" | "presentiel" | "hybride"
+  niveau?: string
+  nb_inscrit?: number
 }
 
-interface PricingCategory {
-  title: string
-  description: string
-  plans: PricingPlan[]
+const statutLabel: Record<Formation["statut"], string> = {
+  "en ligne": "100 % en ligne",
+  presentiel: "Formation en présentiel",
+  hybride: "Formation hybride",
 }
 
-const pricingCategories: PricingCategory[] = [
-  {
-    title: "PROGRAMMES CAP",
-    description: "Formations diplômantes complètes",
-    plans: [
-      {
-        name: "CAP Cuisine",
-        inscription: "60 000",
-        monthly: "30 000",
-        features: [
-          { text: "Inscription unique", included: true },
-          { text: "Mensualités régulières", included: true },
-          { text: "Hybride", included: true },
-          { text: "Vidéos HD + fiches PDF", included: true },
-          { text: "Quiz et évaluations", included: true },
-          { text: "Diplôme d'État", included: true },
-        ],
-        icon: ChefHat,
-      },
-      {
-        name: "CAP Pâtisserie",
-        inscription: "60 000",
-        monthly: "30 000",
-        features: [
-          { text: "Inscription unique", included: true },
-          { text: "Mensualités régulières", included: true },
-          { text: "Hybride", included: true },
-          { text: "Vidéos HD + fiches PDF", included: true },
-          { text: "Quiz et évaluations", included: true },
-          { text: "Diplôme d'État", included: true },
-        ],
-        icon: Cookie,
-      },
-      {
-        name: "CAP Service en Salle",
-        inscription: "60 000",
-        monthly: "30 000",
-        features: [
-          { text: "Inscription unique", included: true },
-          { text: "Mensualités régulières", included: true },
-          { text: "Hybride", included: true },
-          { text: "Vidéos HD + fiches PDF", included: true },
-          { text: "Quiz et évaluations", included: true },
-          { text: "Diplôme d'État", included: true },
-        ],
-        icon: UtensilsCrossed,
-      },
-    ],
-  },
-  {
-    title: "FORMATIONS SPÉCIALISÉES",
-    description: "Certifications professionnelles courtes",
-    plans: [
-      {
-        name: "Hygiène & HACCP",
-        price: "100 000",
-        monthly: null,
-        features: [
-          { text: "100 % en ligne", included: true },
-          { text: "Certification HACCP", included: true },
-          { text: "Normes de sécurité alimentaire", included: true },
-          { text: "Quiz pratiques", included: true },
-          { text: "Certificat numérique", included: true },
-        ],
-        icon: ShieldCheck,
-        featured: false,
-      },
-      {
-        name: "Gestion de Restaurant",
-        price: "100 000",
-        monthly: null,
-        features: [
-          { text: "100 % en ligne", included: true },
-          { text: "Management avancé", included: true },
-          { text: "Gestion financière", included: true },
-          { text: "Stratégie commerciale", included: true },
-          { text: "Gestion d'équipe", included: true },
-          { text: "Certificat numérique", included: true },
-        ],
-        icon: Building2,
-        featured: false,
-      },
-      {
-        name: "Certificat Professionnel de Spécialité",
-        inscription: "60 000",
-        monthly: "30 000",
-        features: [
-          { text: "Spécialisation avancée", included: true },
-          { text: "Flexibilité horaire", included: true },
-          { text: "Vidéos HD + fiches PDF", included: true },
-          { text: "Quiz et évaluations", included: true },
-          { text: "Certification en présentiel obligatoire", included: true },
-        ],
-        icon: ScrollText,
-        featured: false,
-      },
-    ],
-  },
-  {
-    title: "PROGRAMMES PREMIUM",
-    description: "Formations avancées et VAE",
-    plans: [
-      {
-        name: "Incubation Entrepreneuriale (street Food)",
-        price: "100 000",
-        monthly: null,
-        features: [
-          { text: "Créer votre projet", included: true },
-          { text: "Business plan complet", included: true },
-          { text: "Marketing digital", included: true },
-          { text: "Support entrepreneurial", included: true },
-          { text: "Réseau d'affaires", included: true },
-        ],
-        icon: Rocket,
-        featured: true,
-      },
-      {
-        name: "VAE - Validation des Acquis de l'Expérience",
-        price: "150 000",
-        monthly: null,
-        features: [
-          { text: "Reconnaissance des compétences", included: true },
-          { text: "Portfolio et évaluation", included: true },
-          { text: "Mentoring personnalisé", included: true },
-          { text: "Documentation complète (Livret 1 , Livret 2)", included: true },
-          { text: "Support administratif", included: true },
-        ],
-        icon: GraduationCap,
-        featured: true,
-      },
-    ],
-  },
-  {
-    title: "PROGRAMMES ACCESSIBLES",
-    description: "Formations courtes et ateliers",
-    plans: [
-      {
-        name: "Travail à Domicile",
-        price: "60 000",
-        monthly: null,
-        features: [
-          { text: "Formation en ligne / Hybride", included: true },
-          { text: "Flexible et autonome", included: true },
-          { text: "Contenu téléchargeable", included: true },
-          { text: "Forum d'entraide", included: true },
-          { text: "Certificat", included: true },
-        ],
-        icon: Home,
-      },
-      {
-        name: "Atelier Pratique (Séance)",
-        price: "10 000",
-        monthly: null,
-        features: [
-          { text: "Atelier unique de 5h", included: true },
-          { text: "Pratique intensive", included: true },
-          { text: "Accès à la communauté", included: true },
-        ],
-        icon: Hammer,
-      },
-    ],
-  },
-]
+// Choix d'icône par mots-clés du titre — le backend ne stocke pas
+// d'icône, ceci est purement une heuristique visuelle côté client.
+function iconFor(titre: string): LucideIcon {
+  const t = titre.toLowerCase()
+  if (t.includes("cuisin")) return ChefHat
+  if (t.includes("pâtiss") || t.includes("patiss")) return Cookie
+  if (t.includes("serveur") || t.includes("service")) return UtensilsCrossed
+  if (t.includes("haccp") || t.includes("hygiène") || t.includes("hygiene")) return ShieldCheck
+  if (t.includes("gestion")) return Building2
+  if (t.includes("spécialité") || t.includes("specialite")) return ScrollText
+  if (t.includes("incubation") || t.includes("street")) return Rocket
+  if (t.includes("vae")) return GraduationCap
+  if (t.includes("domicile")) return Home
+  if (t.includes("atelier")) return Hammer
+  return BookOpen
+}
 
 export function PricingSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
+  const [formations, setFormations] = useState<Formation[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await apiClient<Formation[]>("/formations")
+        setFormations(res.data || [])
+      } catch (error) {
+        console.error("[PricingSection] Erreur de chargement:", error)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -222,6 +102,12 @@ export function PricingSection() {
     return () => observer.disconnect()
   }, [])
 
+  // "Le plus suivi" = la formation avec le plus d'inscrits, calculé
+  // dynamiquement plutôt qu'un flag fixe arbitraire.
+  const mostPopularId = formations.length
+    ? formations.reduce((a, b) => ((a.nb_inscrit ?? 0) > (b.nb_inscrit ?? 0) ? a : b)).id
+    : null
+
   return (
     <section id="tarifs" ref={sectionRef} className="py-[120px] px-6 md:px-[60px] bg-[rgba(13,37,69,0.1)]">
       <div className="max-w-7xl mx-auto">
@@ -237,98 +123,77 @@ export function PricingSection() {
           </p>
         </div>
 
-        {/* Pricing Categories */}
-        {pricingCategories.map((category, catIndex) => (
-          <div key={category.title} className="mb-20">
-            <div className="reveal text-center mb-12">
-              <h3 className="font-serif text-[32px] font-semibold text-white mb-2">
-                {category.title}
-              </h3>
-              <p className="text-[#d0daf0]">{category.description}</p>
-            </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#C9A227]" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {formations.map((formation, index) => {
+              const Icon = iconFor(formation.titre)
+              const featured = formation.id === mostPopularId
 
-            <div className={`grid gap-6 lg:gap-8 ${
-              category.plans.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
-              category.plans.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
-              'grid-cols-1 md:grid-cols-2'
-            }`}>
-              {category.plans.map((plan, index) => (
+              return (
                 <div
-                  key={plan.name}
+                  key={formation.id}
                   className={`reveal rounded-2xl p-8 lg:p-10 border relative overflow-hidden transition-all duration-500 hover:-translate-y-2 ${
-                    plan.featured
+                    featured
                       ? "bg-gradient-to-b from-[rgba(27,58,107,0.6)] to-[rgba(13,37,69,0.8)] border-[rgba(201,162,39,0.5)] shadow-[0_0_80px_rgba(201,162,39,0.1)] md:scale-105 z-10"
                       : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.08)] hover:border-[rgba(201,162,39,0.3)]"
                   }`}
-                  style={{ transitionDelay: `${index * 100}ms` }}
+                  style={{ transitionDelay: `${index * 60}ms` }}
                 >
-                  {plan.featured && (
+                  {featured && (
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9A227] to-transparent" />
                   )}
 
                   <div className="flex items-start justify-between mb-4">
                     <span className="w-12 h-12 rounded-xl bg-[rgba(201,162,39,0.12)] border border-[rgba(201,162,39,0.25)] flex items-center justify-center">
-                      <plan.icon className="w-6 h-6 text-[#C9A227]" strokeWidth={1.75} />
+                      <Icon className="w-6 h-6 text-[#C9A227]" strokeWidth={1.75} />
                     </span>
-                    {plan.featured && (
+                    {featured && (
                       <span className="inline-flex items-center gap-1.5 bg-[#C9A227] text-[#0D2545] text-[9px] font-bold tracking-[2px] uppercase rounded-full px-3 py-1">
-                        Premium
+                        Le plus suivi
                       </span>
                     )}
                   </div>
 
                   <div className="text-xs font-bold tracking-[3px] uppercase text-[rgba(255,255,255,0.5)] mb-4">
-                    {plan.name}
+                    {formation.titre}
                   </div>
 
-                  <div className="mb-8">
-                    {plan.inscription && plan.monthly ? (
-                      <>
-                        <div className="flex items-baseline gap-2 mb-2">
-                          <span className="text-sm text-[rgba(255,255,255,0.6)]">Inscription:</span>
-                          <span className="font-serif text-2xl font-bold text-white">{plan.inscription}</span>
-                          <span className="text-xs text-[rgba(255,255,255,0.4)]">F</span>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-sm text-[rgba(255,255,255,0.6)]">Mensualité:</span>
-                          <span className="font-serif text-2xl font-bold text-[#C9A227]">{plan.monthly}</span>
-                          <span className="text-xs text-[rgba(255,255,255,0.4)]">F/mois</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-serif text-4xl font-bold text-white">{(plan as any).price}</span>
-                        <span className="text-sm text-[rgba(255,255,255,0.4)]">F</span>
-                      </div>
-                    )}
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-serif text-4xl font-bold text-white">
+                        {Number(formation.prix).toLocaleString()}
+                      </span>
+                      <span className="text-sm text-[rgba(255,255,255,0.4)]">F</span>
+                    </div>
+                    <p className="text-xs text-[rgba(255,255,255,0.4)] mt-1">Paiement unique, accès immédiat</p>
                   </div>
 
                   <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature) => (
-                      <li
-                        key={feature.text}
-                        className={`flex items-start gap-3 text-sm ${
-                          feature.included ? "text-[#d0daf0]" : "text-[rgba(255,255,255,0.25)]"
-                        }`}
-                      >
-                        {feature.included ? (
+                    {[
+                      statutLabel[formation.statut] ?? formation.statut,
+                      formation.niveau ? `Niveau : ${formation.niveau}` : null,
+                      "Vidéos HD + support de cours téléchargeable",
+                      "Certificat numérique vérifiable en ligne",
+                    ]
+                      .filter(Boolean)
+                      .map((text) => (
+                        <li key={text} className="flex items-start gap-3 text-sm text-[#d0daf0]">
                           <svg className="w-5 h-5 text-[#C9A227] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-[rgba(255,255,255,0.15)] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        )}
-                        {feature.text}
-                      </li>
-                    ))}
+                          {text}
+                        </li>
+                      ))}
                   </ul>
 
                   <Link
-                    href="/inscription"
+                    href={`/inscription?formation_id=${formation.id}`}
                     className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold tracking-[1.5px] uppercase transition-all duration-300 ${
-                      plan.featured
+                      featured
                         ? "bg-[#C9A227] text-[#0D2545] hover:bg-[#E8C050] hover:scale-105"
                         : "border border-[rgba(255,255,255,0.15)] text-[rgba(255,255,255,0.7)] hover:border-[#C9A227] hover:text-[#C9A227] hover:bg-[rgba(201,162,39,0.05)]"
                     }`}
@@ -339,11 +204,10 @@ export function PricingSection() {
                     </svg>
                   </Link>
                 </div>
-              ))}
-            </div>
+              )
+            })}
           </div>
-        ))}
-
+        )}
       </div>
     </section>
   )
