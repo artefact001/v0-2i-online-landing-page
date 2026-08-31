@@ -34,8 +34,24 @@ const faqItems = [
 ]
 
 export function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0)
+  // Set d'index ouverts (plutôt qu'un seul index) : chaque carte
+  // s'ouvre/se ferme indépendamment des autres — cliquer sur une carte
+  // n'affecte jamais l'état des autres, on peut en garder plusieurs
+  // ouvertes en même temps pour comparer/lire à son rythme.
+  const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set([0]))
   const sectionRef = useRef<HTMLDivElement>(null)
+
+  function toggleIndex(index: number) {
+    setOpenIndexes((prev) => {
+      const next = new Set(prev)
+      if (next.has(index)) {
+        next.delete(index)
+      } else {
+        next.add(index)
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -83,30 +99,30 @@ export function FAQSection() {
               <div
                 key={index}
                 className={`reveal border rounded-xl overflow-hidden transition-all duration-400 ${
-                  openIndex === index
+                  openIndexes.has(index)
                     ? "border-[rgba(201,162,39,0.4)] bg-[rgba(201,162,39,0.03)] shadow-[0_4px_20px_rgba(201,162,39,0.05)]"
                     : "border-[rgba(255,255,255,0.07)] hover:border-[rgba(201,162,39,0.25)] bg-[rgba(255,255,255,0.01)]"
                 }`}
                 style={{ transitionDelay: `${index * 50}ms` }}
               >
                 <button
-                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                  onClick={() => toggleIndex(index)}
                   className="w-full flex items-start justify-between gap-4 p-6 bg-transparent border-none cursor-pointer text-left"
                 >
                   <span className={`font-medium leading-relaxed transition-colors duration-300 ${
-                    openIndex === index ? "text-[#C9A227]" : "text-white"
+                    openIndexes.has(index) ? "text-[#C9A227]" : "text-white"
                   }`}>
                     {item.question}
                   </span>
                   <span
                     className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
-                      openIndex === index 
+                      openIndexes.has(index) 
                         ? "bg-[#C9A227] text-[#0D2545]" 
                         : "bg-[rgba(255,255,255,0.05)] text-[#C9A227]"
                     }`}
                   >
                     <svg 
-                      className={`w-4 h-4 transition-transform duration-300 ${openIndex === index ? "rotate-180" : ""}`} 
+                      className={`w-4 h-4 transition-transform duration-300 ${openIndexes.has(index) ? "rotate-180" : ""}`} 
                       fill="none" 
                       viewBox="0 0 24 24" 
                       stroke="currentColor"
@@ -117,7 +133,7 @@ export function FAQSection() {
                 </button>
                 <div
                   className={`grid transition-all duration-400 ease-in-out ${
-                    openIndex === index ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                    openIndexes.has(index) ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
                   <div className="overflow-hidden">
