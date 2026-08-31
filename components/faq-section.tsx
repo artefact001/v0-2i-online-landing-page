@@ -41,16 +41,11 @@ export function FAQSection() {
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set([0]))
   const sectionRef = useRef<HTMLDivElement>(null)
 
+  // Uniquement "déplier" — une fois ouverte, une carte le reste (le clic
+  // ne referme plus rien), pour ne jamais faire "disparaître" une
+  // réponse qu'on est en train de lire.
   function toggleIndex(index: number) {
-    setOpenIndexes((prev) => {
-      const next = new Set(prev)
-      if (next.has(index)) {
-        next.delete(index)
-      } else {
-        next.add(index)
-      }
-      return next
-    })
+    setOpenIndexes((prev) => new Set(prev).add(index))
   }
 
   useEffect(() => {
