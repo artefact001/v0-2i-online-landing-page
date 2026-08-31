@@ -116,13 +116,15 @@ export function FAQSection() {
                   </span>
                 </button>
                 <div
-                  className={`overflow-hidden transition-all duration-400 ${
-                    openIndex === index ? "max-h-[400px]" : "max-h-0"
+                  className={`grid transition-all duration-400 ease-in-out ${
+                    openIndex === index ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
-                  <p className="px-6 pb-6 text-sm text-[#d0daf0] leading-relaxed">
-                    {item.answer}
-                  </p>
+                  <div className="overflow-hidden">
+                    <p className="px-6 pb-6 text-sm text-[#d0daf0] leading-relaxed">
+                      {item.answer}
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
