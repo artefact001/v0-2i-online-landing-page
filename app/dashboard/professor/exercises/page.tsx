@@ -337,16 +337,16 @@ export default function ExercisesPage() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Gestion des exercices" subtitle="Créez des exercices QCM ou à questions ouvertes" />
+        <DashboardHeader title="Gestion des évaluations" subtitle="Créez des évaluations QCM ou à questions ouvertes" />
         <div className="p-4 md:p-8 space-y-6">
         <SectionHeader
           icon={<ListChecks className="h-7 w-7" />}
-          title="Gestion des exercices"
-          description="Créez des exercices QCM ou à questions ouvertes pour vos leçons."
+          title="Gestion des évaluations"
+          description="Créez des évaluations QCM ou à questions ouvertes pour vos leçons."
           action={
             <Button onClick={() => (isCreating ? resetForm() : setIsCreating(true))} className="bg-[#C9A227] hover:bg-[#B8860B] text-white">
               <Plus className="mr-2 h-4 w-4" />
-              {isCreating ? 'Annuler' : 'Nouvel exercice'}
+              {isCreating ? 'Annuler' : 'Nouvelle évaluation'}
             </Button>
           }
         />
@@ -394,7 +394,7 @@ export default function ExercisesPage() {
         {isCreating && (
           <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
             <CardHeader>
-              <CardTitle className="text-white">{editingId ? "Modifier l'exercice" : 'Créer un exercice'}</CardTitle>
+              <CardTitle className="text-white">{editingId ? "Modifier l'évaluation" : 'Créer une évaluation'}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -553,7 +553,7 @@ export default function ExercisesPage() {
             <Card className="bg-[#1a1a2e] border-[rgba(201,162,39,0.2)]">
               <CardContent className="pt-12 text-center">
                 <ListChecks className="w-12 h-12 text-[rgba(255,255,255,0.2)] mx-auto mb-4" />
-                <p className="text-[rgba(255,255,255,0.6)]">Aucun exercice créé</p>
+                <p className="text-[rgba(255,255,255,0.6)]">Aucune évaluation créée</p>
               </CardContent>
             </Card>
           )}

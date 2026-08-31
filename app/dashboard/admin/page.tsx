@@ -121,7 +121,7 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Sessions Live', icon: Radio, href: '/dashboard/admin/live-sessions' },
-                  { label: 'Examens', icon: FileCheck, href: '/dashboard/admin/exams' },
+                  { label: 'Examens finaux', icon: FileCheck, href: '/dashboard/admin/exams' },
                   { label: 'Actualités', icon: Newspaper, href: '/dashboard/admin/actus' },
                   { label: 'Opportunités', icon: Briefcase, href: '/dashboard/admin/opportunites' },
                 ].map((link) => (

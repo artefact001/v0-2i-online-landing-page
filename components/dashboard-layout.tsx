@@ -79,7 +79,7 @@ const adminNavItems: NavItem[] = [
   },
   {
     href: '/dashboard/admin/exams',
-    label: 'Examens',
+    label: 'Examens finaux',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M4 7h16M4 7a2 2 0 002 2h12a2 2 0 002-2M4 7a2 2 0 012-2h12a2 2 0 012 2" />
@@ -145,7 +145,7 @@ const professorNavItems: NavItem[] = [
   },
   {
     href: '/dashboard/professor/students',
-    label: 'Mes Élèves',
+    label: 'Mes Apprenants',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -181,7 +181,7 @@ const professorNavItems: NavItem[] = [
   },
   {
     href: '/dashboard/professor/exercises',
-    label: 'Exercices',
+    label: 'Évaluations',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -190,7 +190,7 @@ const professorNavItems: NavItem[] = [
   },
   {
     href: '/dashboard/professor/exams',
-    label: 'Examens',
+    label: 'Examens finaux',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M4 7h16M4 7a2 2 0 002 2h12a2 2 0 002-2M4 7a2 2 0 012-2h12a2 2 0 012 2" />
@@ -392,7 +392,7 @@ export function DashboardSidebar() {
       case 'professor':
         return { label: 'Professeur', color: 'bg-blue-500/20 text-blue-400' }
       case 'student':
-        return { label: 'Élève', color: 'bg-green-500/20 text-green-400' }
+        return { label: 'Apprenant', color: 'bg-green-500/20 text-green-400' }
       case 'partner':
         return { label: 'Partenaire', color: 'bg-purple-500/20 text-purple-400' }
     }

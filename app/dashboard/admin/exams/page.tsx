@@ -18,7 +18,7 @@ interface Examen {
 
 const typeLabel: Record<Examen['type'], string> = {
   quiz: 'Quiz',
-  examen: 'Examen',
+  examen: 'Examen final',
 }
 
 const typeStyle: Record<Examen['type'], string> = {
@@ -47,7 +47,7 @@ export default function AdminExamsPage() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Examens" subtitle="Supervisez tous les examens et quiz de la plateforme" />
+        <DashboardHeader title="Examens finaux" subtitle="Supervisez tous les examens finaux et quiz de la plateforme" />
 
         <div className="p-4 md:p-8 space-y-4">
           {loading ? (

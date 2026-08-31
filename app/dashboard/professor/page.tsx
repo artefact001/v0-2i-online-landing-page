@@ -93,7 +93,7 @@ export default function ProfessorDashboard() {
 
   const stats = [
     { label: 'Mes formations', value: counts.formations, icon: GraduationCap, href: '/dashboard/professor/courses' },
-    { label: 'Élèves actifs', value: counts.students, icon: Users, href: '/dashboard/professor/students' },
+    { label: 'Apprenants actifs', value: counts.students, icon: Users, href: '/dashboard/professor/students' },
     { label: 'Modules', value: counts.modules, icon: Layers, href: '/dashboard/professor/modules' },
     { label: 'Leçons', value: counts.lessons, icon: BookOpen, href: '/dashboard/professor/lessons' },
   ]
@@ -128,8 +128,8 @@ export default function ProfessorDashboard() {
               {/* Accès rapides */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Exercices', icon: FileCheck, href: '/dashboard/professor/exercises' },
-                  { label: 'Examens', icon: FileCheck, href: '/dashboard/professor/exams' },
+                  { label: 'Évaluations', icon: FileCheck, href: '/dashboard/professor/exercises' },
+                  { label: 'Examens finaux', icon: FileCheck, href: '/dashboard/professor/exams' },
                   { label: 'Sessions Live', icon: Radio, href: '/dashboard/professor/live-sessions' },
                   { label: 'Mes élèves', icon: Users, href: '/dashboard/professor/students' },
                 ].map((link) => (

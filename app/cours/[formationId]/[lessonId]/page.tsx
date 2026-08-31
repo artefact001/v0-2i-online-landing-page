@@ -667,7 +667,7 @@ export default function CoursePage() {
                       remarkPlugins={[remarkGfm]}
                       components={{
                         h1: ({children}) => <h1 className="text-3xl font-bold text-white mb-6 pb-4 border-b border-[#1a2942]">{children}</h1>,
-                        h2: ({children}) => <h2 className="text-2xl font-bold text-[#C9A227] mt-8 mb-4">{children}</h2>,
+                        h2: ({children}) => <h2 className="text-2xl font-bold text-[#60A5FA] mt-8 mb-4">{children}</h2>,
                         h3: ({children}) => <h3 className="text-xl font-semibold text-white mt-6 mb-3">{children}</h3>,
                         p: ({children}) => <p className="text-gray-300 leading-relaxed mb-4">{children}</p>,
                         ul: ({children}) => <ul className="list-disc list-inside text-gray-300 mb-4 space-y-2">{children}</ul>,
@@ -675,7 +675,7 @@ export default function CoursePage() {
                         li: ({children}) => <li className="text-gray-300">{children}</li>,
                         strong: ({children}) => <strong className="text-white font-semibold">{children}</strong>,
                         blockquote: ({children}) => (
-                          <blockquote className="border-l-4 border-[#C9A227] pl-4 py-2 my-4 bg-[#C9A227]/10 rounded-r-lg">
+                          <blockquote className="border-l-4 border-[#60A5FA] pl-4 py-2 my-4 bg-[#60A5FA]/10 rounded-r-lg">
                             {children}
                           </blockquote>
                         ),
@@ -688,7 +688,7 @@ export default function CoursePage() {
                         ),
                         th: ({children}) => <th className="bg-[#1a2942] px-4 py-3 text-left text-white font-semibold border border-[#1a2942]">{children}</th>,
                         td: ({children}) => <td className="px-4 py-3 text-gray-300 border border-[#1a2942]">{children}</td>,
-                        code: ({children}) => <code className="bg-[#1a2942] px-2 py-1 rounded text-[#C9A227] text-sm">{children}</code>,
+                        code: ({children}) => <code className="bg-[#1a2942] px-2 py-1 rounded text-[#60A5FA] text-sm">{children}</code>,
                       }}
                     >
                       {currentLesson.contenu}

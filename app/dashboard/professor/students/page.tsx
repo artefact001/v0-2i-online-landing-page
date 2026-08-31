@@ -39,7 +39,7 @@ export default function ProfessorStudentsPage() {
           for (const enrollment of enrollments) {
             const studentId = enrollment.user_id
             const studentName =
-              enrollment.student?.first_name || enrollment.student?.name || `Élève #${studentId}`
+              enrollment.student?.first_name || enrollment.student?.name || `Apprenant #${studentId}`
             const progress = await progressService.getFormationProgress(studentId, formation.id)
             rows.push({
               id: `${formation.id}-${studentId}`,
@@ -62,7 +62,7 @@ export default function ProfessorStudentsPage() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Mes Élèves" subtitle="Suivez la progression de vos étudiants" />
+        <DashboardHeader title="Mes Apprenants" subtitle="Suivez la progression de vos apprenants" />
 
         <div className="p-4 md:p-8">
           {loading ? (
@@ -72,7 +72,7 @@ export default function ProfessorStudentsPage() {
           ) : students.length === 0 ? (
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="py-12 text-center">
-                <p className="text-[rgba(255,255,255,0.5)]">Aucun élève inscrit à tes formations pour le moment.</p>
+                <p className="text-[rgba(255,255,255,0.5)]">Aucun apprenant inscrit à tes formations pour le moment.</p>
               </CardContent>
             </Card>
           ) : (
