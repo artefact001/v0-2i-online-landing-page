@@ -93,15 +93,23 @@ function mapUser(raw: any, role: "professor" | "student" | "partner"): ManagedUs
 export async function listUsers(): Promise<ManagedUser[]> {
   await requireAdmin()
 
-  const [formateursRes, etudiantsRes, partenairesRes] = await Promise.all([
+  // Promise.allSettled (pas Promise.all) : si UN SEUL de ces 3 appels
+  // échoue (ex: /partenaires, le plus récent et donc le plus susceptible
+  // de rencontrer un souci ponctuel côté backend), les deux autres
+  // doivent quand même s'afficher plutôt que de tout faire planter.
+  const [formateursRes, etudiantsRes, partenairesRes] = await Promise.allSettled([
     apiServer("/api/v1/formateurs"),
     apiServer("/api/v1/etudiants"),
     apiServer("/api/v1/partenaires"),
   ])
 
-  const formateurs = Array.isArray(formateursRes.data) ? formateursRes.data : []
-  const etudiants = Array.isArray(etudiantsRes.data) ? etudiantsRes.data : []
-  const partenaires = Array.isArray(partenairesRes.data) ? partenairesRes.data : []
+  if (formateursRes.status === "rejected") console.error("[listUsers] Échec /formateurs:", formateursRes.reason)
+  if (etudiantsRes.status === "rejected") console.error("[listUsers] Échec /etudiants:", etudiantsRes.reason)
+  if (partenairesRes.status === "rejected") console.error("[listUsers] Échec /partenaires:", partenairesRes.reason)
+
+  const formateurs = formateursRes.status === "fulfilled" && Array.isArray(formateursRes.value.data) ? formateursRes.value.data : []
+  const etudiants = etudiantsRes.status === "fulfilled" && Array.isArray(etudiantsRes.value.data) ? etudiantsRes.value.data : []
+  const partenaires = partenairesRes.status === "fulfilled" && Array.isArray(partenairesRes.value.data) ? partenairesRes.value.data : []
 
   return [
     ...formateurs.map((f: any) => mapUser(f, "professor")),
