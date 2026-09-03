@@ -69,6 +69,29 @@ interface Exercise {
   points: number
 }
 
+/**
+ * Détecte un lien YouTube ou Vimeo et renvoie son URL d'intégration
+ * (iframe) — un <video src="..."> natif ne fonctionne PAS avec une page
+ * "watch" YouTube/Vimeo classique, seule une iframe d'embed le peut.
+ * Renvoie null pour tout le reste (fichier uploadé, lien .mp4 direct),
+ * qui utilise alors le lecteur <video> natif — dans tous les cas, la
+ * vidéo reste lue directement dans la plateforme, jamais de redirection
+ * externe.
+ */
+function getVideoEmbedUrl(url: string): string | null {
+  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`
+  }
+
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`
+  }
+
+  return null
+}
+
 export default function CoursePage() {
   const params = useParams()
   const router = useRouter()
@@ -598,12 +621,26 @@ export default function CoursePage() {
             <LessonNotesPanel leconId={currentLesson.id} />
           ) : activeTab === "content" ? (
             <div className="max-w-4xl mx-auto p-6">
-              {/* Video section — fichier vidéo réellement uploadé désormais
-                  (plus une URL YouTube à embarquer), lecteur natif requis */}
+              {/* Vidéo — upload direct, lien direct .mp4, ou lien
+                  YouTube/Vimeo (intégré via iframe). Dans tous les cas,
+                  la lecture reste dans la plateforme, jamais de
+                  redirection externe. */}
               {currentLesson.video && (
                 <div className="mb-8">
                   <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
-                    <video src={currentLesson.video} controls className="w-full h-full" />
+                    {(() => {
+                      const embedUrl = getVideoEmbedUrl(currentLesson.video)
+                      return embedUrl ? (
+                        <iframe
+                          src={embedUrl}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video src={currentLesson.video} controls className="w-full h-full" />
+                      )
+                    })()}
                   </div>
                 </div>
               )}

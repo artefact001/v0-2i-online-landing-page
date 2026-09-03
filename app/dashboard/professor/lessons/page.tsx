@@ -62,6 +62,8 @@ export default function LessonsPage() {
     ordre: 0,
   })
   const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoMode, setVideoMode] = useState<'upload' | 'lien'>('upload')
+  const [videoUrl, setVideoUrl] = useState('')
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null)
   const [existingDocumentUrl, setExistingDocumentUrl] = useState<string | null>(null)
@@ -149,7 +151,11 @@ export default function LessonsPage() {
       body.append('titre', formData.titre.trim())
       body.append('contenu', formData.contenu.trim())
       body.append('ordre', String(formData.ordre))
-      if (videoFile) body.append('video', videoFile)
+      if (videoMode === 'upload') {
+        if (videoFile) body.append('video', videoFile)
+      } else if (videoMode === 'lien' && videoUrl.trim()) {
+        body.append('video_url', videoUrl.trim())
+      }
       if (documentFile) body.append('document', documentFile)
 
       if (editingId) {
@@ -192,6 +198,8 @@ export default function LessonsPage() {
     setDocumentFile(null)
     setExistingVideoUrl(null)
     setExistingDocumentUrl(null)
+    setVideoMode('upload')
+    setVideoUrl('')
     setFormError('')
     setEditingId(null)
     setIsCreating(false)
@@ -207,6 +215,13 @@ export default function LessonsPage() {
     setDocumentFile(null)
     setExistingVideoUrl(lesson.video || null)
     setExistingDocumentUrl(lesson.document || null)
+    // Un fichier réellement uploadé passe toujours par notre propre
+    // stockage Laravel (chemin contenant "/storage/") — tout le reste
+    // (YouTube, Vimeo, lien direct fourni par le professeur) est
+    // considéré comme un lien externe.
+    const isUploadedFile = !!lesson.video && lesson.video.includes('/storage/')
+    setVideoMode(lesson.video && !isUploadedFile ? 'lien' : 'upload')
+    setVideoUrl(lesson.video && !isUploadedFile ? lesson.video : '')
     setEditingId(lesson.id)
     setIsCreating(true)
   }
@@ -302,17 +317,53 @@ export default function LessonsPage() {
                 />
               </div>
 
-              <FileUpload
-                label="Vidéo (optionnel)"
-                kind="video"
-                value={existingVideoUrl}
-                onFileSelected={setVideoFile}
-                disabled={isLoading}
-                accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/mpeg"
-                acceptedTypes={['video/']}
-                typeLabel="fichier vidéo"
-                maxSizeMb={50}
-              />
+              <div className="space-y-2">
+                <Label className="text-white">Vidéo (optionnel)</Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVideoMode('upload')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      videoMode === 'upload' ? 'bg-[#C9A227] text-[#0a0a1a]' : 'bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]'
+                    }`}
+                  >
+                    Téléverser un fichier
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVideoMode('lien')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
+                      videoMode === 'lien' ? 'bg-[#C9A227] text-[#0a0a1a]' : 'bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]'
+                    }`}
+                  >
+                    Coller un lien (YouTube, Vimeo...)
+                  </button>
+                </div>
+
+                {videoMode === 'upload' ? (
+                  <FileUpload
+                    label=""
+                    kind="video"
+                    value={existingVideoUrl}
+                    onFileSelected={setVideoFile}
+                    disabled={isLoading}
+                    accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,video/mpeg"
+                    acceptedTypes={['video/']}
+                    typeLabel="fichier vidéo"
+                    maxSizeMb={50}
+                  />
+                ) : (
+                  <Input
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+                  />
+                )}
+                <p className="text-xs text-[rgba(255,255,255,0.4)]">
+                  La vidéo se lit toujours directement dans la plateforme, même avec un lien externe.
+                </p>
+              </div>
 
               <FileUpload
                 label="Document (optionnel)"
