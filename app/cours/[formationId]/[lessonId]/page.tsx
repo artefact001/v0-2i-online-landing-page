@@ -175,7 +175,7 @@ export default function CoursePage() {
 
           if (params.lessonId) {
             for (const mod of modulesWithLessons) {
-              const lesson = mod.lessons.find((l: Lesson) => l.id === params.lessonId)
+              const lesson = mod.lessons.find((l: Lesson) => String(l.id) === String(params.lessonId))
               if (lesson) {
                 setCurrentLesson(lesson)
                 break
