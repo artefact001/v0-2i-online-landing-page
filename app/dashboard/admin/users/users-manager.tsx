@@ -101,6 +101,7 @@ export function UsersManager({
   // champs spécifiques formateur
   const [specialite, setSpecialite] = useState("")
   const [moduleIds, setModuleIds] = useState<string[]>([])
+  const [formateurFormationId, setFormateurFormationId] = useState("")
 
   // champs spécifiques étudiant
   const [dateNaissance, setDateNaissance] = useState("")
@@ -143,6 +144,7 @@ export function UsersManager({
     setRole(presetRole)
     setSpecialite("")
     setModuleIds([])
+    setFormateurFormationId("")
     setDateNaissance("")
     setLieuNaissance("")
     setNiveau("")
@@ -176,6 +178,7 @@ export function UsersManager({
     setPhone(u.phone ?? "")
     setRole(u.role)
     setSpecialite(u.specialite ?? "")
+    setFormateurFormationId(u.formationId ?? "")
     setModuleIds(u.moduleIds ?? [])
     setDateNaissance(u.dateNaissance ?? "")
     setLieuNaissance(u.lieuNaissance ?? "")
@@ -229,7 +232,7 @@ export function UsersManager({
       const common = { firstName, lastName, role, phone }
       const roleSpecific =
         role === "professor"
-          ? { specialite, moduleIds }
+          ? { specialite, moduleIds, formationId: formateurFormationId }
           : role === "partner"
             ? { nomOrganisation, secteur }
             : { dateNaissance, lieuNaissance, niveau, formationIds }
@@ -598,6 +601,24 @@ export function UsersManager({
                       </button>
                     ))}
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.7)]">Formation assignée</Label>
+                  <Select value={formateurFormationId || "none"} onValueChange={(v) => setFormateurFormationId(v === "none" ? "" : v)}>
+                    <SelectTrigger className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white">
+                      <SelectValue placeholder="Aucune formation assignée" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
+                      <SelectItem value="none" className="text-white">Aucune</SelectItem>
+                      {formations.map((f) => (
+                        <SelectItem key={f.id} value={f.id} className="text-white">{f.titre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-[rgba(255,255,255,0.4)]">
+                    Détermine à quel contenu (leçons, exercices, examens...) ce professeur a accès et peut modifier —
+                    sans formation assignée, il ne verra aucun contenu à gérer.
+                  </p>
                 </div>
               </>
             ) : role === "partner" ? (
