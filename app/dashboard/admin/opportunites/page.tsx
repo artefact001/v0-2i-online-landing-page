@@ -27,6 +27,7 @@ interface Opportunite {
   type: 'stage' | 'emploi' | 'formation' | 'bourse' | 'partenariat'
   description: string
   documents?: string
+  image?: string
   date_debut: string
   date_fin: string
   ville: string
@@ -78,6 +79,8 @@ export default function AdminOpportunitesPage() {
   const [formData, setFormData] = useState(emptyForm)
   const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [existingDocumentUrl, setExistingDocumentUrl] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -100,6 +103,8 @@ export default function AdminOpportunitesPage() {
     setFormData(emptyForm)
     setDocumentFile(null)
     setExistingDocumentUrl(null)
+    setImageFile(null)
+    setExistingImageUrl(null)
     setEditingId(null)
     setIsCreating(false)
     setError('')
@@ -120,6 +125,8 @@ export default function AdminOpportunitesPage() {
     })
     setDocumentFile(null)
     setExistingDocumentUrl(o.documents || null)
+    setImageFile(null)
+    setExistingImageUrl(o.image || null)
     setEditingId(o.id)
     setIsCreating(true)
   }
@@ -141,6 +148,7 @@ export default function AdminOpportunitesPage() {
     if (formData.lien_inscription) body.append('lien_inscription', formData.lien_inscription)
     body.append('statut', formData.statut)
     if (documentFile) body.append('documents', documentFile)
+    if (imageFile) body.append('image', imageFile)
 
     try {
       if (editingId) {
@@ -307,6 +315,17 @@ export default function AdminOpportunitesPage() {
                     acceptedTypes={['application/pdf']}
                     typeLabel="PDF"
                     maxSizeMb={10}
+                  />
+
+                  <FileUpload
+                    label="Image (optionnel)"
+                    value={existingImageUrl}
+                    onFileSelected={setImageFile}
+                    disabled={saving}
+                    accept="image/jpeg,image/png,image/webp"
+                    acceptedTypes={['image/']}
+                    typeLabel="image (JPG, PNG, WebP)"
+                    maxSizeMb={5}
                   />
 
                   <div className="space-y-2">

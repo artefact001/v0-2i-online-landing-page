@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { notFound, useParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { apiClient } from "@/lib/api/client"
 import { useAuth } from "@/lib/auth-context"
 import { candidatureService } from "@/lib/candidature-service"
@@ -16,6 +17,7 @@ interface Opportunite {
   type: 'stage' | 'emploi' | 'formation' | 'bourse' | 'partenariat'
   description: string
   documents?: string
+  image?: string
   date_debut: string
   date_fin: string
   ville: string
@@ -112,6 +114,13 @@ export default function OpportuniteDetailPage() {
             </svg>
             Retour aux opportunités
           </Link>
+
+          {opportunite.image && (
+            <div className="relative w-full h-[220px] md:h-[320px] rounded-2xl overflow-hidden mb-8">
+              <Image src={opportunite.image} alt={opportunite.titre} fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080F1E] via-transparent to-transparent" />
+            </div>
+          )}
 
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-5 ${typeColor[opportunite.type]}`}>
             {typeLabel[opportunite.type]}

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Edit, Trash2, MapPin, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -14,6 +15,7 @@ interface OpportuniteCardProps {
     pays: string
     entreprise?: string
     statut: "ouvert" | "ferme" | "en cours"
+    image?: string
   }
   onEdit: () => void
   onDelete: () => void
@@ -56,6 +58,12 @@ const statutLabel: Record<string, string> = {
 export function OpportuniteCard({ opportunite, onEdit, onDelete, onViewCandidatures }: OpportuniteCardProps) {
   return (
     <div className="group bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)] rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 hover:border-[rgba(201,162,39,0.4)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] h-full flex flex-col">
+      {opportunite.image && (
+        <div className="relative w-full h-[120px] rounded-xl overflow-hidden mb-3 -mt-1">
+          <Image src={opportunite.image} alt={opportunite.titre} fill className="object-cover" />
+        </div>
+      )}
+
       <div className="flex items-center gap-1.5 mb-3">
         <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold tracking-[1.5px] uppercase ${typeColor[opportunite.type]}`}>
           {typeLabel[opportunite.type]}

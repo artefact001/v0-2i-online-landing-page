@@ -34,6 +34,7 @@ interface Opportunite {
   type: 'stage' | 'emploi' | 'formation' | 'bourse' | 'partenariat'
   description: string
   documents?: string
+  image?: string
   date_debut: string
   date_fin: string
   ville: string
@@ -271,6 +272,12 @@ export function ActualitesContent() {
                     key={o.id}
                     className="group block bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-xl p-6 hover:border-[rgba(201,162,39,0.4)] transition-all"
                   >
+                    {o.image && (
+                      <div className="relative w-full h-[140px] rounded-lg overflow-hidden mb-4">
+                        <Image src={o.image} alt={o.titre} fill className="object-cover" />
+                      </div>
+                    )}
+
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${oppoTypeColor[o.type]}`}>
