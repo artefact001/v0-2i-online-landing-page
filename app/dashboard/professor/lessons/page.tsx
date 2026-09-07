@@ -109,6 +109,13 @@ export default function LessonsPage() {
       setModules(data)
       if (data.length > 0) {
         setSelectedModule(data[0].id)
+      } else {
+        // Sans ça, changer de formation vers une formation sans module
+        // laissait selectedModule bloqué sur l'ancienne valeur — la
+        // liste de leçons affichée restait alors celle de la formation
+        // précédente, sans jamais se vider ni se rafraîchir.
+        setSelectedModule('')
+        setLessons([])
       }
     } catch (error) {
       console.error('Error loading modules:', error)
