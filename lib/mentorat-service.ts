@@ -60,4 +60,8 @@ export const mentoratService = {
   async updateStatut(mentoratId: string, statut: Mentorat['statut']) {
     return apiClient(`/mentorats/${mentoratId}/statut`, { method: 'PUT', body: JSON.stringify({ statut }) })
   },
+
+  async updateDisponibilite(disponible: boolean) {
+    return apiClient('/mon-profil-mentorat', { method: 'PUT', body: JSON.stringify({ disponible_mentorat: disponible }) })
+  },
 }

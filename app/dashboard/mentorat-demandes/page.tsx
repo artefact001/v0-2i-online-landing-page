@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { mentoratService, type Mentorat } from '@/lib/mentorat-service'
+import { useAuth } from '@/lib/auth-context'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { alertSuccess, alertError } from '@/lib/alerts'
 import { Users } from 'lucide-react'
 
@@ -14,18 +16,38 @@ import { Users } from 'lucide-react'
  * hors des dossiers spécifiques à un rôle.
  */
 export default function MentoratDemandesPage() {
+  const { user } = useAuth()
   const [demandes, setDemandes] = useState<Mentorat[]>([])
   const [loading, setLoading] = useState(true)
+  const [disponible, setDisponible] = useState(false)
+  const [savingDispo, setSavingDispo] = useState(false)
 
   async function load() {
-    const data = await mentoratService.getDemandesRecues()
+    const [data, mentors] = await Promise.all([
+      mentoratService.getDemandesRecues(),
+      mentoratService.getMentorsDisponibles(),
+    ])
     setDemandes(data)
+    setDisponible(mentors.some((m) => m.userId === user?.id))
     setLoading(false)
   }
 
   useEffect(() => {
     load()
-  }, [])
+  }, [user])
+
+  async function handleToggleDisponibilite(checked: boolean) {
+    setSavingDispo(true)
+    setDisponible(checked)
+    try {
+      await mentoratService.updateDisponibilite(checked)
+      alertSuccess(checked ? 'Tu es maintenant visible comme mentor disponible.' : 'Tu ne seras plus proposé comme mentor.')
+    } catch (err: any) {
+      setDisponible(!checked)
+      alertError(err?.message || 'Erreur lors de la mise à jour')
+    }
+    setSavingDispo(false)
+  }
 
   async function handleUpdate(id: string, statut: Mentorat['statut']) {
     try {
@@ -43,7 +65,20 @@ export default function MentoratDemandesPage() {
       <main className="lg:ml-64">
         <DashboardHeader title="Demandes de mentorat" subtitle="Étudiants souhaitant être accompagnés par toi" />
 
-        <div className="p-4 md:p-8">
+        <div className="p-4 md:p-8 space-y-6">
+          {user?.role === 'professor' && (
+            <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
+              <CardContent className="py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-white text-sm font-medium">Disponible pour du mentorat</p>
+                  <p className="text-[rgba(255,255,255,0.4)] text-xs mt-1">
+                    Active pour apparaître dans la liste des mentors proposés aux étudiants.
+                  </p>
+                </div>
+                <Switch checked={disponible} disabled={savingDispo} onCheckedChange={handleToggleDisponibilite} />
+              </CardContent>
+            </Card>
+          )}
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />

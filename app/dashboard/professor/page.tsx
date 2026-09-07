@@ -129,7 +129,7 @@ export default function ProfessorDashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
                   { label: 'Évaluations', icon: FileCheck, href: '/dashboard/professor/exercises' },
-                  { label: 'Examens finaux', icon: FileCheck, href: '/dashboard/professor/exams' },
+                  { label: 'Certification', icon: FileCheck, href: '/dashboard/professor/exams' },
                   { label: 'Sessions Live', icon: Radio, href: '/dashboard/professor/live-sessions' },
                   { label: 'Mes élèves', icon: Users, href: '/dashboard/professor/students' },
                 ].map((link) => (

@@ -67,7 +67,7 @@ export default function StudentSondagesPage() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
       <main className="lg:ml-64">
-        <DashboardHeader title="Sondages" subtitle="Donne ton avis sur tes formations" />
+        <DashboardHeader title="Avis" subtitle="Donne ton avis sur tes formations" />
 
         <div className="p-4 md:p-8 space-y-4">
           {loading ? (
@@ -78,7 +78,7 @@ export default function StudentSondagesPage() {
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="py-12 text-center">
                 <ClipboardList className="w-10 h-10 text-[rgba(255,255,255,0.2)] mx-auto mb-3" />
-                <p className="text-[rgba(255,255,255,0.5)]">Aucun sondage disponible pour le moment.</p>
+                <p className="text-[rgba(255,255,255,0.5)]">Aucun avis à donner pour le moment.</p>
               </CardContent>
             </Card>
           ) : (

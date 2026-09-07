@@ -18,6 +18,13 @@ export interface DirectMessage {
   created_at: string
 }
 
+export interface Contact {
+  userId: string
+  prenom: string
+  nom: string
+  role: string
+}
+
 export const messageService = {
   async getConversations(): Promise<Conversation[]> {
     try {
@@ -25,6 +32,16 @@ export const messageService = {
       return res.data || []
     } catch (error) {
       console.error('[messageService.getConversations]', error)
+      return []
+    }
+  },
+
+  async getContacts(): Promise<Contact[]> {
+    try {
+      const res = await apiClient<Contact[]>('/messages/contacts')
+      return res.data || []
+    } catch (error) {
+      console.error('[messageService.getContacts]', error)
       return []
     }
   },
