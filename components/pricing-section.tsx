@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
-import { apiClient } from "@/lib/api/client"
 import {
   ChefHat,
   Cookie,
@@ -61,23 +60,13 @@ function iconFor(titre: string): LucideIcon {
   return BookOpen
 }
 
-export function PricingSection() {
+export function PricingSection({ initialFormations }: { initialFormations?: Formation[] } = {}) {
   const sectionRef = useRef<HTMLDivElement>(null)
-  const [formations, setFormations] = useState<Formation[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await apiClient<Formation[]>("/formations")
-        setFormations(res.data || [])
-      } catch (error) {
-        console.error("[PricingSection] Erreur de chargement:", error)
-      }
-      setLoading(false)
-    }
-    load()
-  }, [])
+  // Uniquement utilisé depuis app/page.tsx, qui charge toujours cette
+  // prop — pas de repli sur un appel API séparé ici, pour ne jamais
+  // dupliquer la requête /formations pendant que le parent charge encore.
+  const formations = initialFormations ?? []
+  const loading = initialFormations === undefined
 
   useEffect(() => {
     const observer = new IntersectionObserver(

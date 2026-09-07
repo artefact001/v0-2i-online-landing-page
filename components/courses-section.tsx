@@ -3,7 +3,6 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
-import { apiClient } from "@/lib/api/client"
 
 /**
  * Schéma Laravel réel (formations) : titre, description, image, niveau,
@@ -114,25 +113,16 @@ function CourseCard({ course, index, isPopular }: { course: Formation; index: nu
 
 const PER_PAGE = 6
 
-export function CoursesSection() {
+export function CoursesSection({ initialFormations }: { initialFormations?: Formation[] } = {}) {
   const sectionRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState(0)
-  const [formations, setFormations] = useState<Formation[]>([])
-  const [loading, setLoading] = useState(true)
+  // Uniquement utilisé depuis app/page.tsx, qui charge toujours cette
+  // prop (voir le commentaire là-bas) — pas de repli sur un appel API
+  // séparé ici, pour ne jamais dupliquer la requête /formations pendant
+  // que le parent charge encore.
+  const formations = initialFormations ?? []
+  const loading = initialFormations === undefined
   const pageCount = Math.max(1, Math.ceil(formations.length / PER_PAGE))
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await apiClient<Formation[]>("/formations")
-        setFormations(res.data || [])
-      } catch (error) {
-        console.error("[CoursesSection] Erreur de chargement des formations:", error)
-      }
-      setLoading(false)
-    }
-    load()
-  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
