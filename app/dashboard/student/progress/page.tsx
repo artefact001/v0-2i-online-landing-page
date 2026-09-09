@@ -10,7 +10,12 @@ import { Card, CardContent } from '@/components/ui/card'
 interface Enrollment {
   id: string
   formation_id: string
-  formations?: { name: string }
+  // CORRIGÉ: la relation chargée par le backend s'appelle "formation"
+  // (singulier, voir InscriptionService::getAll() -> with(['user',
+  // 'formation'])), pas "formations", et le champ est "titre" (pas
+  // "name") — même bug de nom déjà trouvé à deux autres endroits cette
+  // session (student/prenom-nom, formation/titre).
+  formation?: { titre: string }
 }
 
 export default function StudentProgressPage() {
@@ -27,7 +32,7 @@ export default function StudentProgressPage() {
 
         const data = await Promise.all(
           list.map(async (e) => ({
-            name: e.formations?.name || 'Formation',
+            name: e.formation?.titre || 'Formation',
             progress: await progressService.getFormationProgress(user.id, e.formation_id),
           })),
         )

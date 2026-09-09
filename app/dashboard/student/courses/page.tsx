@@ -12,7 +12,10 @@ import { Button } from '@/components/ui/button'
 interface Enrollment {
   id: string
   formation_id: string
-  formations?: { titre: string }
+  // CORRIGÉ: la relation chargée par le backend s'appelle "formation"
+  // (singulier), pas "formations" — le nom de la formation ne
+  // s'affichait donc jamais ici non plus.
+  formation?: { titre: string }
 }
 
 export default function StudentCoursesPage() {
@@ -71,7 +74,7 @@ export default function StudentCoursesPage() {
                 return (
                   <Card key={e.id} className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
                     <CardContent className="p-6">
-                      <h3 className="text-white font-serif text-lg mb-3">{e.formations?.titre || 'Formation'}</h3>
+                      <h3 className="text-white font-serif text-lg mb-3">{e.formation?.titre || 'Formation'}</h3>
                       <div className="flex items-center gap-2 mb-4">
                         <div className="h-1.5 flex-1 bg-[rgba(255,255,255,0.1)] rounded-full overflow-hidden">
                           <div className="h-full bg-[#C9A227] rounded-full" style={{ width: `${progress}%` }} />
