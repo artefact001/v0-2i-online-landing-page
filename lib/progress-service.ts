@@ -63,6 +63,14 @@ export class ProgressService {
 
   // Reconstitue la progression d'une formation à partir de /v1/modules,
   // /v1/lecons, /v1/progressions (aucune route dédiée n'existe).
+  //
+  // CORRIGÉ: appelait auparavant GET /progressions séparément pour
+  // CHAQUE leçon (une requête réseau par leçon, en plus des appels
+  // modules/lecons) — pour une formation de 30 leçons, ça faisait 30
+  // requêtes juste pour calculer un pourcentage. Le backend accepte
+  // déjà un filtre ?user_id= seul (sans lecon_id) : un seul appel
+  // récupère TOUTES les progressions de l'utilisateur, le filtrage par
+  // leçon se fait ensuite en mémoire.
   async getFormationProgress(userId: string, formationId: string): Promise<FormationProgress | null> {
     try {
       const modulesRes = await apiClient(`/modules?formation_id=${formationId}`)
@@ -70,22 +78,20 @@ export class ProgressService {
       const moduleIds = modules.map((m: any) => m.id)
       if (moduleIds.length === 0) return null
 
-      const leconsLists = await Promise.all(
-        moduleIds.map((id: string) => apiClient(`/lecons?module_id=${id}`).catch(() => null)),
-      )
+      const [leconsLists, progressionsRes] = await Promise.all([
+        Promise.all(moduleIds.map((id: string) => apiClient(`/lecons?module_id=${id}`).catch(() => null))),
+        apiClient(`/progressions?user_id=${userId}`).catch(() => null),
+      ])
       const lecons = leconsLists.flatMap((r) => (r?.data as any[]) || [])
       const totalLessons = lecons.length
       if (totalLessons === 0) return null
 
-      const progressLists = await Promise.all(
-        lecons.map((l: any) =>
-          apiClient(`/progressions?user_id=${userId}&lecon_id=${l.id}`).catch(() => null),
-        ),
-      )
-      const completedLessons = progressLists.filter((r) => {
-        const list = (r?.data as any[]) || []
-        return list[0]?.statut === 'termine'
-      }).length
+      const allProgressions = (progressionsRes?.data as LessonProgress[]) || []
+      const progressionByLeconId = new Map(allProgressions.map((p) => [String(p.lecon_id), p]))
+
+      const completedLessons = lecons.filter(
+        (l: any) => progressionByLeconId.get(String(l.id))?.statut === 'termine',
+      ).length
 
       const completionPercentage = Math.round((completedLessons / totalLessons) * 100)
 
