@@ -38,13 +38,20 @@ export default function ProfessorStudentsPage() {
 
           for (const enrollment of enrollments) {
             const studentId = enrollment.user_id
-            const studentName =
-              enrollment.student?.first_name || enrollment.student?.name || `Apprenant #${studentId}`
+            // CORRIGÉ: utilisait enrollment.student?.first_name /
+            // enrollment.student?.name — deux noms de champs qui
+            // n'existent pas dans le schéma réel (la relation
+            // s'appelle "user", pas "student", et les champs sont
+            // "prenom"/"nom" en français) — le nom réel n'était donc
+            // JAMAIS affiché, uniquement le repli "Apprenant #ID".
+            const studentName = enrollment.user
+              ? `${enrollment.user.prenom} ${enrollment.user.nom}`
+              : `Apprenant #${studentId}`
             const progress = await progressService.getFormationProgress(studentId, formation.id)
             rows.push({
               id: `${formation.id}-${studentId}`,
               name: studentName,
-              formationName: formation.name,
+              formationName: formation.titre,
               progress: progress?.completion_percentage ?? 0,
             })
           }
