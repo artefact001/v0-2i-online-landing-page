@@ -115,12 +115,14 @@ export class ProgressService {
       const res = await apiClient(`/inscriptions?user_id=${userId}&status=active`)
       const enrollments = Array.isArray(res.data) ? res.data : []
 
-      const progressData = []
-      for (const enrollment of enrollments) {
-        const progress = await this.getFormationProgress(userId, enrollment.formation_id)
-        if (progress) progressData.push(progress)
-      }
-      return progressData
+      // Paralléliser plutôt qu'un for...of séquentiel — même correctif
+      // que getFormationProgress, cette fonction étant appelée sur
+      // chaque chargement du dashboard étudiant (une fois par formation
+      // inscrite).
+      const results = await Promise.all(
+        enrollments.map((enrollment: any) => this.getFormationProgress(userId, enrollment.formation_id)),
+      )
+      return results.filter((p): p is FormationProgress => p !== null)
     } catch (error) {
       console.error('Error fetching all student progress:', error)
       return []
@@ -142,11 +144,11 @@ export class ProgressService {
       )
       const enrollments = Array.isArray(enrollmentsRes.data) ? enrollmentsRes.data : []
 
-      const progressData = []
-      for (const enrollment of enrollments) {
-        const progress = await this.getFormationProgress(userId, enrollment.formation_id)
-        if (progress) progressData.push(progress)
-      }
+      const progressData = (
+        await Promise.all(
+          enrollments.map((enrollment: any) => this.getFormationProgress(userId, enrollment.formation_id)),
+        )
+      ).filter((p): p is FormationProgress => p !== null)
       return progressData
     } catch (error) {
       console.error('Error fetching professor student progress:', error)
@@ -159,16 +161,22 @@ export class ProgressService {
       const res = await apiClient(`/inscriptions?formation_id=${formationId}&status=active`)
       const enrollments = Array.isArray(res.data) ? res.data : []
 
-      const progressData = []
-      for (const enrollment of enrollments) {
-        const progress = await this.getFormationProgress(enrollment.user_id, formationId)
-        if (progress) {
-          progressData.push({
-            ...progress,
-            student_name: `${enrollment.student?.prenom ?? ''} ${enrollment.student?.nom ?? ''}`.trim(),
-          })
-        }
-      }
+      // Paralléliser + CORRIGÉ: "enrollment.student?.prenom" — même bug
+      // de nom de relation que trouvé ailleurs (professor/students/page.tsx) :
+      // la relation s'appelle "user", pas "student" — le nom de
+      // l'étudiant n'était donc jamais affiché ici non plus.
+      const progressData = (
+        await Promise.all(
+          enrollments.map(async (enrollment: any) => {
+            const progress = await this.getFormationProgress(enrollment.user_id, formationId)
+            if (!progress) return null
+            return {
+              ...progress,
+              student_name: `${enrollment.user?.prenom ?? ''} ${enrollment.user?.nom ?? ''}`.trim(),
+            }
+          }),
+        )
+      ).filter((p): p is FormationProgress & { student_name: string } => p !== null)
       return progressData.sort((a, b) => b.completion_percentage - a.completion_percentage)
     } catch (error) {
       console.error('Error fetching students progress:', error)

@@ -29,33 +29,46 @@ export default function ProfessorStudentsPage() {
         const formationsRes = await apiClient<any[]>(`/formations?user_id=${user.id}`)
         const formations = formationsRes.data || []
 
-        const rows: StudentRow[] = []
-        for (const formation of formations) {
-          const inscriptionsRes = await apiClient<any[]>(
-            `/inscriptions?formation_id=${formation.id}&status=active`,
-          )
-          const enrollments = inscriptionsRes.data || []
+        // CORRIGÉ: chargeait auparavant les inscriptions de chaque
+        // formation, PUIS la progression de chaque étudiant, l'un après
+        // l'autre en série (deux boucles for imbriquées avec await) —
+        // pour 2 formations de 15 étudiants chacune, ça faisait 30
+        // calculs de progression exécutés un par un. Paralléliser les
+        // deux étapes avec Promise.all réduit le temps total au plus
+        // lent des appels, pas à leur somme.
+        const inscriptionsPerFormation = await Promise.all(
+          formations.map((formation) =>
+            apiClient<any[]>(`/inscriptions?formation_id=${formation.id}&status=active`)
+              .then((res) => ({ formation, enrollments: res.data || [] }))
+              .catch(() => ({ formation, enrollments: [] as any[] })),
+          ),
+        )
 
-          for (const enrollment of enrollments) {
-            const studentId = enrollment.user_id
-            // CORRIGÉ: utilisait enrollment.student?.first_name /
-            // enrollment.student?.name — deux noms de champs qui
-            // n'existent pas dans le schéma réel (la relation
-            // s'appelle "user", pas "student", et les champs sont
-            // "prenom"/"nom" en français) — le nom réel n'était donc
-            // JAMAIS affiché, uniquement le repli "Apprenant #ID".
-            const studentName = enrollment.user
-              ? `${enrollment.user.prenom} ${enrollment.user.nom}`
-              : `Apprenant #${studentId}`
-            const progress = await progressService.getFormationProgress(studentId, formation.id)
-            rows.push({
-              id: `${formation.id}-${studentId}`,
-              name: studentName,
-              formationName: formation.titre,
-              progress: progress?.completion_percentage ?? 0,
-            })
-          }
-        }
+        const rows: StudentRow[] = (
+          await Promise.all(
+            inscriptionsPerFormation.flatMap(({ formation, enrollments }) =>
+              enrollments.map(async (enrollment) => {
+                const studentId = enrollment.user_id
+                // CORRIGÉ: utilisait enrollment.student?.first_name /
+                // enrollment.student?.name — deux noms de champs qui
+                // n'existent pas dans le schéma réel (la relation
+                // s'appelle "user", pas "student", et les champs sont
+                // "prenom"/"nom" en français) — le nom réel n'était donc
+                // JAMAIS affiché, uniquement le repli "Apprenant #ID".
+                const studentName = enrollment.user
+                  ? `${enrollment.user.prenom} ${enrollment.user.nom}`
+                  : `Apprenant #${studentId}`
+                const progress = await progressService.getFormationProgress(studentId, formation.id)
+                return {
+                  id: `${formation.id}-${studentId}`,
+                  name: studentName,
+                  formationName: formation.titre,
+                  progress: progress?.completion_percentage ?? 0,
+                }
+              }),
+            ),
+          )
+        )
         setStudents(rows)
       } catch (err) {
         console.error('[professor/students] Erreur de chargement:', err)
