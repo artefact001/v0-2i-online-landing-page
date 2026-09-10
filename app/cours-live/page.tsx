@@ -33,8 +33,8 @@ function LiveSessionCard({ session }: { session: LiveSession }) {
   const date = new Date(session.scheduled_at)
 
   return (
-    <div className="group relative bg-gradient-to-br from-[#0D2545] to-[#1B3A6B] rounded-2xl overflow-hidden border border-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.4)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(201,162,39,0.15)]">
-      <div className="relative h-32 bg-gradient-to-br from-[#0a1c38] to-[#0D2545] flex items-center justify-center">
+    <div className="group relative bg-[#0d0d1a] rounded-2xl overflow-hidden border border-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.4)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(201,162,39,0.15)]">
+      <div className="relative h-32 bg-[#0a0a1a] flex items-center justify-center">
         <Radio className="w-10 h-10 text-[rgba(201,162,39,0.3)]" />
 
         {isLive && (
@@ -46,7 +46,7 @@ function LiveSessionCard({ session }: { session: LiveSession }) {
 
         {session.formation && (
           <div className="absolute top-4 right-4">
-            <Badge className="bg-[rgba(201,162,39,0.9)] text-[#0D2545] font-semibold">
+            <Badge className="bg-[rgba(201,162,39,0.9)] text-[#0a0a1a] font-semibold">
               {session.formation.titre}
             </Badge>
           </div>
@@ -81,7 +81,7 @@ function LiveSessionCard({ session }: { session: LiveSession }) {
         <Link href={`/cours/${session.formation_id}/direct/${session.id}`}>
           <Button
             className={`w-full font-semibold tracking-wide ${
-              isLive ? "bg-red-600 hover:bg-red-700 text-white" : "bg-[#C9A227] hover:bg-[#E8C050] text-[#0D2545]"
+              isLive ? "bg-red-600 hover:bg-red-700 text-white" : "bg-[#C9A227] hover:bg-[#E8C050] text-[#0a0a1a]"
             }`}
           >
             {isLive ? "Rejoindre maintenant" : "Voir les détails"}
@@ -118,7 +118,7 @@ function CoursLivePageContent() {
     .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())
 
   return (
-    <main className="min-h-screen bg-[#0D2545]">
+    <main className="min-h-screen bg-[#0a0a1a]">
       <CoursesNavbar currentPage="live" />
 
       <section className="pt-32 pb-12 px-6 md:px-10">

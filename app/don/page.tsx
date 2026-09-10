@@ -51,8 +51,15 @@ export default function DonPage() {
     setLoading(false)
   }
 
+  // Charte graphique unifiée avec le reste de la plateforme (même
+  // correctif déjà appliqué au forum et aux pages d'évaluation) : fond
+  // #0a0a1a au lieu de l'ancien bleu #0D2545, carte #0d0d1a au lieu de
+  // blanc. Corrige au passage le même bug de texte invisible : les
+  // champs Input/Textarea n'avaient aucune couleur de texte définie,
+  // posés sur une carte blanche — le texte tapé héritait du blanc par
+  // défaut du thème sombre global et devenait donc invisible.
   return (
-    <main className="min-h-screen bg-[#0D2545]">
+    <main className="min-h-screen bg-[#0a0a1a]">
       <Navbar />
       <section className="pt-32 pb-20 px-6 flex items-center justify-center">
         <div className="max-w-md w-full">
@@ -64,9 +71,9 @@ export default function DonPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-[#0d0d1a] border border-[rgba(255,255,255,0.05)] rounded-2xl p-6 space-y-4">
             <div>
-              <Label>Montant (FCFA)</Label>
+              <Label className="text-[rgba(255,255,255,0.7)]">Montant (FCFA)</Label>
               <div className="grid grid-cols-4 gap-2 mt-2 mb-3">
                 {MONTANTS_SUGGERES.map((m) => (
                   <button
@@ -74,35 +81,57 @@ export default function DonPage() {
                     type="button"
                     onClick={() => setMontant(m)}
                     className={`py-2 rounded-lg text-sm font-medium transition-colors ${
-                      montant === m ? "bg-[#C9A227] text-[#0D2545]" : "bg-gray-100 text-gray-600"
+                      montant === m ? "bg-[#C9A227] text-[#0a0a1a]" : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]"
                     }`}
                   >
                     {m.toLocaleString()}
                   </button>
                 ))}
               </div>
-              <Input type="number" value={montant} onChange={(e) => setMontant(Number(e.target.value))} min={500} />
+              <Input
+                type="number"
+                value={montant}
+                onChange={(e) => setMontant(Number(e.target.value))}
+                min={500}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
             </div>
 
             {!user && (
               <>
                 <div>
-                  <Label>Nom</Label>
-                  <Input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Votre nom" />
+                  <Label className="text-[rgba(255,255,255,0.7)]">Nom</Label>
+                  <Input
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    placeholder="Votre nom"
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.35)]"
+                  />
                 </div>
                 <div>
-                  <Label>Email (optionnel)</Label>
-                  <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com" />
+                  <Label className="text-[rgba(255,255,255,0.7)]">Email (optionnel)</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="vous@exemple.com"
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.35)]"
+                  />
                 </div>
               </>
             )}
 
             <div>
-              <Label>Message (optionnel)</Label>
-              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} />
+              <Label className="text-[rgba(255,255,255,0.7)]">Message (optionnel)</Label>
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.35)]"
+              />
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full bg-[#C9A227] hover:bg-[#B8860B] text-[#0D2545] font-semibold">
+            <Button type="submit" disabled={loading} className="w-full bg-[#C9A227] hover:bg-[#B8860B] text-[#0a0a1a] font-semibold">
               {loading ? "Redirection..." : `Faire un don de ${montant.toLocaleString()} FCFA`}
             </Button>
           </form>

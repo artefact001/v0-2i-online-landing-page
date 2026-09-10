@@ -50,7 +50,7 @@ function ClassCard({ courseClass, onClick, isSelected }: { courseClass: CourseCl
       className={`group relative p-6 rounded-2xl border transition-all duration-500 text-left w-full ${
         isSelected
           ? 'bg-gradient-to-br from-[#C9A227] to-[#E8C050] border-[#C9A227] shadow-[0_10px_40px_rgba(201,162,39,0.3)]'
-          : 'bg-gradient-to-br from-[#0D2545] to-[#1B3A6B] border-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.4)] hover:shadow-[0_10px_40px_rgba(201,162,39,0.1)]'
+          : 'bg-[#0d0d1a] border-[rgba(255,255,255,0.05)] hover:border-[rgba(201,162,39,0.4)] hover:shadow-[0_10px_40px_rgba(201,162,39,0.1)]'
       }`}
     >
       {/* Icon */}
@@ -93,7 +93,7 @@ function ClassCard({ courseClass, onClick, isSelected }: { courseClass: CourseCl
 
 function RecordedCourseCard({ course }: { course: RecordedCourse }) {
   return (
-    <div className="group relative bg-gradient-to-br from-[#0D2545] to-[#1B3A6B] rounded-2xl overflow-hidden border border-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.4)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(201,162,39,0.15)]">
+    <div className="group relative bg-[#0d0d1a] rounded-2xl overflow-hidden border border-[rgba(201,162,39,0.15)] hover:border-[rgba(201,162,39,0.4)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(201,162,39,0.15)]">
       {/* Image Container */}
       <div className="relative h-44 overflow-hidden">
         <Image
@@ -102,7 +102,7 @@ function RecordedCourseCard({ course }: { course: RecordedCourse }) {
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0D2545] via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a1a] via-transparent to-transparent" />
         
         {/* Play Button Overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -350,7 +350,7 @@ export default function CoursArchivePage() {
       {/* Progress CTA */}
       <section className="py-16">
         <div className="max-w-4xl mx-auto px-6 md:px-10">
-          <div className="relative bg-gradient-to-br from-[#0D2545] to-[#1B3A6B] rounded-3xl p-8 md:p-12 border border-[rgba(201,162,39,0.2)] overflow-hidden">
+          <div className="relative bg-[#0d0d1a] rounded-3xl p-8 md:p-12 border border-[rgba(201,162,39,0.2)] overflow-hidden">
             <div className="absolute top-0 left-0 w-64 h-64 bg-[#C9A227] rounded-full filter blur-[100px] opacity-10" />
             <div className="relative flex flex-col md:flex-row items-center gap-8">
               <div className="flex-1 text-center md:text-left">
