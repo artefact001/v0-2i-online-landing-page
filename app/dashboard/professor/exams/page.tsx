@@ -10,7 +10,7 @@ import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, X, FileCheck, Award } from 'lucide-react'
+import { Edit, Trash2, Plus, X, FileCheck, Award, BarChart3, ChevronDown, ChevronUp } from 'lucide-react'
 import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { StatCard, FormationPills } from '@/components/professor/section-header'
@@ -51,6 +51,13 @@ interface Examen {
   formation_id: string
 }
 
+interface ExamResultat {
+  id: string
+  score: number
+  statut: 'reussi' | 'echoue' | 'en cours'
+  user: { id: string; prenom: string; nom: string } | null
+}
+
 interface Formation {
   id: string
   titre: string
@@ -75,6 +82,9 @@ export default function ExamsPage() {
   const [formations, setFormations] = useState<Formation[]>([])
   const [selectedFormation, setSelectedFormation] = useState('')
   const [examens, setExamens] = useState<Examen[]>([])
+  const [openResultsFor, setOpenResultsFor] = useState<string | null>(null)
+  const [results, setResults] = useState<ExamResultat[]>([])
+  const [loadingResults, setLoadingResults] = useState(false)
 
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -253,6 +263,27 @@ export default function ExamsPage() {
     }
   }
 
+  // Affiche/masque les résultats d'une certification — chargé à la
+  // demande via GET /resultats?examen_id=..., déjà restreint aux
+  // formations réellement possédées par ce formateur côté backend.
+  const toggleResults = async (examenId: string) => {
+    if (openResultsFor === examenId) {
+      setOpenResultsFor(null)
+      return
+    }
+    setOpenResultsFor(examenId)
+    setLoadingResults(true)
+    try {
+      const res = await apiClient<ExamResultat[]>(`/resultats?examen_id=${examenId}`)
+      setResults(res.data || [])
+    } catch (error: any) {
+      console.error('Error loading results:', error)
+      alertError(error?.message || 'Erreur lors du chargement des résultats')
+      setResults([])
+    }
+    setLoadingResults(false)
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
@@ -414,6 +445,11 @@ export default function ExamsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <Button onClick={() => toggleResults(ex.id)} variant="outline" size="sm" className="border-[rgba(201,162,39,0.4)] text-[#C9A227] hover:bg-[#C9A227]/10">
+                      <BarChart3 className="w-4 h-4 mr-1.5" />
+                      Résultats
+                      {openResultsFor === ex.id ? <ChevronUp className="w-3 h-3 ml-1.5" /> : <ChevronDown className="w-3 h-3 ml-1.5" />}
+                    </Button>
                     <Button onClick={() => handleEdit(ex)} variant="outline" size="sm" className="border-[rgba(255,255,255,0.2)] text-white">
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -422,6 +458,37 @@ export default function ExamsPage() {
                     </Button>
                   </div>
                 </CardContent>
+
+                {openResultsFor === ex.id && (
+                  <CardContent className="pt-0 pb-6 border-t border-[rgba(255,255,255,0.08)] mt-2">
+                    {loadingResults ? (
+                      <div className="flex justify-center py-6">
+                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#C9A227]" />
+                      </div>
+                    ) : results.length === 0 ? (
+                      <p className="text-[rgba(255,255,255,0.5)] text-sm pt-4">Aucun apprenant n&apos;a encore passé cette certification.</p>
+                    ) : (
+                      <div className="pt-4 space-y-2">
+                        {results.map((r) => {
+                          const statutLabel = { reussi: 'Réussi', echoue: 'Échoué', 'en cours': 'En attente de correction' }
+                          const statutColor = { reussi: 'text-green-400', echoue: 'text-red-400', 'en cours': 'text-amber-300' }
+                          return (
+                            <div
+                              key={r.id}
+                              className="flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-lg px-4 py-3"
+                            >
+                              <div>
+                                <p className="text-white text-sm font-medium">{r.user ? `${r.user.prenom} ${r.user.nom}` : 'Apprenant inconnu'}</p>
+                                <p className={`text-xs mt-0.5 ${statutColor[r.statut]}`}>{statutLabel[r.statut]}</p>
+                              </div>
+                              <p className="text-[#C9A227] font-semibold shrink-0">{r.score} / {ex.bareme_pts}</p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                )}
               </Card>
             ))}
 
