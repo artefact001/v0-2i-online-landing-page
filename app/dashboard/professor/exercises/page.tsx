@@ -11,7 +11,7 @@ import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Edit, Trash2, Plus, ListChecks, X, GraduationCap, Award } from 'lucide-react'
+import { Edit, Trash2, Plus, ListChecks, X, GraduationCap, Award, BarChart3, ChevronDown, ChevronUp } from 'lucide-react'
 import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { SectionHeader, StatCard, FormationPills } from '@/components/professor/section-header'
 import { combine, required, minLength } from '@/lib/validators'
@@ -50,6 +50,17 @@ interface Exercise {
   type: 'qcm' | 'ouvert' | 'mixte'
   duree: number | null
   note_max: number
+}
+
+interface StudentResult {
+  user_id: string
+  prenom: string
+  nom: string
+  score: number
+  note_max: number
+  pourcentage: number
+  en_attente_correction: boolean
+  soumis_le: string
 }
 
 interface Formation {
@@ -93,6 +104,9 @@ export default function ExercisesPage() {
   const [selectedLesson, setSelectedLesson] = useState('')
 
   const [exercises, setExercises] = useState<Exercise[]>([])
+  const [openResultsFor, setOpenResultsFor] = useState<string | null>(null)
+  const [results, setResults] = useState<StudentResult[]>([])
+  const [loadingResults, setLoadingResults] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -337,6 +351,28 @@ export default function ExercisesPage() {
     }
   }
 
+  // Affiche/masque le tableau des résultats d'une évaluation — chargé à
+  // la demande (pas systématiquement à chaque affichage de la liste,
+  // pour ne pas multiplier les appels inutiles pour des évaluations
+  // qu'on ne consulte jamais).
+  const toggleResults = async (exerciseId: string) => {
+    if (openResultsFor === exerciseId) {
+      setOpenResultsFor(null)
+      return
+    }
+    setOpenResultsFor(exerciseId)
+    setLoadingResults(true)
+    try {
+      const res = await apiClient<StudentResult[]>(`/exercices/${exerciseId}/resultats-etudiants`)
+      setResults(res.data || [])
+    } catch (error: any) {
+      console.error('Error loading results:', error)
+      alertError(error?.message || 'Erreur lors du chargement des résultats')
+      setResults([])
+    }
+    setLoadingResults(false)
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
@@ -542,6 +578,11 @@ export default function ExercisesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button onClick={() => toggleResults(ex.id)} variant="outline" size="sm" className="border-[rgba(201,162,39,0.4)] text-[#C9A227] hover:bg-[#C9A227]/10">
+                    <BarChart3 className="w-4 h-4 mr-1.5" />
+                    Résultats
+                    {openResultsFor === ex.id ? <ChevronUp className="w-3 h-3 ml-1.5" /> : <ChevronDown className="w-3 h-3 ml-1.5" />}
+                  </Button>
                   <Button onClick={() => handleEdit(ex)} variant="outline" size="sm" className="border-[rgba(255,255,255,0.2)] text-white">
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -550,6 +591,38 @@ export default function ExercisesPage() {
                   </Button>
                 </div>
               </CardContent>
+
+              {openResultsFor === ex.id && (
+                <CardContent className="pt-0 pb-6 border-t border-[rgba(255,255,255,0.08)] mt-2">
+                  {loadingResults ? (
+                    <div className="flex justify-center py-6">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#C9A227]" />
+                    </div>
+                  ) : results.length === 0 ? (
+                    <p className="text-[rgba(255,255,255,0.5)] text-sm pt-4">Aucun apprenant n&apos;a encore soumis cette évaluation.</p>
+                  ) : (
+                    <div className="pt-4 space-y-2">
+                      {results.map((r) => (
+                        <div
+                          key={r.user_id}
+                          className="flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-lg px-4 py-3"
+                        >
+                          <div>
+                            <p className="text-white text-sm font-medium">{r.prenom} {r.nom}</p>
+                            {r.en_attente_correction && (
+                              <p className="text-amber-300 text-xs mt-0.5">Correction manuelle en attente — note provisoire</p>
+                            )}
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-[#C9A227] font-semibold">{r.score} / {r.note_max}</p>
+                            <p className="text-[rgba(255,255,255,0.4)] text-xs">{r.pourcentage}%</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              )}
             </Card>
           ))}
 
