@@ -11,7 +11,13 @@ async function setAuthCookie(token: string) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    // Aligné sur l'expiration réelle du token Sanctum côté Laravel
+    // (SANCTUM_TOKEN_EXPIRATION = 43200 minutes = 30 jours). Avant ce
+    // correctif, le cookie expirait après 7 jours alors que le token
+    // backend restait valide jusqu'à 30 — l'utilisateur se retrouvait
+    // déconnecté du jour au lendemain sans raison côté serveur, juste
+    // parce que le cookie avait disparu en premier.
+    maxAge: 60 * 60 * 24 * 30,
   })
 }
 

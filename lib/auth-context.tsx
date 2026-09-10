@@ -98,18 +98,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   const refresh = useCallback(async () => {
-    // Un accroc réseau transitoire au tout premier chargement ne doit
-    // jamais faire croire à l'utilisateur qu'il est déconnecté alors que
-    // sa session est toujours valide côté serveur — on retente une fois
-    // avant d'abandonner.
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // Un accroc réseau transitoire (ex: PHP-FPM qui redémarre après
+    // inactivité, fréquent sur hébergement mutualisé) ne doit jamais
+    // faire croire à l'utilisateur qu'il est déconnecté alors que sa
+    // session est toujours valide côté serveur. On retente 3 fois avec
+    // un court délai entre chaque tentative (un retry INSTANTANÉ
+    // n'aide en rien si le problème dure ne serait-ce qu'une seconde).
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await apiClient('/me')
         setUser(res.data ? buildUser(res.data) : null)
         return
-      } catch (error) {
-        if (attempt === 1) {
-          console.error('[auth] Échec de la vérification de session après 2 tentatives:', error)
+      } catch (error: any) {
+        // Diagnostic explicite : sans ça, impossible de distinguer une
+        // vraie session invalide (401) d'un problème transitoire
+        // (429 = trop de requêtes, 500/502 = souci serveur, erreur
+        // réseau) — la personne est déconnectée dans tous les cas sans
+        // qu'on sache pourquoi. Le message d'erreur contient déjà le
+        // code HTTP réel grâce à apiClient.
+        console.warn(`[auth] Tentative ${attempt + 1}/3 de /me a échoué:`, error?.message || error)
+        if (attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 700))
+        } else {
+          console.error('[auth] Échec de la vérification de session après 3 tentatives — déconnexion.')
           setUser(null)
         }
       }
