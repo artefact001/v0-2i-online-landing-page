@@ -101,7 +101,7 @@ export function UsersManager({
   // champs spécifiques formateur
   const [specialite, setSpecialite] = useState("")
   const [moduleIds, setModuleIds] = useState<string[]>([])
-  const [formateurFormationId, setFormateurFormationId] = useState("")
+  const [formateurFormationIds, setFormateurFormationIds] = useState<string[]>([])
 
   // champs spécifiques étudiant
   const [dateNaissance, setDateNaissance] = useState("")
@@ -144,7 +144,7 @@ export function UsersManager({
     setRole(presetRole)
     setSpecialite("")
     setModuleIds([])
-    setFormateurFormationId("")
+    setFormateurFormationIds([])
     setDateNaissance("")
     setLieuNaissance("")
     setNiveau("")
@@ -178,7 +178,7 @@ export function UsersManager({
     setPhone(u.phone ?? "")
     setRole(u.role)
     setSpecialite(u.specialite ?? "")
-    setFormateurFormationId(u.formationId ?? "")
+    setFormateurFormationIds(u.formationIds ?? [])
     setModuleIds(u.moduleIds ?? [])
     setDateNaissance(u.dateNaissance ?? "")
     setLieuNaissance(u.lieuNaissance ?? "")
@@ -227,12 +227,21 @@ export function UsersManager({
     setFormationIds((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]))
   }
 
+  // Un formateur peut désormais intervenir dans plusieurs formations
+  // (voir 2IONLINE: table pivot formation_formateur) — même principe
+  // que toggleFormationId ci-dessus, mais sur son propre state, un
+  // formateur et un étudiant n'étant jamais édités en même temps dans
+  // ce formulaire.
+  function toggleFormateurFormationId(id: string) {
+    setFormateurFormationIds((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]))
+  }
+
   function submitForm() {
     startTransition(async () => {
       const common = { firstName, lastName, role, phone }
       const roleSpecific =
         role === "professor"
-          ? { specialite, moduleIds, formationId: formateurFormationId }
+          ? { specialite, moduleIds, formationIds: formateurFormationIds }
           : role === "partner"
             ? { nomOrganisation, secteur }
             : { dateNaissance, lieuNaissance, niveau, formationIds }
@@ -603,18 +612,31 @@ export function UsersManager({
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.7)]">Formation assignée</Label>
-                  <Select value={formateurFormationId || "none"} onValueChange={(v) => setFormateurFormationId(v === "none" ? "" : v)}>
-                    <SelectTrigger className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white">
-                      <SelectValue placeholder="Aucune formation assignée" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)]">
-                      <SelectItem value="none" className="text-white">Aucune</SelectItem>
-                      {formations.map((f) => (
-                        <SelectItem key={f.id} value={f.id} className="text-white">{f.titre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-[rgba(255,255,255,0.7)]">Formation(s) enseignée(s)</Label>
+                  {/* Un formateur peut désormais intervenir dans
+                      plusieurs formations — même pattern d'interface
+                      que le sélecteur multi-formations de l'étudiant
+                      ci-dessus (boutons à bascule), plutôt qu'un menu
+                      déroulant à choix unique. */}
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-[#0a0a1a] rounded-lg border border-[rgba(255,255,255,0.1)]">
+                    {formations.length === 0 && (
+                      <p className="text-xs text-[rgba(255,255,255,0.4)]">Aucune formation disponible</p>
+                    )}
+                    {formations.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => toggleFormateurFormationId(f.id)}
+                        className={`px-2.5 py-1 rounded-full text-xs transition-colors ${
+                          formateurFormationIds.includes(f.id)
+                            ? "bg-[#C9A227] text-[#0a0a1a]"
+                            : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.6)]"
+                        }`}
+                      >
+                        {f.titre}
+                      </button>
+                    ))}
+                  </div>
                   <p className="text-xs text-[rgba(255,255,255,0.4)]">
                     Détermine à quel contenu (leçons, exercices, examens...) ce professeur a accès et peut modifier —
                     sans formation assignée, il ne verra aucun contenu à gérer.

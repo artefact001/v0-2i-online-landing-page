@@ -37,7 +37,6 @@ export type ManagedUser = {
   // Spécifique formateur
   specialite?: string
   moduleIds?: string[]
-  formationId?: string // formation dont ce formateur est propriétaire (formations.user_id) — un seul, pas un tableau
   // Spécifique étudiant
   dateNaissance?: string
   lieuNaissance?: string
@@ -73,15 +72,24 @@ function mapUser(raw: any, role: "professor" | "student" | "partner"): ManagedUs
     emailConfirmed: true,
     specialite: raw.specialite ?? undefined,
     moduleIds: Array.isArray(raw.modules) ? raw.modules.map((m: any) => String(m.id)) : undefined,
-    // Le backend renvoie "formations" pour un formateur aussi (voir
-    // FormateurService::getAll()/getById(), qui charge la formation dont
-    // il est réellement propriétaire via formations.user_id) — un seul
-    // élément possible ici (pas de many-to-many côté formateur).
-    formationId: role === "professor" && Array.isArray(raw.formations) && raw.formations[0] ? String(raw.formations[0].id) : undefined,
+    // CORRIGÉ: le backend chargeait auparavant "formations" directement
+    // sur l'objet formateur (workaround pour le modèle à propriétaire
+    // unique) — passage à une vraie relation plusieurs-à-plusieurs
+    // (FormateurService::getAll() charge maintenant
+    // user.formationsEnseignees, exposée en JSON sous
+    // user.formations_enseignees). Un formateur peut désormais avoir
+    // PLUSIEURS formations, comme un étudiant — même champ formationIds
+    // réutilisé pour les deux (jamais les deux rôles à la fois sur un
+    // même objet).
+    formationIds:
+      role === "professor"
+        ? (Array.isArray(u.formations_enseignees) ? u.formations_enseignees.map((f: any) => String(f.id)) : [])
+        : role === "student" && Array.isArray(raw.formations)
+          ? raw.formations.map((f: any) => String(f.id))
+          : undefined,
     dateNaissance: raw.date_naissance ?? undefined,
     lieuNaissance: raw.lieu_naissance ?? undefined,
     niveau: raw.niveau ?? undefined,
-    formationIds: Array.isArray(raw.formations) && role === "student" ? raw.formations.map((f: any) => String(f.id)) : undefined,
     nomOrganisation: raw.nom_organisation ?? undefined,
     secteur: raw.secteur ?? undefined,
     financedFormations:
@@ -146,7 +154,6 @@ export async function createUser(input: {
   phone?: string
   specialite?: string
   moduleIds?: string[]
-  formationId?: string
   dateNaissance?: string
   lieuNaissance?: string
   niveau?: string
@@ -176,7 +183,7 @@ export async function createUser(input: {
 
     const body =
       input.role === "professor"
-        ? { ...common, specialite: input.specialite ?? "", modules: input.moduleIds ?? [], formation_id: input.formationId || null }
+        ? { ...common, specialite: input.specialite ?? "", modules: input.moduleIds ?? [], formation_ids: input.formationIds ?? [] }
         : input.role === "partner"
           ? { ...common, nom_organisation: input.nomOrganisation ?? "", secteur: input.secteur ?? undefined }
           : {
@@ -246,7 +253,7 @@ export async function updateUser(
     // changés.
     const body =
       input.role === "professor"
-        ? { ...common, specialite: input.specialite ?? "", modules: input.moduleIds ?? [], formation_id: input.formationId || null }
+        ? { ...common, specialite: input.specialite ?? "", modules: input.moduleIds ?? [], formation_ids: input.formationIds ?? [] }
         : input.role === "partner"
           ? { ...common, nom_organisation: input.nomOrganisation ?? "", secteur: input.secteur ?? undefined }
           : {
