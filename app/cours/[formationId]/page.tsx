@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { apiClient } from "@/lib/api/client"
+import { examenService, type Examen } from "@/lib/examen-service"
 import { useAuth } from "@/lib/auth-context"
 import { 
   ChevronLeft,
@@ -65,6 +66,7 @@ export default function FormationOverviewPage() {
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(true)
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([])
+  const [examens, setExamens] = useState<Examen[]>([])
   const [expandedLessonModules, setExpandedLessonModules] = useState<Set<string>>(new Set())
 
   const LESSONS_PREVIEW_COUNT = 8
@@ -142,6 +144,24 @@ export default function FormationOverviewPage() {
       }
     }
     loadLiveSessions()
+  }, [formation])
+
+  // Certifications (examens) disponibles pour cette formation — même
+  // pattern que les sessions live ci-dessus. Le service existait déjà
+  // (lib/examen-service.ts) mais n'était appelé depuis AUCUNE page
+  // côté apprenant, ce qui explique pourquoi une certification créée
+  // par un professeur n'apparaissait jamais nulle part.
+  useEffect(() => {
+    async function loadExamens() {
+      if (!formation) return
+      try {
+        const list = await examenService.getExamensByFormation(formation.id)
+        setExamens(list)
+      } catch (error) {
+        console.error('Error loading examens:', error)
+      }
+    }
+    loadExamens()
   }, [formation])
 
   const totalLessons = modules.reduce((acc, m) => acc + m.lecons.length, 0)
@@ -282,6 +302,38 @@ export default function FormationOverviewPage() {
                   </div>
                 </div>
                 <Radio className="w-5 h-5 text-[#C9A227] shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Certifications — invisible pour un apprenant non inscrit, même
+          logique d'accès que le reste du contenu (backend refuse déjà
+          l'accès à /examens si non inscrit, mais on évite aussi de
+          montrer une section vide/trompeuse). */}
+      {enrolled && examens.length > 0 && (
+        <section className="max-w-6xl mx-auto px-6 pt-12">
+          <h2 className="text-2xl font-bold mb-6">Certification</h2>
+          <div className="space-y-3">
+            {examens.map((examen) => (
+              <Link
+                key={examen.id}
+                href={`/exam/${examen.id}`}
+                className="flex items-center justify-between bg-[#0D1B2A] rounded-xl border border-[#1a2942] hover:border-[#C9A227] transition-colors p-5"
+              >
+                <div className="flex items-center gap-4">
+                  <Award className="w-5 h-5 text-[#C9A227] shrink-0" />
+                  <div>
+                    <p className="font-semibold">{examen.titre}</p>
+                    {examen.description && (
+                      <p className="text-sm text-[rgba(255,255,255,0.5)]">{examen.description}</p>
+                    )}
+                  </div>
+                </div>
+                <span className="text-xs text-[rgba(255,255,255,0.5)] shrink-0">
+                  {examen.duree_minutes} min · {examen.bareme_pts} pts
+                </span>
               </Link>
             ))}
           </div>

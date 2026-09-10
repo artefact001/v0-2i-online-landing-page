@@ -224,7 +224,13 @@ export default function CoursePage() {
       if (!currentLesson) return
 
       try {
-        const res = await apiClient<Exercise[]>(`/exercices?lesson_id=${currentLesson.id}`)
+        // CORRIGÉ: envoyait "lesson_id" (anglais) alors que le backend
+        // n'accepte QUE "lecon_id" (français, voir
+        // ExerciceController::index()) — le paramètre n'était donc
+        // jamais lu, la requête échouait à chaque fois, et l'échec
+        // était silencieusement avalé par le catch ci-dessous. C'est la
+        // cause exacte des évaluations jamais visibles pour l'apprenant.
+        const res = await apiClient<Exercise[]>(`/exercices?lecon_id=${currentLesson.id}`)
         if (res.data) setExercises(res.data)
       } catch (error) {
         console.error('Error loading exercises:', error)
