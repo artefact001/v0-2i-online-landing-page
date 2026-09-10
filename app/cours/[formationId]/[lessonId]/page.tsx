@@ -410,7 +410,11 @@ export default function CoursePage() {
       <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
         <div className="text-center">
           <h1 className="text-2xl mb-4">Cours non trouve</h1>
-          <Link href="/" className="text-[#C9A227] hover:underline">Retour a l&apos;accueil</Link>
+          {/* CORRIGÉ: pointait vers "/" (accueil public) — même défaut
+              que le lien "Retour" de la barre latérale ci-dessus. */}
+          <Link href={user?.role === 'professor' ? '/dashboard/professor' : '/dashboard/student'} className="text-[#C9A227] hover:underline">
+            Retour au tableau de bord
+          </Link>
         </div>
       </div>
     )
@@ -428,7 +432,11 @@ export default function CoursePage() {
         <div className="w-80 h-screen flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-[#1a2942]">
-            <Link href="/" className="text-[#C9A227] text-sm hover:underline flex items-center gap-2 mb-3">
+            {/* CORRIGÉ: pointait vers "/" (l'accueil du site vitrine)
+                au lieu du tableau de bord apprenant — un clic sur
+                "Retour" depuis une leçon envoyait donc l'utilisateur
+                hors de son espace connecté. */}
+            <Link href="/dashboard/student" className="text-[#C9A227] text-sm hover:underline flex items-center gap-2 mb-3">
               <ChevronLeft className="w-4 h-4" />
               Retour
             </Link>

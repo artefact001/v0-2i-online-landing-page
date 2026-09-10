@@ -194,7 +194,11 @@ export default function FormationOverviewPage() {
       {/* Header */}
       <header className="bg-[#0D1B2A] border-b border-[#1a2942]">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <Link href="/" className="text-[#C9A227] hover:underline flex items-center gap-2 text-sm">
+          {/* CORRIGÉ: pointait vers "/" (accueil public) — même défaut
+              que dans le lecteur de leçon. "Retour aux formations"
+              doit mener à la liste des formations DU dashboard, pas
+              hors de l'espace connecté. */}
+          <Link href={user?.role === 'professor' ? '/dashboard/professor/courses' : '/dashboard/student/courses'} className="text-[#C9A227] hover:underline flex items-center gap-2 text-sm">
             <ChevronLeft className="w-4 h-4" />
             Retour aux formations
           </Link>
