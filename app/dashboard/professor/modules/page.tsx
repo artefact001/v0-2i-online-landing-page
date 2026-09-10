@@ -129,7 +129,7 @@ export default function ModulesPage() {
       alertSuccess(editingId ? 'Module modifié avec succès.' : 'Module créé avec succès.')
     } catch (error: any) {
       console.error('[v0] Error saving module:', error)
-      const msg = "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
+      const msg = error?.message || "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer."
       setFormError(msg)
       alertError(msg)
     } finally {

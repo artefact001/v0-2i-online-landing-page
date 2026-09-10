@@ -312,7 +312,11 @@ export default function ExercisesPage() {
       alertSuccess(editingId ? 'Exercice modifié avec succès.' : 'Exercice créé avec succès.')
     } catch (error: any) {
       console.error('[v0] Error saving exercise:', error)
-      const msg = "Une erreur est survenue lors de l'enregistrement."
+      // CORRIGÉ: affichait toujours ce texte générique, quelle que
+      // soit la vraie cause de l'échec (le backend expose désormais le
+      // vrai message via error.message, exploitable en un clic depuis
+      // l'interface au lieu de devoir aller chercher dans les logs).
+      const msg = error?.message || "Une erreur est survenue lors de l'enregistrement."
       setFormError(msg)
       alertError(msg)
     } finally {

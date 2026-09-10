@@ -232,7 +232,7 @@ export default function ExamsPage() {
       alertSuccess(editingId ? "Examen modifié avec succès." : 'Examen créé avec succès.')
     } catch (error: any) {
       console.error('[v0] Error saving examen:', error)
-      const msg = "Une erreur est survenue lors de l'enregistrement."
+      const msg = error?.message || "Une erreur est survenue lors de l'enregistrement."
       setFormError(msg)
       alertError(msg)
     } finally {
