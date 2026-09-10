@@ -136,9 +136,12 @@ export default function ExamPage() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
+  // Charte graphique unifiée avec le reste de la plateforme (voir même
+  // correctif appliqué à la page d'évaluation/exercice) : fond #0a0a1a,
+  // cartes #0d0d1a, texte blanc/gris clair pour un contraste suffisant.
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A227]" />
       </div>
     )
@@ -146,9 +149,9 @@ export default function ExamPage() {
 
   if (!examen || questions.length === 0) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center text-white">
+      <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center text-white">
         <div className="text-center">
-          <p className="mb-4">Certification non trouvée ou sans questions.</p>
+          <p className="mb-4 text-[rgba(255,255,255,0.7)]">Certification non trouvée ou sans questions.</p>
           <Link href={backHref} className="text-[#C9A227] hover:underline">
             Retour au tableau de bord
           </Link>
@@ -160,16 +163,16 @@ export default function ExamPage() {
   if (showResults) {
     const statutLabel = { reussi: "Réussi", echoue: "Échoué", "en cours": "En attente de correction" }
     const statutColor = {
-      reussi: "text-green-500",
-      echoue: "text-red-500",
-      "en cours": "text-amber-500",
+      reussi: "text-green-400",
+      echoue: "text-red-400",
+      "en cours": "text-amber-300",
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0D2545] to-[#1a3a5c] p-8 flex items-center justify-center">
-        <div className="w-full max-w-2xl bg-white rounded-2xl p-8 text-center">
+      <div className="min-h-screen bg-[#0a0a1a] p-6 md:p-8 flex items-center justify-center">
+        <div className="w-full max-w-2xl bg-[#0d0d1a] border border-[rgba(255,255,255,0.05)] rounded-2xl p-8 text-center">
           <Award className="w-16 h-16 text-[#C9A227] mx-auto mb-4" />
-          <h1 className="text-3xl font-bold mb-2 text-[#0D2545]">Certification soumise</h1>
+          <h1 className="text-3xl font-bold mb-2 text-white">Certification soumise</h1>
           {resultat && (
             <>
               <div className="text-6xl font-bold text-[#C9A227] my-6">
@@ -179,14 +182,16 @@ export default function ExamPage() {
                 {statutLabel[resultat.statut]}
               </p>
               {resultat.statut === "en cours" && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mt-4">
                   Certaines questions ouvertes doivent encore être corrigées par ton formateur — le score final peut évoluer.
                 </p>
               )}
             </>
           )}
           <Link href={backHref}>
-            <Button className="bg-[#0D2545] hover:bg-[#0a1d2e] mt-6">Retour au tableau de bord</Button>
+            <Button className="bg-[#C9A227] hover:bg-[#B8860B] text-[#0a0a1a] font-semibold mt-6">
+              Retour au tableau de bord
+            </Button>
           </Link>
         </div>
       </div>
@@ -197,74 +202,106 @@ export default function ExamPage() {
   const progress = ((currentQuestion + 1) / questions.length) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D2545] to-[#1a3a5c] p-8">
+    <div className="min-h-screen bg-[#0a0a1a] p-6 md:p-8">
       <div className="max-w-3xl mx-auto">
-        <Link href={backHref} className="inline-flex items-center gap-2 text-white/70 hover:text-white mb-4 text-sm">
+        <Link
+          href={backHref}
+          className="inline-flex items-center gap-2 text-[rgba(255,255,255,0.6)] hover:text-white mb-4 text-sm transition-colors"
+        >
           <ChevronLeft className="w-4 h-4" />
           Retour
         </Link>
 
-        <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-white">{examen.titre}</h1>
+        <div className="mb-6 flex justify-between items-center gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">{examen.titre}</h1>
           {timeLeft !== null && (
-            <div className="text-white text-2xl font-bold flex items-center gap-2">
+            <div
+              className={`text-xl md:text-2xl font-bold flex items-center gap-2 shrink-0 ${
+                timeLeft <= 60 ? 'text-red-400' : 'text-white'
+              }`}
+            >
               <Clock className="w-5 h-5" />
               {formatTime(timeLeft)}
             </div>
           )}
         </div>
 
-        {examen.description && <p className="text-white/70 mb-6">{examen.description}</p>}
+        {examen.description && <p className="text-[rgba(255,255,255,0.6)] mb-6">{examen.description}</p>}
 
-        <div className="mb-6 bg-white rounded-lg overflow-hidden">
-          <div className="h-2 bg-[#C9A227] transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="mb-6 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden h-2">
+          <div
+            className="h-full bg-[#C9A227] transition-all duration-300 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
-        <div className="bg-white rounded-2xl p-8 mb-6">
+        <div className="bg-[#0d0d1a] border border-[rgba(255,255,255,0.05)] rounded-2xl p-6 md:p-8 mb-6">
           <div className="mb-6">
-            <p className="text-sm text-gray-500 mb-2">
+            <p className="text-sm text-[rgba(255,255,255,0.5)] mb-2">
               Question {currentQuestion + 1} de {questions.length} — {question.points} point{question.points > 1 ? "s" : ""}
             </p>
-            <h2 className="text-2xl font-bold text-[#0D2545] mb-4">{question.contenu}</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-4">{question.contenu}</h2>
           </div>
 
           {question.type === "qcm" ? (
-            <div className="space-y-3">
-              {question.choix?.map((choix) => (
-                <label key={choix.id} className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="radio"
-                    name={`question-${question.id}`}
-                    checked={answers[question.id]?.choix_id === choix.id}
-                    onChange={() => handleChoixAnswer(question.id, choix.id)}
-                    className="mr-3"
-                  />
-                  <span>{choix.contenu}</span>
-                </label>
-              ))}
+            <div className="space-y-3" role="radiogroup" aria-label={question.contenu}>
+              {question.choix?.map((choix) => {
+                const selected = answers[question.id]?.choix_id === choix.id
+                return (
+                  <label
+                    key={choix.id}
+                    className={`flex items-center gap-3 p-4 rounded-lg cursor-pointer border transition-colors ${
+                      selected
+                        ? 'border-[#C9A227] bg-[#C9A227]/10'
+                        : 'border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.03)]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={`question-${question.id}`}
+                      checked={selected}
+                      onChange={() => handleChoixAnswer(question.id, choix.id)}
+                      className="w-4 h-4 accent-[#C9A227] shrink-0"
+                    />
+                    <span className="text-white">{choix.contenu}</span>
+                  </label>
+                )
+              })}
             </div>
           ) : (
             <Textarea
               value={answers[question.id]?.reponse_texte || ""}
               onChange={(e) => handleTextAnswer(question.id, e.target.value)}
               placeholder="Ta réponse..."
-              className="w-full"
+              className="w-full bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.35)]"
               rows={5}
             />
           )}
         </div>
 
         <div className="flex justify-between gap-4">
-          <Button onClick={() => setCurrentQuestion((p) => Math.max(0, p - 1))} disabled={currentQuestion === 0} variant="outline" className="bg-white">
+          <Button
+            onClick={() => setCurrentQuestion((p) => Math.max(0, p - 1))}
+            disabled={currentQuestion === 0}
+            variant="outline"
+            className="border-[rgba(255,255,255,0.15)] text-white bg-transparent hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-40"
+          >
             Précédent
           </Button>
 
           {currentQuestion === questions.length - 1 ? (
-            <Button onClick={handleSubmit} disabled={submitting} className="bg-[#C9A227] hover:bg-[#E8C050] text-[#0D2545]">
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="bg-[#C9A227] hover:bg-[#B8860B] text-[#0a0a1a] font-semibold"
+            >
               {submitting ? "Envoi..." : "Soumettre"}
             </Button>
           ) : (
-            <Button onClick={() => setCurrentQuestion((p) => Math.min(questions.length - 1, p + 1))} className="bg-[#0D2545] hover:bg-[#0a1d2e]">
+            <Button
+              onClick={() => setCurrentQuestion((p) => Math.min(questions.length - 1, p + 1))}
+              className="bg-[#C9A227] hover:bg-[#B8860B] text-[#0a0a1a] font-semibold"
+            >
               Suivant
             </Button>
           )}
