@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { mentoratService, type MentorDisponible, type Mentorat } from '@/lib/mentorat-service'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { alertSuccess, alertError } from '@/lib/alerts'
-import { Users, GraduationCap, Briefcase } from 'lucide-react'
+import { Users, GraduationCap, Briefcase, MessageSquare } from 'lucide-react'
 
 export default function StudentMentoratPage() {
   const [mentors, setMentors] = useState<MentorDisponible[]>([])
@@ -57,16 +58,32 @@ export default function StudentMentoratPage() {
                   {mesMentorats.map((m) => (
                     <div key={m.id} className="flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-lg px-3 py-2.5">
                       <span className="text-white text-sm">{m.mentor?.prenom} {m.mentor?.nom}</span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          m.statut === 'actif' ? 'bg-green-500/20 text-green-400'
-                          : m.statut === 'en_attente' ? 'bg-amber-500/20 text-amber-400'
-                          : m.statut === 'refuse' ? 'bg-red-500/20 text-red-400'
-                          : 'bg-gray-500/20 text-gray-400'
-                        }`}
-                      >
-                        {m.statut === 'en_attente' ? 'En attente' : m.statut === 'actif' ? 'Actif' : m.statut === 'refuse' ? 'Refusé' : 'Terminé'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            m.statut === 'actif' ? 'bg-green-500/20 text-green-400'
+                            : m.statut === 'en_attente' ? 'bg-amber-500/20 text-amber-400'
+                            : m.statut === 'refuse' ? 'bg-red-500/20 text-red-400'
+                            : 'bg-gray-500/20 text-gray-400'
+                          }`}
+                        >
+                          {m.statut === 'en_attente' ? 'En attente' : m.statut === 'actif' ? 'Actif' : m.statut === 'refuse' ? 'Refusé' : 'Terminé'}
+                        </span>
+                        {/* Un mentor accepté (mentorat actif) doit
+                            pouvoir être contacté directement — même
+                            messagerie que le reste de la plateforme,
+                            ouverte directement sur cette conversation. */}
+                        {m.statut === 'actif' && m.mentor_id && (
+                          <Link
+                            href={`/dashboard/messages?userId=${m.mentor_id}&name=${encodeURIComponent(`${m.mentor?.prenom ?? ''} ${m.mentor?.nom ?? ''}`.trim())}`}
+                          >
+                            <Button size="sm" variant="outline" className="h-7 px-2 border-[rgba(201,162,39,0.4)] text-[#C9A227] hover:bg-[#C9A227]/10">
+                              <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                              Message
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

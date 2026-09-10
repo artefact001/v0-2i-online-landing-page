@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { messageService, type Conversation, type DirectMessage, type Contact } from '@/lib/message-service'
 import { useAuth } from '@/lib/auth-context'
@@ -13,9 +14,17 @@ import { MessageSquare, Send, Plus, X } from 'lucide-react'
  * placée hors des dossiers spécifiques à un rôle pour éviter la
  * duplication. Accessible via /dashboard/messages quel que soit le
  * rôle connecté.
+ *
+ * Accepte aussi ?userId=...&name=... pour ouvrir directement une
+ * conversation depuis ailleurs (ex: bouton "Message" sur un mentorat
+ * actif) — "name" en repli car le destinataire n'est pas forcément
+ * dans la liste "officielle" des contacts (ex: un mentor alumni, pas
+ * un formateur), auquel cas ni activeConversation ni activeContact ne
+ * le trouveraient sans ce repli, laissant l'en-tête vide.
  */
-export default function MessagesPage() {
+function MessagesContent() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [showContactPicker, setShowContactPicker] = useState(false)
@@ -33,6 +42,13 @@ export default function MessagesPage() {
       setLoading(false)
     })
   }, [])
+
+  // Ouvre directement une conversation si on arrive depuis un lien
+  // externe (ex: bouton "Message" sur un mentorat actif).
+  useEffect(() => {
+    const userId = searchParams.get('userId')
+    if (userId) setActiveUserId(userId)
+  }, [searchParams])
 
   useEffect(() => {
     if (!activeUserId) return
@@ -56,9 +72,18 @@ export default function MessagesPage() {
       setConversations((prev) => {
         if (prev.some((c) => c.userId === activeUserId)) return prev
         const contact = contacts.find((ct) => ct.userId === activeUserId)
-        if (!contact) return prev
+        // Repli sur le nom transmis par l'URL si ce destinataire n'est
+        // pas dans la liste "officielle" des contacts (ex: mentor
+        // alumni) — sans ça, la conversation n'apparaissait jamais dans
+        // la barre latérale après l'envoi du tout premier message.
+        const displayName = contact
+          ? { prenom: contact.prenom, nom: contact.nom }
+          : searchParams.get('name')
+            ? { prenom: searchParams.get('name') || '', nom: '' }
+            : null
+        if (!displayName) return prev
         return [
-          { userId: contact.userId, prenom: contact.prenom, nom: contact.nom, dernierMessage: newMessage.trim(), dernierMessageDate: new Date().toISOString(), nonLus: 0 },
+          { userId: activeUserId, prenom: displayName.prenom, nom: displayName.nom, dernierMessage: newMessage.trim(), dernierMessageDate: new Date().toISOString(), nonLus: 0 },
           ...prev,
         ]
       })
@@ -81,7 +106,11 @@ export default function MessagesPage() {
     ? `${activeConversation.prenom} ${activeConversation.nom}`
     : activeContact
       ? `${activeContact.prenom} ${activeContact.nom}`
-      : ''
+      // Repli sur le nom transmis par l'URL (ex: mentor alumni, pas
+      // dans la liste "officielle" des contacts d'un étudiant) — sans
+      // ça l'en-tête resterait vide pour une toute nouvelle
+      // conversation avec quelqu'un hors de cette liste.
+      : searchParams.get('name') || ''
 
   // Contacts pas encore présents dans la liste de conversations — évite
   // de proposer de "redémarrer" une conversation déjà existante.
@@ -217,5 +246,19 @@ export default function MessagesPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0a0a1a] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />
+        </div>
+      }
+    >
+      <MessagesContent />
+    </Suspense>
   )
 }
