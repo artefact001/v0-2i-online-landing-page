@@ -579,40 +579,62 @@ export default function ExamsPage() {
                                         ) : (
                                           <p className="text-[rgba(255,255,255,0.4)] text-sm mb-2 italic">Pas de réponse écrite (QCM ou non répondu).</p>
                                         )}
-                                        {d.question?.type === 'ouvert' ? (
-                                          <div className="flex items-end gap-2">
-                                            <div className="w-24">
-                                              <Label className="text-[rgba(255,255,255,0.5)] text-xs">Note (/{d.question?.points})</Label>
-                                              <Input
-                                                type="number"
-                                                min={0}
-                                                max={d.question?.points}
-                                                value={scoreDrafts[d.id]?.score ?? ''}
-                                                onChange={(e) =>
-                                                  setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: e.target.value, commentaire: prev[d.id]?.commentaire ?? '' } }))
-                                                }
-                                                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white h-8"
-                                              />
-                                            </div>
+                                        {/* CORRIGÉ: même correctif que
+                                            professor/exercises — la
+                                            correction était limitée aux
+                                            questions ouvertes, un QCM
+                                            restait totalement verrouillé. */}
+                                        <div className="flex items-end gap-2 flex-wrap">
+                                          <div className="w-20">
+                                            <Label className="text-[rgba(255,255,255,0.5)] text-xs">Note (/{d.question?.points})</Label>
                                             <Input
-                                              placeholder="Commentaire (optionnel)"
-                                              value={scoreDrafts[d.id]?.commentaire ?? ''}
+                                              type="number"
+                                              min={0}
+                                              max={d.question?.points}
+                                              value={scoreDrafts[d.id]?.score ?? ''}
                                               onChange={(e) =>
-                                                setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: prev[d.id]?.score ?? '', commentaire: e.target.value } }))
+                                                setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: e.target.value, commentaire: prev[d.id]?.commentaire ?? '' } }))
                                               }
-                                              className="flex-1 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white h-8"
+                                              className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white h-8"
                                             />
-                                            <Button
-                                              size="sm"
-                                              onClick={() => handleCorriger(d.id, ex.id, studentId)}
-                                              disabled={savingReponseId === d.id}
-                                              className="bg-[#C9A227] hover:bg-[#B8860B] h-8"
-                                            >
-                                              {d.statut === 'corrige' ? 'Mettre à jour' : 'Valider'}
-                                            </Button>
                                           </div>
-                                        ) : (
-                                          <p className="text-[rgba(255,255,255,0.4)] text-xs">Score automatique : {d.score ?? 0} / {d.question?.points}</p>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: String(d.question?.points ?? 1), commentaire: prev[d.id]?.commentaire ?? '' } }))}
+                                            className="h-8 border-green-500/30 text-green-400 hover:bg-green-500/10"
+                                          >
+                                            Correct
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: '0', commentaire: prev[d.id]?.commentaire ?? '' } }))}
+                                            className="h-8 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                                          >
+                                            Incorrect
+                                          </Button>
+                                          <Input
+                                            placeholder="Commentaire (optionnel)"
+                                            value={scoreDrafts[d.id]?.commentaire ?? ''}
+                                            onChange={(e) =>
+                                              setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: prev[d.id]?.score ?? '', commentaire: e.target.value } }))
+                                            }
+                                            className="flex-1 min-w-[140px] bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white h-8"
+                                          />
+                                          <Button
+                                            size="sm"
+                                            onClick={() => handleCorriger(d.id, ex.id, studentId)}
+                                            disabled={savingReponseId === d.id}
+                                            className="bg-[#C9A227] hover:bg-[#B8860B] h-8"
+                                          >
+                                            {d.statut === 'corrige' ? 'Mettre à jour' : 'Valider'}
+                                          </Button>
+                                        </div>
+                                        {d.question?.type !== 'ouvert' && (
+                                          <p className="text-[rgba(255,255,255,0.4)] text-xs mt-1">
+                                            Note automatique actuelle : {d.score ?? 0} / {d.question?.points} — modifiable ci-dessus si besoin.
+                                          </p>
                                         )}
                                       </div>
                                     ))
