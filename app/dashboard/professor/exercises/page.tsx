@@ -63,6 +63,16 @@ interface StudentResult {
   soumis_le: string
 }
 
+interface ReponseDetail {
+  id: string
+  question_id: string
+  reponse_texte: string | null
+  score: number | null
+  statut: 'en_attente' | 'corrige'
+  commentaire_formateur: string | null
+  question?: { contenu: string; points: number; type: string }
+}
+
 interface Formation {
   id: string
   titre: string
@@ -107,6 +117,11 @@ export default function ExercisesPage() {
   const [openResultsFor, setOpenResultsFor] = useState<string | null>(null)
   const [results, setResults] = useState<StudentResult[]>([])
   const [loadingResults, setLoadingResults] = useState(false)
+  const [correctingStudentId, setCorrectingStudentId] = useState<string | null>(null)
+  const [detailReponses, setDetailReponses] = useState<ReponseDetail[]>([])
+  const [loadingDetail, setLoadingDetail] = useState(false)
+  const [scoreDrafts, setScoreDrafts] = useState<Record<string, { score: string; commentaire: string }>>({})
+  const [savingReponseId, setSavingReponseId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -373,6 +388,60 @@ export default function ExercisesPage() {
     setLoadingResults(false)
   }
 
+  // Ouvre le détail des réponses d'un apprenant pour corriger ses
+  // questions ouvertes une par une.
+  async function loadDetail(exerciseId: string, studentId: string) {
+    setLoadingDetail(true)
+    try {
+      const res = await apiClient<ReponseDetail[]>(`/exercices/${exerciseId}/resultats?user_id=${studentId}`)
+      const detail = res.data || []
+      setDetailReponses(detail)
+      // Pré-remplit les brouillons avec le score déjà existant (pour
+      // les réponses déjà corrigées, permet de les ajuster).
+      const drafts: Record<string, { score: string; commentaire: string }> = {}
+      detail.forEach((r) => {
+        drafts[r.id] = { score: r.score != null ? String(r.score) : '', commentaire: r.commentaire_formateur || '' }
+      })
+      setScoreDrafts(drafts)
+    } catch (error: any) {
+      alertError(error?.message || 'Erreur lors du chargement du détail')
+    }
+    setLoadingDetail(false)
+  }
+
+  function toggleCorrection(exerciseId: string, studentId: string) {
+    if (correctingStudentId === studentId) {
+      setCorrectingStudentId(null)
+      return
+    }
+    setCorrectingStudentId(studentId)
+    loadDetail(exerciseId, studentId)
+  }
+
+  async function handleCorriger(reponseId: string, exerciseId: string, studentId: string) {
+    const draft = scoreDrafts[reponseId]
+    if (!draft || draft.score === '') {
+      alertError('Indique une note avant de valider.')
+      return
+    }
+    setSavingReponseId(reponseId)
+    try {
+      await apiClient(`/reponses/${reponseId}/corriger`, {
+        method: 'PUT',
+        body: JSON.stringify({ score: Number(draft.score), commentaire_formateur: draft.commentaire || null }),
+      })
+      alertSuccess('Réponse corrigée.')
+      // Recharge le détail (statut mis à jour) ET le résumé agrégé
+      // (score total, en_attente_correction) pour rester synchronisés.
+      await loadDetail(exerciseId, studentId)
+      const res = await apiClient<StudentResult[]>(`/exercices/${exerciseId}/resultats-etudiants`)
+      setResults(res.data || [])
+    } catch (error: any) {
+      alertError(error?.message || 'Erreur lors de la correction')
+    }
+    setSavingReponseId(null)
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a1a]">
       <DashboardSidebar />
@@ -603,20 +672,91 @@ export default function ExercisesPage() {
                   ) : (
                     <div className="pt-4 space-y-2">
                       {results.map((r) => (
-                        <div
-                          key={r.user_id}
-                          className="flex items-center justify-between bg-[rgba(255,255,255,0.03)] rounded-lg px-4 py-3"
-                        >
-                          <div>
-                            <p className="text-white text-sm font-medium">{r.prenom} {r.nom}</p>
-                            {r.en_attente_correction && (
-                              <p className="text-amber-300 text-xs mt-0.5">Correction manuelle en attente — note provisoire</p>
-                            )}
+                        <div key={r.user_id} className="bg-[rgba(255,255,255,0.03)] rounded-lg overflow-hidden">
+                          <div className="flex items-center justify-between px-4 py-3">
+                            <div>
+                              <p className="text-white text-sm font-medium">{r.prenom} {r.nom}</p>
+                              {r.en_attente_correction && (
+                                <p className="text-amber-300 text-xs mt-0.5">Correction manuelle en attente — note provisoire</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <div className="text-right">
+                                <p className="text-[#C9A227] font-semibold">{r.score} / {r.note_max}</p>
+                                <p className="text-[rgba(255,255,255,0.4)] text-xs">{r.pourcentage}%</p>
+                              </div>
+                              {/* Un professeur doit pouvoir ouvrir la copie
+                                  d'un apprenant et noter chaque question
+                                  ouverte individuellement — avant, il n'y
+                                  avait aucun moyen d'y accéder malgré
+                                  l'endpoint de correction déjà existant
+                                  côté backend. */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => toggleCorrection(ex.id, r.user_id)}
+                                className="border-[rgba(255,255,255,0.2)] text-white h-7 px-2 text-xs"
+                              >
+                                {correctingStudentId === r.user_id ? 'Fermer' : 'Corriger'}
+                              </Button>
+                            </div>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-[#C9A227] font-semibold">{r.score} / {r.note_max}</p>
-                            <p className="text-[rgba(255,255,255,0.4)] text-xs">{r.pourcentage}%</p>
-                          </div>
+
+                          {correctingStudentId === r.user_id && (
+                            <div className="border-t border-[rgba(255,255,255,0.08)] px-4 py-3 space-y-3">
+                              {loadingDetail ? (
+                                <div className="flex justify-center py-4">
+                                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#C9A227]" />
+                                </div>
+                              ) : (
+                                detailReponses.map((d) => (
+                                  <div key={d.id} className="bg-[#0a0a1a] rounded-lg p-3">
+                                    <p className="text-white text-sm font-medium mb-1">{d.question?.contenu}</p>
+                                    {d.reponse_texte ? (
+                                      <p className="text-[rgba(255,255,255,0.7)] text-sm mb-2 whitespace-pre-wrap">{d.reponse_texte}</p>
+                                    ) : (
+                                      <p className="text-[rgba(255,255,255,0.4)] text-sm mb-2 italic">Pas de réponse écrite (QCM ou non répondu).</p>
+                                    )}
+                                    {d.question?.type === 'ouvert' ? (
+                                      <div className="flex items-end gap-2">
+                                        <div className="w-24">
+                                          <Label className="text-[rgba(255,255,255,0.5)] text-xs">Note (/{d.question?.points})</Label>
+                                          <Input
+                                            type="number"
+                                            min={0}
+                                            max={d.question?.points}
+                                            value={scoreDrafts[d.id]?.score ?? ''}
+                                            onChange={(e) =>
+                                              setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: e.target.value, commentaire: prev[d.id]?.commentaire ?? '' } }))
+                                            }
+                                            className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white h-8"
+                                          />
+                                        </div>
+                                        <Input
+                                          placeholder="Commentaire (optionnel)"
+                                          value={scoreDrafts[d.id]?.commentaire ?? ''}
+                                          onChange={(e) =>
+                                            setScoreDrafts((prev) => ({ ...prev, [d.id]: { ...prev[d.id], score: prev[d.id]?.score ?? '', commentaire: e.target.value } }))
+                                          }
+                                          className="flex-1 bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white h-8"
+                                        />
+                                        <Button
+                                          size="sm"
+                                          onClick={() => handleCorriger(d.id, ex.id, r.user_id)}
+                                          disabled={savingReponseId === d.id}
+                                          className="bg-[#C9A227] hover:bg-[#B8860B] h-8"
+                                        >
+                                          {d.statut === 'corrige' ? 'Mettre à jour' : 'Valider'}
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <p className="text-[rgba(255,255,255,0.4)] text-xs">Score automatique : {d.score ?? 0} / {d.question?.points}</p>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

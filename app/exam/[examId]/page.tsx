@@ -111,9 +111,12 @@ export default function ExamPage() {
     setSubmitting(true)
 
     try {
+      // CORRIGÉ: n'envoyait que choix_id — le texte des réponses aux
+      // questions ouvertes n'était jamais transmis au backend, donc
+      // jamais enregistré, rendant toute correction manuelle impossible.
       const reponses = questions.map((q) => {
         const answer = answers[q.id]
-        return { question_id: q.id, choix_id: answer?.choix_id ?? null }
+        return { question_id: q.id, choix_id: answer?.choix_id ?? null, reponse_texte: answer?.reponse_texte ?? null }
       })
 
       const res = await apiClient<Resultat>(`/examens/${examen.id}/soumettre`, {
