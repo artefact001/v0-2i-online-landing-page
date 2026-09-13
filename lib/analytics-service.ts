@@ -37,10 +37,13 @@ export interface StudentAnalytics {
 }
 
 export const analyticsService = {
-  // GET /v1/analytics/admin
-  async getAdminAnalytics(): Promise<AnalyticsData | null> {
+  // GET /v1/analytics/admin — ?month=YYYY-MM optionnel, restreint aux
+  // revenus/inscriptions/résultats de ce mois précis (comportement
+  // global inchangé si omis).
+  async getAdminAnalytics(month?: string): Promise<AnalyticsData | null> {
     try {
-      const res = await apiClient<AnalyticsData>('/analytics/admin')
+      const query = month ? `?month=${month}` : ''
+      const res = await apiClient<AnalyticsData>(`/analytics/admin${query}`)
       return res.data ?? null
     } catch (error) {
       console.error('[analyticsService.getAdminAnalytics]', error)
@@ -59,10 +62,11 @@ export const analyticsService = {
     }
   },
 
-  // GET /v1/analytics/formations
-  async getAllFormationsAnalytics(): Promise<FormationAnalytics[]> {
+  // GET /v1/analytics/formations — même filtre ?month= optionnel
+  async getAllFormationsAnalytics(month?: string): Promise<FormationAnalytics[]> {
     try {
-      const res = await apiClient<FormationAnalytics[]>('/analytics/formations')
+      const query = month ? `?month=${month}` : ''
+      const res = await apiClient<FormationAnalytics[]>(`/analytics/formations${query}`)
       return res.data || []
     } catch (error) {
       console.error('[analyticsService.getAllFormationsAnalytics]', error)
@@ -87,5 +91,27 @@ export const analyticsService = {
     const headers = Object.keys(data[0])
     const rows = data.map((row) => headers.map((h) => JSON.stringify(row[h] ?? '')).join(','))
     return [headers.join(','), ...rows].join('\n')
+  },
+
+  // GET /v1/analytics/export-pdf — renvoie un vrai fichier binaire (PDF),
+  // pas du JSON : apiClient() ne convient pas ici (il tente toujours de
+  // parser la réponse comme du JSON). Passe par la même route relais
+  // (/api/backend/...) pour que le cookie de session soit transmis,
+  // récupère un blob, puis déclenche un téléchargement classique.
+  async exportPdf(month?: string): Promise<void> {
+    const query = month ? `?month=${month}` : ''
+    const res = await fetch(`/api/backend/analytics/export-pdf${query}`)
+    if (!res.ok) {
+      throw new Error("Impossible de générer le PDF. Réessaie dans un instant.")
+    }
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `rapport-analytics-${month || 'global'}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
   },
 }

@@ -4,22 +4,29 @@ import { useState, useEffect } from 'react';
 import { analyticsService } from '@/lib/analytics-service';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Download, TrendingUp } from 'lucide-react';
+import { TrendingUp, FileDown } from 'lucide-react';
+import { alertError } from '@/lib/alerts';
 
 export default function AnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [formations, setFormations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  // Vide = vue globale (tout l'historique) — au format YYYY-MM attendu
+  // par le backend (?month=...) une fois renseigné.
+  const [month, setMonth] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const loadAnalytics = async () => {
+      setLoading(true);
       try {
-        const adminAnalytics = await analyticsService.getAdminAnalytics();
+        const adminAnalytics = await analyticsService.getAdminAnalytics(month || undefined);
         setAnalytics(adminAnalytics);
 
-        const formationsAnalytics = await analyticsService.getAllFormationsAnalytics();
+        const formationsAnalytics = await analyticsService.getAllFormationsAnalytics(month || undefined);
         setFormations(formationsAnalytics);
       } catch (error) {
         console.error('Error loading analytics:', error);
@@ -29,7 +36,17 @@ export default function AnalyticsDashboard() {
     };
 
     loadAnalytics();
-  }, []);
+  }, [month]);
+
+  async function handleExportPdf() {
+    setExporting(true);
+    try {
+      await analyticsService.exportPdf(month || undefined);
+    } catch (error: any) {
+      alertError(error?.message || "Erreur lors de l'export du PDF");
+    }
+    setExporting(false);
+  }
 
   const chartData = formations.map(f => ({
     name: f.name,
@@ -45,6 +62,30 @@ export default function AnalyticsDashboard() {
         <DashboardHeader title="Analytiques" subtitle="Vue d'ensemble des performances de la plateforme" />
 
         <div className="p-4 md:p-8">
+          {/* Filtre par mois + export PDF — le PDF est pensé pour être
+              partagé hors plateforme (email à un partenaire, par
+              exemple), pas seulement consulté en ligne. */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3 mb-6">
+            <div className="flex-1 max-w-[200px]">
+              <label className="text-xs text-[rgba(255,255,255,0.5)] mb-1.5 block">Filtrer par mois</label>
+              <Input
+                type="month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white"
+              />
+            </div>
+            {month && (
+              <Button variant="outline" onClick={() => setMonth('')} className="border-[rgba(255,255,255,0.2)] text-white">
+                Voir tout l&apos;historique
+              </Button>
+            )}
+            <Button onClick={handleExportPdf} disabled={exporting} className="bg-[#C9A227] hover:bg-[#B8860B] text-[#0a0a1a] font-semibold sm:ml-auto">
+              <FileDown className="w-4 h-4 mr-2" />
+              {exporting ? 'Génération...' : 'Exporter en PDF'}
+            </Button>
+          </div>
+
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />
@@ -54,11 +95,16 @@ export default function AnalyticsDashboard() {
           ) : (
             <>
               {/* KPI Cards */}
+              {month && (
+                <p className="text-xs text-[#C9A227] mb-3 uppercase tracking-wide">
+                  Données du mois sélectionné — les comptes actifs restent une mesure globale
+                </p>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 <Card className="p-6 bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm text-[rgba(255,255,255,0.5)] mb-2">Étudiants Total</p>
+                      <p className="text-sm text-[rgba(255,255,255,0.5)] mb-2">{month ? 'Nouveaux apprenants' : 'Étudiants Total'}</p>
                       <p className="text-3xl font-bold text-white">{analytics.totalStudents}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-[#C9A227]" />
@@ -66,7 +112,7 @@ export default function AnalyticsDashboard() {
                 </Card>
 
                 <Card className="p-6 bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
-                  <p className="text-sm text-[rgba(255,255,255,0.5)] mb-2">Revenus Total</p>
+                  <p className="text-sm text-[rgba(255,255,255,0.5)] mb-2">{month ? 'Revenus du mois' : 'Revenus Total'}</p>
                   <p className="text-3xl font-bold text-white">{analytics.totalRevenue.toLocaleString()} FCFA</p>
                 </Card>
 
