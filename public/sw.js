@@ -1,5 +1,14 @@
-// Service worker pour les notifications push (Web Push API standard).
+// Service worker pour les notifications push (Web Push API standard)
+// et l'installabilité PWA (icône "Ajouter à l'écran d'accueil").
 // Doit rester à la racine publique (/sw.js) pour couvrir tout le site.
+
+self.addEventListener('install', () => {
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim())
+})
 
 self.addEventListener('push', (event) => {
   if (!event.data) return

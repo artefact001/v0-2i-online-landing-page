@@ -6,7 +6,7 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
+  "background_color": "#080F1E",
   "theme_color": "#0D2545",
   "icons": [
     {
@@ -28,18 +28,6 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshot-1.png",
-      "sizes": "540x720",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshot-2.png",
-      "sizes": "1280x720",
-      "form_factor": "wide"
-    }
-  ],
   "categories": ["education", "productivity"],
   "shortcuts": [
     {
@@ -56,15 +44,5 @@
       "url": "/cours-live",
       "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
     }
-  ],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "application/x-www-form-urlencoded",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
+  ]
 }
