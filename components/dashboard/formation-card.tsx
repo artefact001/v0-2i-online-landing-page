@@ -15,6 +15,10 @@ interface FormationCardProps {
     prix: number
     statut: "en ligne" | "presentiel" | "hybride"
     nb_inscrit?: number
+    // Vrai nombre d'apprenants actuellement inscrits (statut actif),
+    // calculé en temps réel côté backend — contrairement à nb_inscrit,
+    // une colonne manuelle jamais mise à jour automatiquement.
+    inscrits_count?: number
   }
   onEdit: () => void
   onDelete: () => void
@@ -89,9 +93,9 @@ export function FormationCard({ formation, onEdit, onDelete }: FormationCardProp
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-[rgba(255,255,255,0.4)] text-xs">
+            <span className="flex items-center gap-1 text-[rgba(255,255,255,0.4)] text-xs" title="Apprenants inscrits (actifs)">
               <Users className="w-3.5 h-3.5" />
-              {formation.nb_inscrit ?? 0}
+              {formation.inscrits_count ?? formation.nb_inscrit ?? 0}
             </span>
             <Button size="icon" variant="outline" onClick={onEdit} title="Modifier" className="border-[rgba(255,255,255,0.15)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8">
               <Edit className="w-3.5 h-3.5" />

@@ -30,6 +30,10 @@ interface Formation {
   prix: number
   statut: 'en ligne' | 'presentiel' | 'hybride'
   nb_inscrit?: number
+  // CORRIGÉ: "nb_inscrit" n'est jamais recalculé automatiquement nulle
+  // part côté backend — "inscrits_count" est le vrai nombre calculé en
+  // temps réel depuis la table des inscriptions (statut actif).
+  inscrits_count?: number
   categorie_id?: string
 }
 
