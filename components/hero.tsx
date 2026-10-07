@@ -45,7 +45,7 @@ export function Hero() {
       <div className="relative z-[2] px-6 md:px-[60px] max-w-[760px] pt-24 sm:pt-20 lg:pt-0">
         {/* Title */}
         <h1 className="font-serif text-[clamp(48px,7vw,88px)] font-bold leading-[0.95] text-white mb-5 opacity-0 translate-y-[30px] animate-fade-up delay-500">
-          Forme ici.<br />
+          Formé ici.<br />
           <span className="text-[#C9A227]">Reconnu</span><br />
           <span className="font-light italic">partout.</span>
         </h1>
