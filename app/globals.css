@@ -196,3 +196,24 @@ html {
 .delay-900 { transition-delay: 0.9s; animation-delay: 0.9s; }
 .delay-1100 { transition-delay: 1.1s; animation-delay: 1.1s; }
 .delay-1300 { transition-delay: 1.3s; animation-delay: 1.3s; }
+
+/* Défilement automatique de la section partenaires (landing page).
+   La piste contient la liste dupliquée deux fois : translater de -50%
+   boucle donc sans à-coup. */
+@keyframes partners-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.partners-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: partners-marquee var(--partners-duration, 40s) linear infinite;
+}
+.partners-marquee:hover .partners-marquee-track,
+.partners-marquee:focus-within .partners-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .partners-marquee-track { animation: none; }
+  .partners-marquee { overflow-x: auto; }
+}

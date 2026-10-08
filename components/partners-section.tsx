@@ -1,9 +1,17 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import Image from "next/image"
+import { useEffect, useRef, useState } from "react"
+import { apiClient } from "@/lib/api/client"
 
-const partners = [
+interface Partner {
+  name: string
+  domain?: string | null
+  image: string
+}
+
+// Affichage de repli tant que l'admin n'a ajouté aucun logo (ou si l'API
+// est injoignable) : la section ne reste jamais vide.
+const fallbackPartners: Partner[] = [
   {
     name: "OFII (Office Français de l'Immigration et de l'Intégration)",
     domain: "Coopération Internationale",
@@ -48,6 +56,28 @@ const partners = [
 
 export function PartnersSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
+  const [partners, setPartners] = useState<Partner[]>(fallbackPartners)
+
+  useEffect(() => {
+    let cancelled = false
+    apiClient<{ nom: string; domaine?: string | null; logo: string }[]>("/partenaire-logos")
+      .then((res) => {
+        const list = res.data ?? []
+        if (!cancelled && list.length > 0) {
+          setPartners(list.map((p) => ({ name: p.nom, domain: p.domaine, image: p.logo })))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // On répète la liste jusqu'à remplir l'écran, puis on la double pour une
+  // boucle continue sans coupure (translation de -50%).
+  const base = partners.length >= 8 ? partners : Array.from({ length: Math.ceil(8 / partners.length) }, () => partners).flat()
+  const track = [...base, ...base]
+  const duration = Math.max(25, base.length * 5)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -99,41 +129,46 @@ export function PartnersSection() {
           </p>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {partners.map((partner, index) => (
-            <div
-              key={`${partner.name}-${index}`}
-              className="reveal opacity-0 translate-y-6 transition-all duration-700"
-              style={{ transitionDelay: `${index * 80}ms` }}
-            >
-              <div className="group h-full rounded-3xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#C9A227] hover:bg-white/10 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_15px_45px_rgba(201,162,39,.25)] p-8">
-                {/* Logo */}
+        {/* Défilement automatique (pause au survol) */}
+        <div
+          className="partners-marquee relative overflow-hidden"
+          style={{
+            ["--partners-duration" as string]: `${duration}s`,
+            maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+            WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          }}
+        >
+          <div className="partners-marquee-track gap-6 py-4">
+            {track.map((partner, index) => (
+              <div
+                key={`${partner.name}-${index}`}
+                aria-hidden={index >= base.length}
+                className="group w-60 shrink-0 rounded-3xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#C9A227] hover:bg-white/10 transition-colors duration-500 p-8"
+              >
                 <div className="flex justify-center mb-6">
-                  <div className="relative w-28 h-28 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden p-4">
-                    <Image
+                  <div className="w-28 h-28 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden p-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={partner.image}
                       alt={partner.name}
-                      fill
-                      sizes="112px"
-                      loading={index < 4 ? "eager" : "lazy"}
-                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                      className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110"
                     />
                   </div>
                 </div>
 
-                {/* Name */}
-                <h3 className="text-center text-white font-semibold text-lg leading-7">
+                <h3 className="text-center text-white font-semibold text-base leading-6 line-clamp-3">
                   {partner.name}
                 </h3>
 
-                {/* Domain */}
-                <p className="mt-3 text-center text-[#C9A227] text-sm leading-6">
-                  {partner.domain}
-                </p>
+                {partner.domain && (
+                  <p className="mt-3 text-center text-[#C9A227] text-sm leading-6 line-clamp-2">
+                    {partner.domain}
+                  </p>
+                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Bottom Text */}
