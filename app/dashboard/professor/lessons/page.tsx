@@ -30,6 +30,7 @@ interface Lesson {
   video?: string | null
   document?: string | null
   ordre: number
+  publie?: boolean
   module_id: string
 }
 
@@ -60,6 +61,7 @@ export default function LessonsPage() {
     titre: '',
     contenu: '',
     ordre: 0,
+    publie: true,
   })
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [videoMode, setVideoMode] = useState<'upload' | 'lien'>('upload')
@@ -158,6 +160,7 @@ export default function LessonsPage() {
       body.append('titre', formData.titre.trim())
       body.append('contenu', formData.contenu.trim())
       body.append('ordre', String(formData.ordre))
+      body.append('publie', formData.publie ? '1' : '0')
       if (videoMode === 'upload') {
         if (videoFile) body.append('video', videoFile)
       } else if (videoMode === 'lien' && videoUrl.trim()) {
@@ -199,8 +202,20 @@ export default function LessonsPage() {
     }
   }
 
+  // Publier / masquer une leçon en un clic, sans rouvrir le formulaire
+  const togglePublie = async (lesson: Lesson) => {
+    try {
+      const body = new FormData()
+      body.append('publie', lesson.publie === false ? '1' : '0')
+      await apiClientUpload(`/lecons/${lesson.id}`, body, 'PUT')
+      await loadLessons()
+    } catch (err: any) {
+      alertError(err?.message || 'Erreur lors de la modification')
+    }
+  }
+
   const resetForm = () => {
-    setFormData({ titre: '', contenu: '', ordre: 0 })
+    setFormData({ titre: '', contenu: '', ordre: 0, publie: true })
     setVideoFile(null)
     setDocumentFile(null)
     setExistingVideoUrl(null)
@@ -217,6 +232,7 @@ export default function LessonsPage() {
       titre: lesson.titre,
       contenu: lesson.contenu,
       ordre: lesson.ordre,
+      publie: lesson.publie !== false,
     })
     setVideoFile(null)
     setDocumentFile(null)
@@ -393,6 +409,22 @@ export default function LessonsPage() {
                 />
               </div>
 
+              <label className="flex items-start gap-3 p-3 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.publie}
+                  onChange={(e) => setFormData({ ...formData, publie: e.target.checked })}
+                  className="mt-0.5 accent-[#C9A227] w-4 h-4"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-white">Publier cette leçon</span>
+                  <span className="block text-xs text-[rgba(255,255,255,0.5)] mt-0.5">
+                    Décochée, la leçon (et ses exercices) reste invisible pour les apprenants : vous pouvez la préparer
+                    et la publier plus tard, ou la masquer à une nouvelle promotion.
+                  </span>
+                </span>
+              </label>
+
               <div className="flex gap-3">
                 <Button type="submit" disabled={isLoading} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white">
                   {isLoading ? 'Enregistrement...' : editingId ? 'Modifier' : 'Créer'}
@@ -425,6 +457,11 @@ export default function LessonsPage() {
                     >
                       {lesson.titre}
                     </Link>
+                    {lesson.publie === false && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] border border-[rgba(255,255,255,0.12)]">
+                        Brouillon
+                      </span>
+                    )}
                   </div>
                   <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2 line-clamp-2">{lesson.contenu}</p>
                   <div className="flex items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
@@ -439,6 +476,17 @@ export default function LessonsPage() {
                 </div>
 
                 <div className="flex gap-2">
+                  <Button
+                    onClick={() => togglePublie(lesson)}
+                    variant="outline"
+                    size="sm"
+                    title={lesson.publie === false ? 'Publier : la rendre visible aux apprenants' : 'Masquer aux apprenants'}
+                    className={lesson.publie === false
+                      ? 'border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/10'
+                      : 'border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]'}
+                  >
+                    {lesson.publie === false ? 'Publier' : 'Masquer'}
+                  </Button>
                   <Link href={`/cours/${selectedFormation}/${lesson.id}`}>
                     <Button
                       variant="outline"
