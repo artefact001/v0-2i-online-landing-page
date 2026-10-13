@@ -95,10 +95,10 @@ export function OpportuniteCard({ opportunite, onEdit, onDelete, onViewCandidatu
               <Users className="w-3.5 h-3.5" />
             </Button>
           )}
-          <Button size="icon" variant="outline" onClick={onEdit} title="Modifier" className="border-[rgba(255,255,255,0.15)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8">
+          <Button size="icon" variant="outline" onClick={onEdit} title="Modifier" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227] h-8 w-8">
             <Edit className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="outline" onClick={onDelete} title="Supprimer" className="border-red-500/20 text-red-400 hover:bg-red-500/10 h-8 w-8">
+          <Button size="icon" variant="outline" onClick={onDelete} title="Supprimer" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400 h-8 w-8">
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>

@@ -104,7 +104,7 @@ export default function AdminPaymentsPage() {
                         variant="outline"
                         onClick={() => setSelected(p)}
                         title="Voir détails"
-                        className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                        className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227] h-8 w-8"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>

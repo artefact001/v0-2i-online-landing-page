@@ -567,7 +567,7 @@ export default function ExercisesPage() {
                           className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white flex-1"
                           rows={2}
                         />
-                        <Button type="button" onClick={() => removeQuestion(qIndex)} size="sm" variant="outline" className="border-red-500/20 text-red-400">
+                        <Button type="button" onClick={() => removeQuestion(qIndex)} size="sm" variant="outline" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400">
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
@@ -606,7 +606,7 @@ export default function ExercisesPage() {
                                 placeholder={`Choix ${cIndex + 1}`}
                                 className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white flex-1"
                               />
-                              <Button type="button" onClick={() => removeChoix(qIndex, cIndex)} size="sm" variant="ghost" className="text-red-400">
+                              <Button type="button" onClick={() => removeChoix(qIndex, cIndex)} size="sm" variant="ghost" className="text-[#C9A227] hover:bg-red-500/15 hover:text-red-400">
                                 <X className="h-3.5 w-3.5" />
                               </Button>
                             </div>
@@ -652,10 +652,10 @@ export default function ExercisesPage() {
                     Résultats
                     {openResultsFor === ex.id ? <ChevronUp className="w-3 h-3 ml-1.5" /> : <ChevronDown className="w-3 h-3 ml-1.5" />}
                   </Button>
-                  <Button onClick={() => handleEdit(ex)} variant="outline" size="sm" className="border-[rgba(255,255,255,0.2)] text-white">
+                  <Button onClick={() => handleEdit(ex)} variant="outline" size="sm" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227]">
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <Button onClick={() => handleDelete(ex.id, ex.titre)} variant="outline" size="sm" className="border-red-500/20 text-red-400 hover:bg-red-500/10">
+                  <Button onClick={() => handleDelete(ex.id, ex.titre)} variant="outline" size="sm" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>

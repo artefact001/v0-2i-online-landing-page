@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input'
 import { ValidatedInput } from '@/components/ui/validated-input'
 import { Label } from '@/components/ui/label'
 import { ImageUpload } from '@/components/ui/image-upload'
-import { Edit, Trash2, Plus, Eye, EyeOff } from 'lucide-react'
+import { Edit, Trash2, Plus, Eye, Power } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { alertSuccess, alertError, confirmDelete } from '@/lib/alerts'
 import { combine, required, minLength } from '@/lib/validators'
 
@@ -22,6 +23,8 @@ interface PartenaireLogo {
   logo: string
   ordre: number
   actif: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 const emptyForm = { nom: '', domaine: '', ordre: '', actif: true }
@@ -36,6 +39,7 @@ export default function AdminPartenairesLogosPage() {
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [selected, setSelected] = useState<PartenaireLogo | null>(null)
 
   useEffect(() => {
     load()
@@ -230,13 +234,16 @@ export default function AdminPartenairesLogosPage() {
                       Ordre : {p.ordre} {!p.actif && '· Masqué'}
                     </p>
                     <div className="flex gap-2 mt-4">
-                      <Button size="sm" variant="outline" onClick={() => toggleActif(p)} title={p.actif ? 'Masquer' : 'Afficher'} className="border-[rgba(255,255,255,0.2)] text-white">
-                        {p.actif ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      <Button size="sm" variant="outline" onClick={() => setSelected(p)} title="Voir les détails" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227]">
+                        <Eye className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(p)} className="border-[rgba(255,255,255,0.2)] text-white">
+                      <Button size="sm" variant="outline" onClick={() => toggleActif(p)} title={p.actif ? 'Masquer de la page d\'accueil' : 'Afficher sur la page d\'accueil'} className={p.actif ? 'border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227]' : 'border-[rgba(255,255,255,0.2)] text-[rgba(255,255,255,0.4)] hover:bg-[#C9A227]/15 hover:text-[#C9A227]'}>
+                        <Power className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(p)} title="Modifier" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227]">
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDelete(p)} className="border-red-500/40 text-red-400 hover:bg-red-500/10">
+                      <Button size="sm" variant="outline" onClick={() => handleDelete(p)} title="Supprimer" className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -255,6 +262,48 @@ export default function AdminPartenairesLogosPage() {
           )}
         </div>
       </main>
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="bg-[#1a1a2e] border-[rgba(255,255,255,0.1)] text-white">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Détails du partenaire</DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <div className="space-y-5">
+              <div className="flex justify-center">
+                <div className="w-36 h-36 rounded-full bg-white flex items-center justify-center overflow-hidden p-5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={selected.logo} alt={selected.nom} className="max-w-full max-h-full object-contain" />
+                </div>
+              </div>
+              <dl className="grid grid-cols-3 gap-y-3 text-sm">
+                <dt className="text-[rgba(255,255,255,0.5)]">Nom</dt>
+                <dd className="col-span-2 font-medium">{selected.nom}</dd>
+                <dt className="text-[rgba(255,255,255,0.5)]">Domaine</dt>
+                <dd className="col-span-2 text-[#C9A227]">{selected.domaine || '—'}</dd>
+                <dt className="text-[rgba(255,255,255,0.5)]">Ordre</dt>
+                <dd className="col-span-2">{selected.ordre}</dd>
+                <dt className="text-[rgba(255,255,255,0.5)]">Statut</dt>
+                <dd className="col-span-2">{selected.actif ? 'Visible sur la page d\'accueil' : 'Masqué'}</dd>
+                {selected.created_at && (
+                  <>
+                    <dt className="text-[rgba(255,255,255,0.5)]">Ajouté le</dt>
+                    <dd className="col-span-2">{new Date(selected.created_at).toLocaleDateString('fr-FR')}</dd>
+                  </>
+                )}
+              </dl>
+              <div className="flex gap-3 pt-1">
+                <Button onClick={() => { const p = selected; setSelected(null); handleEdit(p) }} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-[#0D2545] font-semibold">
+                  <Edit className="w-4 h-4 mr-2" /> Modifier
+                </Button>
+                <Button onClick={() => { const p = selected; setSelected(null); handleDelete(p) }} variant="outline" className="flex-1 border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400">
+                  <Trash2 className="w-4 h-4 mr-2" /> Supprimer
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

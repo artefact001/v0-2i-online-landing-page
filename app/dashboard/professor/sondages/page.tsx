@@ -127,7 +127,7 @@ export default function ProfessorSondagesPage() {
                           <SelectItem value="texte" className="text-white">Texte libre</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button type="button" size="icon" variant="ghost" onClick={() => setQuestions((prev) => prev.filter((_, ii) => ii !== i))} className="text-red-400 shrink-0">
+                      <Button type="button" size="icon" variant="ghost" onClick={() => setQuestions((prev) => prev.filter((_, ii) => ii !== i))} className="text-[#C9A227] hover:bg-red-500/15 hover:text-red-400 shrink-0">
                         <X className="w-4 h-4" />
                       </Button>
                     </div>

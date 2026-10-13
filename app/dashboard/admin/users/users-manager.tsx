@@ -457,7 +457,7 @@ export function UsersManager({
                               variant="outline"
                               onClick={() => openEdit(u)}
                               title="Modifier"
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                              className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227] h-8 w-8"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -466,7 +466,7 @@ export function UsersManager({
                               variant="outline"
                               onClick={() => handleResetPassword(u)}
                               title="Réinitialiser le mot de passe"
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                              className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227] h-8 w-8"
                             >
                               <Key className="w-4 h-4" />
                             </Button>
@@ -475,7 +475,7 @@ export function UsersManager({
                               variant="outline"
                               onClick={() => handleToggleActive(u)}
                               title={u.isActive ? "Désactiver" : "Activer"}
-                              className="border-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.05)] h-8 w-8"
+                              className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227] h-8 w-8"
                             >
                               <Power className="w-4 h-4" />
                             </Button>
@@ -484,7 +484,7 @@ export function UsersManager({
                               variant="outline"
                               onClick={() => setDeleteTarget(u)}
                               title="Supprimer"
-                              className="border-red-500/30 text-red-400 hover:bg-red-500/10 h-8 w-8"
+                              className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400 h-8 w-8"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -680,7 +680,7 @@ export function UsersManager({
                               size="icon"
                               variant="ghost"
                               onClick={() => handleRemoveFinancing(f.id)}
-                              className="text-red-400 hover:bg-red-500/10 h-7 w-7"
+                              className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400 h-7 w-7"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>

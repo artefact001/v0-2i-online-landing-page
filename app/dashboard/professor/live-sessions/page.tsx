@@ -389,7 +389,7 @@ export default function LiveSessionsPage() {
                         onClick={() => handleEdit(session)}
                         variant="outline"
                         size="sm"
-                        className="border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]"
+                        className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227]"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -397,7 +397,7 @@ export default function LiveSessionsPage() {
                         onClick={() => handleDelete(session.id, session.title)}
                         variant="outline"
                         size="sm"
-                        className="border-red-500/20 text-red-400 hover:bg-red-500/10"
+                        className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

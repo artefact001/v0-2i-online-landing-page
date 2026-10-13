@@ -286,7 +286,7 @@ export default function ModulesPage() {
                 onClick={() => handleEdit(module)}
                 variant="outline"
                 size="sm"
-                className="border-[rgba(255,255,255,0.15)] text-white hover:border-[#C9A227]/50 hover:bg-[#C9A227]/10"
+                className="border-[#C9A227]/50 text-[#C9A227] hover:bg-[#C9A227]/15 hover:border-[#C9A227]"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -294,7 +294,7 @@ export default function ModulesPage() {
                 onClick={() => handleDelete(module.id, module.titre)}
                 variant="outline"
                 size="sm"
-                className="border-red-500/20 text-red-400 hover:bg-red-500/10"
+                className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

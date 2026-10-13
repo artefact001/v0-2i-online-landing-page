@@ -88,7 +88,7 @@ export function LessonNotesPanel({ leconId }: { leconId: string }) {
                 size="icon"
                 variant="ghost"
                 onClick={() => handleDelete(note.id)}
-                className="text-red-400 hover:bg-red-500/10 h-7 w-7 shrink-0"
+                className="border-[#C9A227]/50 text-[#C9A227] hover:bg-red-500/15 hover:border-red-400 hover:text-red-400 h-7 w-7 shrink-0"
                 title="Supprimer"
               >
                 <Trash2 className="w-3.5 h-3.5" />

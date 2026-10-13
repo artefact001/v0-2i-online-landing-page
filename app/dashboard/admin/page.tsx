@@ -41,6 +41,14 @@ export default function AdminDashboard() {
   const [recentOpportunites, setRecentOpportunites] = useState<Opportunite[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [partenaires, setPartenaires] = useState<{ id: number; nom: string; domaine?: string | null; logo: string; actif: boolean }[]>([])
+
+  useEffect(() => {
+    apiClient<any[]>('/admin/partenaire-logos')
+      .then((res) => setPartenaires(res.data || []))
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     async function load() {
       try {
@@ -222,6 +230,37 @@ export default function AdminDashboard() {
                       <p className="text-[rgba(255,255,255,0.4)] text-sm">Aucune opportunité ouverte.</p>
                     )}
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-white font-semibold">Partenaires</h3>
+                    <Link href="/dashboard/admin/partenaires-logos" className="text-xs text-[#C9A227] hover:underline flex items-center gap-0.5">
+                      Gérer <ChevronRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                  {partenaires.length === 0 ? (
+                    <p className="text-[rgba(255,255,255,0.4)] text-sm">Aucun partenaire ajouté.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                      {partenaires.map((p) => (
+                        <Link
+                          key={p.id}
+                          href="/dashboard/admin/partenaires-logos"
+                          title={p.nom}
+                          className={`flex flex-col items-center text-center rounded-lg p-3 bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] transition-colors ${p.actif ? '' : 'opacity-50'}`}
+                        >
+                          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center overflow-hidden p-2 mb-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={p.logo} alt={p.nom} className="max-w-full max-h-full object-contain" />
+                          </div>
+                          <span className="text-xs text-[rgba(255,255,255,0.8)] line-clamp-2">{p.nom}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </>
