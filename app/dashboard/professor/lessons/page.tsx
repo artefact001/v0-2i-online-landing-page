@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ValidatedInput } from '@/components/ui/validated-input'
 import { FileUpload } from '@/components/ui/file-upload'
+import { needsDirectUpload, uploadFileDirect } from '@/lib/api/direct-upload'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -67,6 +68,7 @@ export default function LessonsPage() {
   const [videoMode, setVideoMode] = useState<'upload' | 'lien'>('upload')
   const [videoUrl, setVideoUrl] = useState('')
   const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [uploadStatus, setUploadStatus] = useState('')
   const [existingVideoUrl, setExistingVideoUrl] = useState<string | null>(null)
   const [existingDocumentUrl, setExistingDocumentUrl] = useState<string | null>(null)
 
@@ -161,12 +163,26 @@ export default function LessonsPage() {
       body.append('contenu', formData.contenu.trim())
       body.append('ordre', String(formData.ordre))
       body.append('publie', formData.publie ? '1' : '0')
+      // Gros fichiers (> 4 Mo) : envoi direct à l'API (le relais Vercel les refuse)
       if (videoMode === 'upload') {
-        if (videoFile) body.append('video', videoFile)
+        if (needsDirectUpload(videoFile)) {
+          setUploadStatus('Envoi de la vidéo… 0 %')
+          const ref = await uploadFileDirect(videoFile, 'video', (p) => setUploadStatus(`Envoi de la vidéo… ${p} %`))
+          body.append('video_ref', ref)
+        } else if (videoFile) {
+          body.append('video', videoFile)
+        }
       } else if (videoMode === 'lien' && videoUrl.trim()) {
         body.append('video_url', videoUrl.trim())
       }
-      if (documentFile) body.append('document', documentFile)
+      if (needsDirectUpload(documentFile)) {
+        setUploadStatus('Envoi du document… 0 %')
+        const ref = await uploadFileDirect(documentFile, 'document', (p) => setUploadStatus(`Envoi du document… ${p} %`))
+        body.append('document_ref', ref)
+      } else if (documentFile) {
+        body.append('document', documentFile)
+      }
+      setUploadStatus('Enregistrement de la leçon…')
 
       if (editingId) {
         await apiClientUpload(`/lecons/${editingId}`, body, 'PUT')
@@ -185,6 +201,7 @@ export default function LessonsPage() {
       alertError(msg)
     } finally {
       setIsLoading(false)
+      setUploadStatus('')
     }
   }
 
@@ -427,7 +444,7 @@ export default function LessonsPage() {
 
               <div className="flex gap-3">
                 <Button type="submit" disabled={isLoading} className="flex-1 bg-[#C9A227] hover:bg-[#B8860B] text-white">
-                  {isLoading ? 'Enregistrement...' : editingId ? 'Modifier' : 'Créer'}
+                  {isLoading ? (uploadStatus || 'Enregistrement...') : editingId ? 'Modifier' : 'Créer'}
                 </Button>
                 <Button type="button" onClick={resetForm} variant="outline" className="flex-1 border-[rgba(255,255,255,0.2)] text-white hover:bg-[rgba(255,255,255,0.05)]">
                   Annuler
