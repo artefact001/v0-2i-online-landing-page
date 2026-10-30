@@ -4,39 +4,49 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
-import { partnerService, type FinancedStudent } from '@/lib/partner-service'
-import { apiClient } from '@/lib/api/client'
+import { partnerService, formatDateFr, formatFcfa, type FinancedStudent, type FinancedFormation } from '@/lib/partner-service'
 import { Card, CardContent } from '@/components/ui/card'
-import { ChevronLeft, Users } from 'lucide-react'
-
-interface Formation {
-  id: string
-  titre: string
-}
+import { ChevronLeft, Users, HandCoins, Calendar, BookOpen } from 'lucide-react'
 
 export default function PartnerFormationDetailPage() {
   const params = useParams()
   const formationId = params.id as string
-  const [formation, setFormation] = useState<Formation | null>(null)
+  const [formation, setFormation] = useState<FinancedFormation | null>(null)
   const [students, setStudents] = useState<FinancedStudent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [studentsError, setStudentsError] = useState('')
+
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    setStudentsError('')
+
+    // Deux appels indépendants : si la liste des apprenants échoue, la fiche
+    // de la formation s'affiche quand même (et inversement).
+    const [formationRes, studentsRes] = await Promise.allSettled([
+      partnerService.getFormationDetail(formationId),
+      partnerService.getFormationStudents(formationId),
+    ])
+
+    if (formationRes.status === 'fulfilled') {
+      setFormation(formationRes.value)
+    } else {
+      setError(formationRes.reason?.message || 'Impossible de charger cette formation.')
+    }
+
+    if (studentsRes.status === 'fulfilled') {
+      setStudents(studentsRes.value)
+    } else {
+      setStudentsError(studentsRes.reason?.message || 'Impossible de charger les étudiants.')
+    }
+
+    setLoading(false)
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [formationRes, studentsData] = await Promise.all([
-          apiClient<Formation>(`/formations/${formationId}`),
-          partnerService.getFormationStudents(formationId),
-        ])
-        setFormation(formationRes.data ?? null)
-        setStudents(studentsData)
-      } catch (err: any) {
-        setError(err?.message || 'Vous ne financez pas cette formation.')
-      }
-      setLoading(false)
-    }
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formationId])
 
   const averageProgress =
@@ -67,11 +77,63 @@ export default function PartnerFormationDetailPage() {
           ) : error ? (
             <Card className="bg-[#0d0d1a] border-red-500/20">
               <CardContent className="py-12 text-center">
-                <p className="text-red-400">{error}</p>
+                <p className="text-red-400 mb-4">{error}</p>
+                <button onClick={load} className="text-sm text-[#C9A227] hover:underline">Réessayer</button>
               </CardContent>
             </Card>
           ) : (
             <>
+              {/* Fiche de la formation financée */}
+              {formation && (
+                <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)] overflow-hidden">
+                  <CardContent className="p-0 md:flex">
+                    {formation.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={formation.image} alt={formation.titre} className="w-full md:w-64 h-44 md:h-auto object-cover" />
+                    )}
+                    <div className="p-5 space-y-4 flex-1">
+                      {formation.description && (
+                        <p className="text-[rgba(255,255,255,0.7)] text-sm leading-relaxed line-clamp-4">{formation.description}</p>
+                      )}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-[9px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider flex items-center gap-1">
+                            <HandCoins className="w-3 h-3 text-[#C9A227]" /> Montant financé
+                          </p>
+                          <p className="text-lg font-bold text-[#C9A227]">{formatFcfa(formation.pivot?.montant_finance)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-[#C9A227]" /> Financé le
+                          </p>
+                          <p className="text-white text-sm font-medium">{formatDateFr(formation.pivot?.date_financement)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider flex items-center gap-1">
+                            <BookOpen className="w-3 h-3 text-[#C9A227]" /> Modules
+                          </p>
+                          <p className="text-white text-sm font-medium">{formation.modules_count ?? '—'}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] text-[rgba(255,255,255,0.3)] uppercase tracking-wider">Niveau / durée</p>
+                          <p className="text-white text-sm font-medium">
+                            {[formation.niveau, formation.duree].filter(Boolean).join(' · ') || '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {studentsError && (
+                <Card className="bg-[#0d0d1a] border-red-500/20">
+                  <CardContent className="py-4 text-center">
+                    <p className="text-red-400 text-sm">{studentsError}</p>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
                   <CardContent className="p-5">

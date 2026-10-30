@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
 import { useAuth } from '@/lib/auth-context'
-import { partnerService, type PartnerStats, type FinancedFormation } from '@/lib/partner-service'
+import { partnerService, formatDateFr, formatFcfa, type PartnerStats, type FinancedFormation } from '@/lib/partner-service'
 import { Card, CardContent } from '@/components/ui/card'
 import { GraduationCap, Users, TrendingUp, Award, ChevronRight, HandCoins } from 'lucide-react'
 
@@ -14,17 +14,25 @@ export default function PartnerDashboard() {
   const [stats, setStats] = useState<PartnerStats | null>(null)
   const [formations, setFormations] = useState<FinancedFormation[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    async function load() {
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    try {
       const [statsData, formationsData] = await Promise.all([
         partnerService.getStats(),
         partnerService.getFinancedFormations(),
       ])
       setStats(statsData)
       setFormations(formationsData)
-      setLoading(false)
+    } catch (err: any) {
+      setError(err?.message || 'Impossible de charger vos données.')
     }
+    setLoading(false)
+  }
+
+  useEffect(() => {
     load()
   }, [])
 
@@ -48,7 +56,14 @@ export default function PartnerDashboard() {
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />
             </div>
-          ) : !stats || stats.totalFormationsFinancees === 0 ? (
+          ) : error ? (
+            <Card className="bg-[#0d0d1a] border-red-500/20">
+              <CardContent className="p-10 text-center space-y-4">
+                <p className="text-red-400">{error}</p>
+                <button onClick={load} className="text-sm text-[#C9A227] hover:underline">Réessayer</button>
+              </CardContent>
+            </Card>
+          ) : !stats || (stats.totalFormationsFinancees === 0 && formations.length === 0) ? (
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="p-10 text-center">
                 <HandCoins className="w-12 h-12 text-[rgba(255,255,255,0.2)] mx-auto mb-4" />
@@ -71,7 +86,7 @@ export default function PartnerDashboard() {
                       Montant total investi
                     </p>
                     <p className="text-3xl font-bold text-white">
-                      {(stats.totalInvesti ?? 0).toLocaleString()} FCFA
+                      {formatFcfa(stats.totalInvesti)}
                     </p>
                   </div>
                 </CardContent>
@@ -113,11 +128,11 @@ export default function PartnerDashboard() {
                           <p className="text-white font-medium">{f.titre}</p>
                           <p className="text-[rgba(255,255,255,0.4)] text-xs">
                             {f.inscriptions_count ?? 0} inscrit{(f.inscriptions_count ?? 0) !== 1 ? 's' : ''} · financé le{' '}
-                            {new Date(f.pivot.date_financement).toLocaleDateString('fr-FR')}
+                            {formatDateFr(f.pivot?.date_financement)}
                           </p>
                         </div>
                         <span className="text-[#C9A227] font-semibold text-sm shrink-0">
-                          {Number(f.pivot.montant_finance).toLocaleString()} FCFA
+                          {formatFcfa(f.pivot?.montant_finance)}
                         </span>
                       </Link>
                     ))}

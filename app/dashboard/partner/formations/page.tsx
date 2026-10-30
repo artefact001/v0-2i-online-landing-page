@@ -3,20 +3,27 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { DashboardSidebar, DashboardHeader } from '@/components/dashboard-layout'
-import { partnerService, type FinancedFormation } from '@/lib/partner-service'
+import { partnerService, formatDateFr, formatFcfa, type FinancedFormation } from '@/lib/partner-service'
 import { Card, CardContent } from '@/components/ui/card'
 import { GraduationCap, Users, Calendar, ChevronRight } from 'lucide-react'
 
 export default function PartnerFormationsPage() {
   const [formations, setFormations] = useState<FinancedFormation[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const load = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      setFormations(await partnerService.getFinancedFormations())
+    } catch (err: any) {
+      setError(err?.message || 'Impossible de charger vos formations financées.')
+    }
+    setLoading(false)
+  }
 
   useEffect(() => {
-    async function load() {
-      const data = await partnerService.getFinancedFormations()
-      setFormations(data)
-      setLoading(false)
-    }
     load()
   }, [])
 
@@ -31,6 +38,13 @@ export default function PartnerFormationsPage() {
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#C9A227]" />
             </div>
+          ) : error ? (
+            <Card className="bg-[#0d0d1a] border-red-500/20">
+              <CardContent className="py-12 text-center space-y-4">
+                <p className="text-red-400">{error}</p>
+                <button onClick={load} className="text-sm text-[#C9A227] hover:underline">Réessayer</button>
+              </CardContent>
+            </Card>
           ) : formations.length === 0 ? (
             <Card className="bg-[#0d0d1a] border-[rgba(255,255,255,0.05)]">
               <CardContent className="py-12 text-center">
@@ -55,7 +69,7 @@ export default function PartnerFormationsPage() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5" />
-                          {new Date(f.pivot.date_financement).toLocaleDateString('fr-FR')}
+                          {formatDateFr(f.pivot?.date_financement)}
                         </span>
                       </div>
                       <div className="pt-3 border-t border-[rgba(255,255,255,0.06)]">
@@ -63,7 +77,7 @@ export default function PartnerFormationsPage() {
                           Montant financé
                         </span>
                         <p className="text-xl font-bold text-[#C9A227]">
-                          {Number(f.pivot.montant_finance).toLocaleString()} FCFA
+                          {formatFcfa(f.pivot?.montant_finance)}
                         </p>
                       </div>
                     </CardContent>
