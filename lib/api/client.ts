@@ -1,3 +1,13 @@
+/** Erreur d'API portant le code HTTP (ex. 401 = session expirée). */
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
 export async function apiClient<T = any>(
   path: string,
   options: RequestInit = {},
@@ -28,15 +38,16 @@ export async function apiClient<T = any>(
       json = JSON.parse(rawText)
     } catch {
       console.error('[apiClient] Réponse non-JSON du serveur:', res.status, rawText.slice(0, 300))
-      throw new Error(
+      throw new ApiError(
         res.ok
           ? 'Réponse inattendue du serveur.'
           : `Erreur serveur (${res.status}). Réessayez ou contactez le support si le problème persiste.`,
+        res.status,
       )
     }
   }
 
-  if (!res.ok) throw new Error(json?.message || `Erreur API (${res.status})`)
+  if (!res.ok) throw new ApiError(json?.message || `Erreur API (${res.status})`, res.status)
 
   // Normalisation: certains contrôleurs Laravel (apiResource par défaut,
   // sans wrapper personnalisé) renvoient un tableau brut ou un objet

@@ -117,6 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // qu'on sache pourquoi. Le message d'erreur contient déjà le
         // code HTTP réel grâce à apiClient.
         console.warn(`[auth] Tentative ${attempt + 1}/3 de /me a échoué:`, error?.message || error)
+        // 401 = session réellement expirée/invalide (pas un accroc réseau) :
+        // inutile de réessayer, on déconnecte tout de suite.
+        if (error?.status === 401) {
+          setUser(null)
+          return
+        }
         if (attempt < 2) {
           await new Promise((resolve) => setTimeout(resolve, 700))
         } else {

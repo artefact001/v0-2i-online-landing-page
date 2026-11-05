@@ -129,11 +129,11 @@ export async function forgotPassword(email: string) {
 }
 
 // Route Laravel réelle: POST /api/v1/resetPassword (publique)
-// Le champ "password" seul provoquait "Le nouveau mot de passe est
-// obligatoire" — signe que ResetPasswordRequest attend un autre nom de
-// clé pour ce champ. On envoie plusieurs alias plausibles en même temps
-// (password, new_password, nouveau_mot_de_passe + leurs confirmations)
-// pour couvrir la convention réelle sans avoir à deviner à l'aveugle.
+// ResetPasswordRequest attend exactement : email, code, nouveau_password et
+// nouveau_password_confirmation (règle "confirmed"). Avant ce correctif, on
+// envoyait d'autres noms (password, new_password...) : Laravel répondait
+// toujours « Le nouveau mot de passe est obligatoire » et la
+// réinitialisation ne pouvait jamais aboutir.
 export async function resetPassword(data: {
   email: string
   code: string
@@ -147,16 +147,8 @@ export async function resetPassword(data: {
   const payload = {
     email: data.email,
     code: data.code,
-    otp: data.code,
-    token: data.code,
-
-    password: data.password,
-    new_password: data.password,
-    nouveau_mot_de_passe: data.password,
-
-    password_confirmation: data.password_confirmation,
-    new_password_confirmation: data.password_confirmation,
-    nouveau_mot_de_passe_confirmation: data.password_confirmation,
+    nouveau_password: data.password,
+    nouveau_password_confirmation: data.password_confirmation,
   }
 
   try {

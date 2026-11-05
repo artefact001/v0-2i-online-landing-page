@@ -71,7 +71,16 @@ async function proxy(request: NextRequest, path: string[], method: string) {
     }
   }
 
-  return NextResponse.json(json, { status: res.status })
+  const response = NextResponse.json(json, { status: res.status })
+
+  // Token refusé par Laravel (expiré, révoqué après un changement de mot de
+  // passe...) : on supprime le cookie périmé pour que l'utilisateur soit
+  // renvoyé proprement vers /login au lieu de rester sur un écran bloqué.
+  if (res.status === 401 && token) {
+    response.cookies.delete('auth_token')
+  }
+
+  return response
 }
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
