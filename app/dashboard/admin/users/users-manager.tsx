@@ -70,6 +70,24 @@ const ROLE_STYLES: Record<ManagedUser["role"], string> = {
 
 type Feedback = { type: "success" | "error"; message: string } | null
 
+// Filet de sécurité : si une action serveur échoue "du dehors" (délai dépassé,
+// coupure réseau, plantage du serveur), l'exception n'est PAS interceptée par
+// le try/catch interne de l'action et faisait apparaître la page d'erreur
+// « This page couldn't load ». On la transforme en simple message d'erreur.
+async function safely<T extends { success: boolean; error?: string }>(
+  fn: () => Promise<T>,
+): Promise<T | { success: false; error: string }> {
+  try {
+    return await fn()
+  } catch {
+    return {
+      success: false,
+      error:
+        "Le serveur a mis trop de temps à répondre. L'opération a peut-être abouti : vérifiez la liste, puis réessayez si besoin.",
+    }
+  }
+}
+
 export function UsersManager({
   initialUsers,
   initialNewRole,
@@ -192,7 +210,7 @@ export function UsersManager({
 
   async function handleAddFinancing() {
     if (!editing || !newFinanceFormationId || !newFinanceMontant) return
-    const res = await financerFormation(editing.id, newFinanceFormationId, Number(newFinanceMontant), newFinanceDate)
+    const res = await safely(() => financerFormation(editing.id, newFinanceFormationId, Number(newFinanceMontant), newFinanceDate))
     if (res.success) {
       await refresh()
       const updated = (await listUsers()).find((u) => u.id === editing.id)
@@ -209,7 +227,7 @@ export function UsersManager({
     if (!editing) return
     const confirmed = await confirmDeleteDialog("ce financement")
     if (!confirmed) return
-    const res = await retirerFinancement(editing.id, formationId)
+    const res = await safely(() => retirerFinancement(editing.id, formationId))
     if (res.success) {
       setFinancedFormations((prev) => prev.filter((f) => f.id !== formationId))
       await refresh()
@@ -247,7 +265,7 @@ export function UsersManager({
             : { dateNaissance, lieuNaissance, niveau, formationIds }
 
       if (editing) {
-        const res = await updateUser(editing.id, { ...common, email, ...roleSpecific })
+        const res = await safely(() => updateUser(editing.id, { ...common, email, ...roleSpecific }))
         if (res.success) {
           setFormOpen(false) // ferme le formulaire automatiquement
           await refresh()
@@ -260,7 +278,7 @@ export function UsersManager({
           alertError("Email requis")
           return
         }
-        const res = await createUser({ email, ...common, ...roleSpecific })
+        const res = await safely(() => createUser({ email, ...common, ...roleSpecific }))
         if (res.success) {
           setLastPassword(res.passwordTemporaire ?? null)
           setFormOpen(false) // ferme le formulaire automatiquement
@@ -272,6 +290,7 @@ export function UsersManager({
           )
         } else {
           alertError(res.error ?? "Erreur")
+          await refresh() // le compte a pu être créé malgré l'erreur
         }
       }
     })
@@ -280,7 +299,7 @@ export function UsersManager({
   function confirmDelete() {
     if (!deleteTarget) return
     startTransition(async () => {
-      const res = await deleteUser(deleteTarget.id, deleteTarget.role)
+      const res = await safely(() => deleteUser(deleteTarget.id, deleteTarget.role))
       setDeleteTarget(null)
       if (res.success) {
         await refresh()
@@ -293,7 +312,7 @@ export function UsersManager({
 
   function handleToggleActive(u: ManagedUser) {
     startTransition(async () => {
-      const res = await setUserActive(u.id, u.role)
+      const res = await safely(() => setUserActive(u.id, u.role))
       if (res.success) {
         await refresh()
         alertSuccess(u.isActive ? "Compte désactivé." : "Compte activé.")
@@ -307,7 +326,7 @@ export function UsersManager({
     const confirmed = await confirmDeleteDialog(`Réinitialiser le mot de passe de ${u.firstName} ${u.lastName}`)
     if (!confirmed) return
     startTransition(async () => {
-      const res = await resetUserPassword(u.id, u.role)
+      const res = await safely(() => resetUserPassword(u.id, u.role))
       if (res.success) {
         alertSuccess(
           res.passwordTemporaire
