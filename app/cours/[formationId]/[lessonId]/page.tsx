@@ -755,14 +755,14 @@ export default function CoursePage() {
               {exercises.length === 0 ? (
                 <div className="bg-[#0D1B2A] rounded-xl p-8 border border-[#1a2942] text-center">
                   <Award className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">Aucun exercice disponible pour cette lecon.</p>
+                  <p className="text-gray-400">Aucune évaluation disponible pour cette leçon.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {exercises.map((exercise, index) => (
                     <Link
                       key={exercise.id}
-                      href={`/cours/${params.formationId}/${currentLesson.id}/exercice/${exercise.id}`}
+                      href={`/cours/${params.formationId}/${currentLesson.id}/evaluation/${exercise.id}`}
                       className="block bg-[#0D1B2A] rounded-xl p-6 border border-[#1a2942] hover:border-[#C9A227]/50 transition-all group"
                     >
                       <div className="flex items-center justify-between">

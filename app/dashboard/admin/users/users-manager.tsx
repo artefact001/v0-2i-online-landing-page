@@ -657,7 +657,7 @@ export function UsersManager({
                     ))}
                   </div>
                   <p className="text-xs text-[rgba(255,255,255,0.4)]">
-                    Détermine à quel contenu (leçons, exercices, examens...) ce professeur a accès et peut modifier —
+                    Détermine à quel contenu (leçons, évaluations, examens...) ce professeur a accès et peut modifier —
                     sans formation assignée, il ne verra aucun contenu à gérer.
                   </p>
                 </div>

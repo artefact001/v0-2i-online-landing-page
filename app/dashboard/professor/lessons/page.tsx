@@ -436,7 +436,7 @@ export default function LessonsPage() {
                 <span>
                   <span className="block text-sm font-medium text-white">Publier cette leçon</span>
                   <span className="block text-xs text-[rgba(255,255,255,0.5)] mt-0.5">
-                    Décochée, la leçon (et ses exercices) reste invisible pour les apprenants : vous pouvez la préparer
+                    Décochée, la leçon (et ses évaluations) reste invisible pour les apprenants : vous pouvez la préparer
                     et la publier plus tard, ou la masquer à une nouvelle promotion.
                   </span>
                 </span>

@@ -19,6 +19,17 @@ const nextConfig = {
       },
     ],
   },
+  // Les évaluations s'appelaient « exercices » dans l'adresse : les anciens
+  // liens (favoris, messages) continuent de fonctionner.
+  async redirects() {
+    return [
+      {
+        source: '/cours/:formationId/:lessonId/exercice/:exerciseId',
+        destination: '/cours/:formationId/:lessonId/evaluation/:exerciseId',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig

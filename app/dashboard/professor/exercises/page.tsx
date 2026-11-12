@@ -46,7 +46,8 @@ interface Exercise {
   id: string
   lecon_id: string
   titre: string
-  description?: string
+  description?: string // affiché comme « Situation »
+  consigne?: string
   type: 'qcm' | 'ouvert' | 'mixte'
   duree: number | null
   note_max: number
@@ -128,7 +129,8 @@ export default function ExercisesPage() {
   const [formError, setFormError] = useState('')
 
   const [titre, setTitre] = useState('')
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState('') // = Situation
+  const [consigne, setConsigne] = useState('')
   const [type, setType] = useState<'qcm' | 'ouvert' | 'mixte'>('qcm')
   const [duree, setDuree] = useState<number | ''>('')
   const [noteMax, setNoteMax] = useState(20)
@@ -196,6 +198,7 @@ export default function ExercisesPage() {
   const resetForm = () => {
     setTitre('')
     setDescription('')
+    setConsigne('')
     setType('qcm')
     setDuree('')
     setNoteMax(20)
@@ -208,6 +211,7 @@ export default function ExercisesPage() {
   const handleEdit = async (ex: Exercise) => {
     setTitre(ex.titre)
     setDescription(ex.description || '')
+    setConsigne(ex.consigne || '')
     setType(ex.type)
     setDuree(ex.duree ?? '')
     setNoteMax(ex.note_max)
@@ -276,7 +280,7 @@ export default function ExercisesPage() {
 
   const validate = () => {
     if (!selectedLesson) return 'Veuillez sélectionner une leçon.'
-    if (!titre.trim()) return "Le titre de l'exercice est obligatoire."
+    if (!titre.trim()) return "Le titre de l'évaluation est obligatoire."
     if (questions.length === 0) return 'Ajoutez au moins une question.'
     for (const [i, q] of questions.entries()) {
       if (!q.contenu.trim()) return `La question ${i + 1} ne peut pas être vide.`
@@ -307,6 +311,7 @@ export default function ExercisesPage() {
       const payload = {
         titre: titre.trim(),
         description: description.trim() || undefined,
+        consigne: consigne.trim() || undefined,
         type,
         duree: duree === '' ? null : Number(duree),
         note_max: noteMax,
@@ -338,7 +343,7 @@ export default function ExercisesPage() {
 
       await loadExercises()
       resetForm()
-      alertSuccess(editingId ? 'Exercice modifié avec succès.' : 'Exercice créé avec succès.')
+      alertSuccess(editingId ? 'Évaluation modifiée avec succès.' : 'Évaluation créée avec succès.')
     } catch (error: any) {
       console.error('[v0] Error saving exercise:', error)
       // CORRIGÉ: affichait toujours ce texte générique, quelle que
@@ -359,7 +364,7 @@ export default function ExercisesPage() {
     try {
       await apiClient(`/exercices/${id}`, { method: 'DELETE' })
       loadExercises()
-      alertSuccess('Exercice supprimé avec succès.')
+      alertSuccess('Évaluation supprimée avec succès.')
     } catch (error: any) {
       console.error('Error deleting exercise:', error)
       alertError(error?.message || 'Erreur lors de la suppression')
@@ -461,7 +466,7 @@ export default function ExercisesPage() {
         />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <StatCard label="Exercices" value={exercises.length} icon={<GraduationCap className="h-5 w-5" />} />
+          <StatCard label="Évaluations" value={exercises.length} icon={<GraduationCap className="h-5 w-5" />} />
           <StatCard label="Note max moyenne" value={exercises.length ? Math.round(exercises.reduce((s, e) => s + e.note_max, 0) / exercises.length) : 0} icon={<Award className="h-5 w-5" />} />
         </div>
 
@@ -521,8 +526,23 @@ export default function ExercisesPage() {
                 />
 
                 <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.8)]">Description</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" rows={3} />
+                  <Label className="text-[rgba(255,255,255,0.8)]">Situation</Label>
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Contexte, scénario ou problématique présentés à l'apprenant"
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[rgba(255,255,255,0.8)]">Consigne</Label>
+                  <Textarea
+                    value={consigne}
+                    onChange={(e) => setConsigne(e.target.value)}
+                    placeholder="Ce que l'apprenant doit faire, et comment"
+                    className="bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white" rows={3}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -639,7 +659,16 @@ export default function ExercisesPage() {
               <CardContent className="pt-6 flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-white mb-1">{ex.titre}</h3>
-                  {ex.description && <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2">{ex.description}</p>}
+                  {ex.description && (
+                    <p className="text-[rgba(255,255,255,0.6)] text-sm mb-1">
+                      <span className="text-[#C9A227] font-medium">Situation : </span>{ex.description}
+                    </p>
+                  )}
+                  {ex.consigne && (
+                    <p className="text-[rgba(255,255,255,0.6)] text-sm mb-2">
+                      <span className="text-[#C9A227] font-medium">Consigne : </span>{ex.consigne}
+                    </p>
+                  )}
                   <div className="flex items-center gap-4 text-xs text-[rgba(255,255,255,0.5)]">
                     <span>{ex.type}</span>
                     <span>{ex.note_max} points</span>

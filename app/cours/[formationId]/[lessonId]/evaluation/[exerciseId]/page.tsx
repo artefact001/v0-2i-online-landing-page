@@ -39,7 +39,8 @@ interface Question {
 interface Exercice {
   id: string
   titre: string
-  description?: string
+  description?: string // affiché comme « Situation »
+  consigne?: string
   type: "qcm" | "ouvert" | "mixte"
   duree: number | null
   note_max: number
@@ -266,7 +267,22 @@ export default function ExercisePage() {
           )}
         </div>
 
-        {exercice.description && <p className="text-[rgba(255,255,255,0.6)] mb-6">{exercice.description}</p>}
+        {(exercice.description || exercice.consigne) && (
+          <div className="mb-6 space-y-4">
+            {exercice.description && (
+              <div className="rounded-xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C9A227] mb-1">Situation</p>
+                <p className="text-[rgba(255,255,255,0.75)] whitespace-pre-line">{exercice.description}</p>
+              </div>
+            )}
+            {exercice.consigne && (
+              <div className="rounded-xl border border-[rgba(201,162,39,0.25)] bg-[rgba(201,162,39,0.05)] p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C9A227] mb-1">Consigne</p>
+                <p className="text-[rgba(255,255,255,0.85)] whitespace-pre-line">{exercice.consigne}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-6 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden h-2">
           <div

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 const faqItems = [
   {
     question: "Comment se déroule le parcours de formation ?",
-    answer: "En 4 étapes simples : 1) Choisissez votre formation dans le catalogue depuis votre téléphone (programme, durée, certificat et tarif détaillés). 2) Payez en Mobile Money via Wave, Orange Money ou Free Money — l'accès est activé instantanément. 3) Apprenez à votre rythme avec des vidéos HD, des fiches PDF téléchargeables, des quiz et des exercices pratiques, depuis n'importe où. 4) Obtenez votre certificat numérique Incub Institut, vérifiable en ligne et reconnu par les employeurs.",
+    answer: "En 4 étapes simples : 1) Choisissez votre formation dans le catalogue depuis votre téléphone (programme, durée, certificat et tarif détaillés). 2) Payez en Mobile Money via Wave, Orange Money ou Free Money — l'accès est activé instantanément. 3) Apprenez à votre rythme avec des vidéos HD, des fiches PDF téléchargeables, des quiz et des évaluations pratiques, depuis n'importe où. 4) Obtenez votre certificat numérique Incub Institut, vérifiable en ligne et reconnu par les employeurs.",
   },
   {
     question: "Les diplômes 2I Online sont-ils reconnus par l'État ?",

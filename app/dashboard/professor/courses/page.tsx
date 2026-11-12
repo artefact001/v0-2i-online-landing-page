@@ -32,7 +32,7 @@ export default function ProfessorCoursesPage() {
             <CardHeader><CardTitle className="text-white font-serif text-base">Évaluations</CardTitle></CardHeader>
             <CardContent>
               <Link href="/dashboard/professor/exercises">
-                <Button className="w-full bg-[#C9A227] hover:bg-[#B8860B]">Gérer les exercices</Button>
+                <Button className="w-full bg-[#C9A227] hover:bg-[#B8860B]">Gérer les évaluations</Button>
               </Link>
             </CardContent>
           </Card>
