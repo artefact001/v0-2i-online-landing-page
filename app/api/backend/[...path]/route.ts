@@ -48,6 +48,24 @@ async function proxy(request: NextRequest, path: string[], method: string) {
     )
   }
 
+  // Fichiers (PDF, images : pièces justificatives, rapports PDF...) : on les
+  // transmet TELS QUELS en binaire. Avant, toute réponse non-JSON était lue
+  // comme du texte puis rejetée (« Réponse invalide du serveur API »), donc
+  // aucun PDF ni image ne pouvait passer par le relais.
+  const upstreamType = res.headers.get('content-type') || ''
+  if (res.ok && /^(application\/pdf|image\/|application\/octet-stream|application\/vnd\.)/i.test(upstreamType)) {
+    const fileResponse = new NextResponse(await res.arrayBuffer(), {
+      status: res.status,
+      headers: {
+        'Content-Type': upstreamType,
+        'Content-Disposition': res.headers.get('content-disposition') || 'inline',
+        'Cache-Control': 'private, no-store, max-age=0',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    })
+    return fileResponse
+  }
+
   const text = await res.text()
 
   let json: unknown = null

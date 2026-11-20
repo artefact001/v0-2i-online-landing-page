@@ -788,7 +788,7 @@ export function UsersManager({
                   className="bg-[#0a0a1a] border-[rgba(255,255,255,0.1)] text-white"
                 />
                 <div className="space-y-2">
-                  <Label className="text-[rgba(255,255,255,0.7)]">Formation(s) *</Label>
+                  <Label className="text-[rgba(255,255,255,0.7)]">Formation *</Label>
                   <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 bg-[#0a0a1a] rounded-lg border border-[rgba(255,255,255,0.1)]">
                     {formations.length === 0 && (
                       <p className="text-xs text-[rgba(255,255,255,0.4)]">Aucune formation disponible</p>
@@ -797,7 +797,7 @@ export function UsersManager({
                       <button
                         key={f.id}
                         type="button"
-                        onClick={() => toggleFormationId(f.id)}
+                        onClick={() => setFormationIds([f.id])}
                         className={`px-2.5 py-1 rounded-full text-xs transition-colors ${
                           formationIds.includes(f.id)
                             ? "bg-[#C9A227] text-[#0a0a1a]"
@@ -808,8 +808,11 @@ export function UsersManager({
                       </button>
                     ))}
                   </div>
+                  <p className="text-xs text-[rgba(255,255,255,0.45)]">
+                    Un apprenant suit une seule formation à la fois. Changer de formation annule l'ancienne.
+                  </p>
                   {formationIds.length === 0 && (
-                    <p className="text-xs text-red-400">Au moins une formation est obligatoire</p>
+                    <p className="text-xs text-red-400">Une formation est obligatoire</p>
                   )}
                 </div>
               </>
